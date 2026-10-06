@@ -24,7 +24,7 @@ import type { ResidentRequest } from "@/server/resident-requests/resident-reques
 const ALL = "todos";
 // status is free text in the DB; unknown values fall back to a readable label and a neutral pill.
 const STATUS_LABELS: Record<string, string> = {
-  PENDING_VERIFICATION: "Pendiente de verificación",
+  PENDING_VERIFICATION: "Pendiente",
 };
 const STATUS_TONES: Record<string, Tone> = {
   PENDING_VERIFICATION: "amber",
