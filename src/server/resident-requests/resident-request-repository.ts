@@ -5,12 +5,17 @@ import type { ConsorcioScope } from "@/lib/access/feature-scope-types";
 export type ResidentRequest = {
   id: string;
   name: string;
+  firstName: string;
+  lastName: string;
   phone: string | null;
   email: string;
   communityName: string;
+  communityAddress: string | null;
+  communityUnitCount: number;
   unitNumber: string | null;
   relationship: string;
   status: string;
+  rejectionReason: string | null;
   createdAt: string;
 };
 
@@ -24,10 +29,11 @@ type RequestRow = {
   phone: string | null;
   relationship_type_code: string;
   status: string;
+  rejection_reason: string | null;
   created_at: string;
 };
-type UnitRow = { id: string; numero: string | null };
-type CommunityRow = { id: string; nombre: string };
+type UnitRow = { id: string; numero: string | null; edificio_id: string };
+type CommunityRow = { id: string; nombre: string; direccion: string | null };
 
 function throwOnError<T>(result: { data: T | null; error: { message: string } | null }): T {
   if (result.error) throw new Error(result.error.message);
@@ -44,11 +50,14 @@ export async function listResidentRequests(
   let requestsQuery = supabase
     .from("resident_onboarding_requests")
     .select(
-      "id, edificio_id, unidad_id, first_name, last_name, email, phone, relationship_type_code, status, created_at",
+      "id, edificio_id, unidad_id, first_name, last_name, email, phone, relationship_type_code, status, rejection_reason, created_at",
     )
     .eq("organization_id", organizationId);
-  let unitsQuery = supabase.from("unidades").select("id, numero").eq("organization_id", organizationId);
-  let communitiesQuery = supabase.from("edificios").select("id, nombre").eq("organization_id", organizationId);
+  let unitsQuery = supabase.from("unidades").select("id, numero, edificio_id").eq("organization_id", organizationId);
+  let communitiesQuery = supabase
+    .from("edificios")
+    .select("id, nombre, direccion")
+    .eq("organization_id", organizationId);
   if (scope.kind === "explicit") {
     requestsQuery = requestsQuery.in("edificio_id", scope.consorcioIds);
     unitsQuery = unitsQuery.in("edificio_id", scope.consorcioIds);
@@ -60,18 +69,28 @@ export async function listResidentRequests(
     unitsQuery,
     communitiesQuery,
   ]);
-  const unitById = new Map(throwOnError<UnitRow[]>(units).map((unit) => [unit.id, unit]));
+  const unitRows = throwOnError<UnitRow[]>(units);
+  const unitById = new Map(unitRows.map((unit) => [unit.id, unit]));
+  const unitCountByCommunity = new Map<string, number>();
+  for (const unit of unitRows) {
+    unitCountByCommunity.set(unit.edificio_id, (unitCountByCommunity.get(unit.edificio_id) ?? 0) + 1);
+  }
   const communityById = new Map(throwOnError<CommunityRow[]>(communities).map((row) => [row.id, row]));
 
   return throwOnError<RequestRow[]>(requests).map((row) => ({
     id: row.id,
     name: `${row.first_name} ${row.last_name}`.trim(),
+    firstName: row.first_name,
+    lastName: row.last_name,
     phone: row.phone,
     email: row.email,
     communityName: communityById.get(row.edificio_id)?.nombre ?? "Sin consorcio",
+    communityAddress: communityById.get(row.edificio_id)?.direccion ?? null,
+    communityUnitCount: unitCountByCommunity.get(row.edificio_id) ?? 0,
     unitNumber: unitById.get(row.unidad_id)?.numero ?? null,
     relationship: row.relationship_type_code,
     status: row.status,
+    rejectionReason: row.rejection_reason,
     createdAt: row.created_at,
   }));
 }

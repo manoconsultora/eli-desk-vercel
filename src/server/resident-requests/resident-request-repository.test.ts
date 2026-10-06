@@ -49,6 +49,7 @@ const ROWS = {
       phone: "11",
       relationship_type_code: "propietario",
       status: "PENDING_VERIFICATION",
+      rejection_reason: null,
       created_at: "2026-09-24T10:00:00Z",
     },
     {
@@ -62,16 +63,18 @@ const ROWS = {
       phone: null,
       relationship_type_code: "inquilino",
       status: "APPROVED",
+      rejection_reason: null,
       created_at: "2026-09-23T10:00:00Z",
     },
   ],
   unidades: [
-    { id: "u1", numero: "1A" },
-    { id: "u2", numero: "7B" },
+    { id: "u1", numero: "1A", edificio_id: "e1" },
+    { id: "u3", numero: "1B", edificio_id: "e1" },
+    { id: "u2", numero: "7B", edificio_id: "e2" },
   ],
   edificios: [
-    { id: "e1", nombre: "Ugarte 2200" },
-    { id: "e2", nombre: "Sandbox Belgrano" },
+    { id: "e1", nombre: "Ugarte 2200", direccion: "Ugarte 2200, CABA" },
+    { id: "e2", nombre: "Sandbox Belgrano", direccion: null },
   ],
 };
 
@@ -83,12 +86,17 @@ test("con todos los consorcios devuelve todas las solicitudes con consorcio y un
   assert.deepEqual(requests[0], {
     id: "q1",
     name: "Ana Paz",
+    firstName: "Ana",
+    lastName: "Paz",
     phone: "11",
     email: "a@x.com",
     communityName: "Ugarte 2200",
+    communityAddress: "Ugarte 2200, CABA",
+    communityUnitCount: 2,
     unitNumber: "1A",
     relationship: "propietario",
     status: "PENDING_VERIFICATION",
+    rejectionReason: null,
     createdAt: "2026-09-24T10:00:00Z",
   });
   assert.deepEqual(

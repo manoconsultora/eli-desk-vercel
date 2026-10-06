@@ -4,22 +4,35 @@ import { Initials, Pill } from "@/app/(main)/dashboard/_components/list-table";
 import { relationshipLabel, relationshipTone } from "@/app/(main)/dashboard/consorcios/_components/community-labels";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import type { ResidentRequest } from "@/server/resident-requests/resident-request-repository";
 
-import { isNewRequest, requestedAgo } from "./request-time";
+import { formatRequestDate, isNewRequest, requestedAgo } from "./request-time";
 
-const dateTimeFormat = new Intl.DateTimeFormat("es-AR", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
-
-export function ResidentRequestCard({ request, index, now }: { request: ResidentRequest; index: number; now: number }) {
+export function ResidentRequestCard({
+  request,
+  index,
+  now,
+  selected,
+  onSelect,
+}: {
+  request: ResidentRequest;
+  index: number;
+  now: number;
+  selected: boolean;
+  onSelect: () => void;
+}) {
   return (
-    <Card className="gap-4 p-5">
+    <Card
+      className={cn("relative gap-4 p-5 transition-colors hover:border-blue-500/50", selected && "border-blue-500")}
+    >
+      {/* Covers the whole card, so the card opens the detail without nesting content in a button. */}
+      <button
+        type="button"
+        aria-label={`Ver solicitud de ${request.name}`}
+        className="absolute inset-0 rounded-xl"
+        onClick={onSelect}
+      />
       <div className="flex items-start gap-3">
         <Initials name={request.name} index={index} />
         <div className="min-w-0 flex-1 space-y-1">
@@ -53,7 +66,7 @@ export function ResidentRequestCard({ request, index, now }: { request: Resident
           <span suppressHydrationWarning>
             Solicitó acceso {requestedAgo(request.createdAt, now)}
             <br />
-            {dateTimeFormat.format(new Date(request.createdAt)).replace(",", "")}
+            {formatRequestDate(request.createdAt)}
           </span>
         </li>
       </ul>
