@@ -235,3 +235,28 @@ async function listResidentsByUnit(supabase: SupabaseClient, organizationId: str
   }
   return residentsByUnit;
 }
+
+export type NewUnit = { number: string; floor: string | null };
+export type CreateUnitResult = { ok: true } | { ok: false; reason: "duplicate" | "forbidden" };
+
+// RLS decides who can insert (TENANT_OWNER, or ADMIN and OPERATOR assigned to the consorcio).
+// A new unit has no residents yet, so it starts as desocupado (the column defaults to ocupado).
+export async function createUnit(
+  supabase: SupabaseClient,
+  organizationId: string,
+  communityId: string,
+  unit: NewUnit,
+): Promise<CreateUnitResult> {
+  const { error } = await supabase.from("unidades").insert({
+    organization_id: organizationId,
+    edificio_id: communityId,
+    numero: unit.number,
+    piso: unit.floor,
+    estado: "desocupado",
+  });
+  if (!error) return { ok: true };
+  // unidades_edificio_id_numero_key: the number already exists in this consorcio.
+  if (error.code === "23505") return { ok: false, reason: "duplicate" };
+  if (error.code === "42501") return { ok: false, reason: "forbidden" };
+  throw new Error(error.message);
+}

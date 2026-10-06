@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { getCommunityDetail, listCommunities } from "./community-repository";
+import { createUnit, getCommunityDetail, listCommunities } from "./community-repository";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -139,5 +139,63 @@ test("listCommunities devuelve dirección y estado de cada consorcio", async () 
     status: "activo",
     unitCount: 1,
     activeTicketCount: 0,
+  });
+});
+
+/** Cliente falso para el insert de unidades: devuelve el error dado y guarda la fila. */
+function createInsertClient(error: { code: string; message: string } | null) {
+  const inserted: { table: string; row: unknown }[] = [];
+  const client = {
+    from: (table: string) => ({
+      insert: (row: unknown) => {
+        inserted.push({ table, row });
+        return Promise.resolve({ error });
+      },
+    }),
+  };
+  return { client: client as unknown as SupabaseClient, inserted };
+}
+
+test("createUnit inserta la unidad desocupada, con la organización y el consorcio", async () => {
+  const { client, inserted } = createInsertClient(null);
+
+  const result = await createUnit(client, ORGANIZATION_ID, COMMUNITY_ID, { number: "2B", floor: null });
+
+  assert.deepEqual(result, { ok: true });
+  assert.deepEqual(inserted, [
+    {
+      table: "unidades",
+      row: {
+        organization_id: ORGANIZATION_ID,
+        edificio_id: COMMUNITY_ID,
+        numero: "2B",
+        piso: null,
+        estado: "desocupado",
+      },
+    },
+  ]);
+});
+
+test("createUnit devuelve duplicate si el número ya existe en el consorcio", async () => {
+  const { client } = createInsertClient({ code: "23505", message: "duplicate key" });
+
+  const result = await createUnit(client, ORGANIZATION_ID, COMMUNITY_ID, { number: "1A", floor: "1" });
+
+  assert.deepEqual(result, { ok: false, reason: "duplicate" });
+});
+
+test("createUnit devuelve forbidden si RLS rechaza el insert", async () => {
+  const { client } = createInsertClient({ code: "42501", message: "row-level security" });
+
+  const result = await createUnit(client, ORGANIZATION_ID, COMMUNITY_ID, { number: "1A", floor: null });
+
+  assert.deepEqual(result, { ok: false, reason: "forbidden" });
+});
+
+test("createUnit lanza ante otros errores de la base", async () => {
+  const { client } = createInsertClient({ code: "08006", message: "connection failure" });
+
+  await assert.rejects(createUnit(client, ORGANIZATION_ID, COMMUNITY_ID, { number: "1A", floor: null }), {
+    message: "connection failure",
   });
 });
