@@ -1,9 +1,10 @@
 import type * as React from "react";
 
-import { Building2, Home, Mail, Phone, User, Users } from "lucide-react";
+import { Ban, Building2, Home, Mail, Phone, User, Users } from "lucide-react";
 
 import { Initials, Pill, type Tone } from "@/app/(main)/dashboard/_components/list-table";
 import { relationshipLabel } from "@/app/(main)/dashboard/consorcios/_components/community-labels";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import type { ResidentRequest } from "@/server/resident-requests/resident-request-repository";
@@ -27,9 +28,15 @@ function DataRow({ icon: Icon, label, children }: { icon: typeof User; label: st
   );
 }
 
-type ReviewProps = { busy: boolean; onApprove: () => void; onReject: () => void };
+type ReviewProps = {
+  busy: boolean;
+  blacklisted: boolean;
+  onApprove: () => void;
+  onReject: () => void;
+  onBlacklist: () => void;
+};
 
-function ReviewActions({ busy, onApprove, onReject }: ReviewProps) {
+function ReviewActions({ busy, blacklisted, onApprove, onReject, onBlacklist }: ReviewProps) {
   return (
     <section className="space-y-3">
       <h3 className="font-semibold">Acciones</h3>
@@ -47,6 +54,22 @@ function ReviewActions({ busy, onApprove, onReject }: ReviewProps) {
         </ReviewButton>
         <p className="text-muted-foreground text-xs">Se enviará un email notificando el rechazo.</p>
       </div>
+      {blacklisted ? (
+        <p className="flex items-center gap-2 text-muted-foreground text-sm">
+          <Ban className="size-4" />
+          Este contacto ya está en la blacklist.
+        </p>
+      ) : (
+        <div className="space-y-1.5">
+          <Button type="button" variant="outline" className="w-full" disabled={busy} onClick={onBlacklist}>
+            <Ban className="size-4" />
+            Agregar a blacklist
+          </Button>
+          <p className="text-muted-foreground text-xs">
+            El contacto no podrá volver a iniciar solicitudes. Esta acción puede revertirse desde la sección Blacklist.
+          </p>
+        </div>
+      )}
     </section>
   );
 }
