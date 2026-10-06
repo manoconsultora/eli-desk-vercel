@@ -2,7 +2,10 @@
 
 import * as React from "react";
 
+import { useRouter } from "next/navigation";
+
 import { Eye, LayoutGrid, List } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   FilterSelect,
@@ -21,10 +24,16 @@ import { Badge } from "@/components/ui/badge";
 import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  approveResidentRequestAction,
+  rejectResidentRequestAction,
+} from "@/server/resident-requests/resident-request-actions";
 import type { ResidentRequest } from "@/server/resident-requests/resident-request-repository";
 
+import { RejectRequestDialog } from "./reject-request-dialog";
 import { ResidentRequestCard } from "./resident-request-card";
 import { ResidentRequestDrawer } from "./resident-request-drawer";
+import { ReviewButton } from "./review-buttons";
 
 const ALL = "todos";
 // status is free text in the DB; unknown values fall back to a readable label and a neutral pill.
@@ -65,6 +74,33 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
   const [now] = React.useState(() => Date.now());
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const selected = requests.find((request) => request.id === selectedId) ?? null;
+  const router = useRouter();
+  const [busyId, setBusyId] = React.useState<string | null>(null);
+  const [rejectId, setRejectId] = React.useState<string | null>(null);
+  const rejecting = requests.find((request) => request.id === rejectId) ?? null;
+
+  async function runReview(
+    request: ResidentRequest,
+    action: () => ReturnType<typeof approveResidentRequestAction>,
+    done: string,
+  ) {
+    setBusyId(request.id);
+    const result = await action();
+    setBusyId(null);
+    if (!result.success) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success(done);
+    setRejectId(null);
+    setSelectedId(null);
+    router.refresh();
+  }
+
+  const approve = (request: ResidentRequest) =>
+    runReview(request, () => approveResidentRequestAction(request.id), `Solicitud de ${request.name} aceptada.`);
+  const reject = (request: ResidentRequest, reason: string) =>
+    runReview(request, () => rejectResidentRequestAction(request.id, reason), "Solicitud rechazada.");
 
   const query = search.trim().toLowerCase();
   const communities = [...new Set(requests.map((request) => request.communityName))].sort();
@@ -165,6 +201,18 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
               now={now}
               selected={request.id === selectedId}
               onSelect={() => setSelectedId(request.id)}
+              actions={
+                request.status === "PENDING_VERIFICATION" && (
+                  <>
+                    <ReviewButton kind="approve" disabled={busyId !== null} onClick={() => approve(request)}>
+                      Aceptar
+                    </ReviewButton>
+                    <ReviewButton kind="reject" disabled={busyId !== null} onClick={() => setRejectId(request.id)}>
+                      Rechazar
+                    </ReviewButton>
+                  </>
+                )
+              }
             />
           ))}
         </div>
@@ -223,6 +271,16 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
         index={selected ? requests.indexOf(selected) : 0}
         now={now}
         onClose={() => setSelectedId(null)}
+        busy={busyId !== null}
+        onApprove={() => selected && approve(selected)}
+        onReject={() => selected && setRejectId(selected.id)}
+      />
+
+      <RejectRequestDialog
+        request={rejecting}
+        busy={busyId !== null}
+        onConfirm={(reason) => rejecting && reject(rejecting, reason)}
+        onClose={() => setRejectId(null)}
       />
     </div>
   );

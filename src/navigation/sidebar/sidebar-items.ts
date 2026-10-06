@@ -8,11 +8,11 @@ import {
   FileText,
   LayoutDashboard,
   type LucideIcon,
-  Rocket,
   Scale,
   Settings,
   ShieldCheck,
   Ticket,
+  UserPlus,
   Users,
 } from "lucide-react";
 
@@ -73,7 +73,7 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
   {
     id: "solicitudes",
     label: "Solicitudes",
-    icon: Rocket,
+    icon: UserPlus,
     availability: "available",
     href: "/dashboard/solicitudes",
     placements: ["mobile_more", "desktop"],
