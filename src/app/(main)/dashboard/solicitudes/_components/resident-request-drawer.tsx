@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/
 import type { ResidentRequest } from "@/server/resident-requests/resident-request-repository";
 
 import { formatRequestDate, requestedAgo } from "./request-time";
+import { ReviewButton } from "./review-buttons";
 
 const STATUS: Record<string, { label: string; tone: Tone }> = {
   PENDING_VERIFICATION: { label: "Solicitud pendiente", tone: "amber" },
@@ -26,7 +27,41 @@ function DataRow({ icon: Icon, label, children }: { icon: typeof User; label: st
   );
 }
 
-function RequestDetail({ request, index, now }: { request: ResidentRequest; index: number; now: number }) {
+type ReviewProps = { busy: boolean; onApprove: () => void; onReject: () => void };
+
+function ReviewActions({ busy, onApprove, onReject }: ReviewProps) {
+  return (
+    <section className="space-y-3">
+      <h3 className="font-semibold">Acciones</h3>
+      <div className="space-y-1.5">
+        <ReviewButton kind="approve" className="w-full" disabled={busy} onClick={onApprove}>
+          Aceptar solicitud
+        </ReviewButton>
+        <p className="text-muted-foreground text-xs">
+          Se enviará un email de bienvenida y pasará al listado de vecinos.
+        </p>
+      </div>
+      <div className="space-y-1.5">
+        <ReviewButton kind="reject" className="w-full" disabled={busy} onClick={onReject}>
+          Rechazar solicitud
+        </ReviewButton>
+        <p className="text-muted-foreground text-xs">Se enviará un email notificando el rechazo.</p>
+      </div>
+    </section>
+  );
+}
+
+function RequestDetail({
+  request,
+  index,
+  now,
+  review,
+}: {
+  request: ResidentRequest;
+  index: number;
+  now: number;
+  review: ReviewProps;
+}) {
   const status = STATUS[request.status] ?? { label: request.status, tone: "neutral" };
 
   return (
@@ -85,6 +120,13 @@ function RequestDetail({ request, index, now }: { request: ResidentRequest; inde
         </div>
       </section>
 
+      {request.status === "PENDING_VERIFICATION" && (
+        <>
+          <Separator />
+          <ReviewActions {...review} />
+        </>
+      )}
+
       {request.status === "REJECTED" && (
         <>
           <Separator />
@@ -103,16 +145,17 @@ export function ResidentRequestDrawer({
   index,
   now,
   onClose,
+  ...review
 }: {
   request: ResidentRequest | null;
   index: number;
   now: number;
   onClose: () => void;
-}) {
+} & ReviewProps) {
   return (
     <Sheet open={request !== null} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="w-full overflow-y-auto p-6 sm:max-w-md">
-        {request && <RequestDetail request={request} index={index} now={now} />}
+        {request && <RequestDetail request={request} index={index} now={now} review={review} />}
       </SheetContent>
     </Sheet>
   );

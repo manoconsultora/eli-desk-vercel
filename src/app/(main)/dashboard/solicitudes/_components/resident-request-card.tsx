@@ -1,3 +1,5 @@
+import type * as React from "react";
+
 import { CalendarDays, Mail, Phone } from "lucide-react";
 
 import { Initials, Pill } from "@/app/(main)/dashboard/_components/list-table";
@@ -15,12 +17,14 @@ export function ResidentRequestCard({
   now,
   selected,
   onSelect,
+  actions,
 }: {
   request: ResidentRequest;
   index: number;
   now: number;
   selected: boolean;
   onSelect: () => void;
+  actions?: React.ReactNode;
 }) {
   return (
     <Card
@@ -70,6 +74,9 @@ export function ResidentRequestCard({
           </span>
         </li>
       </ul>
+
+      {/* Above the card's cover button, so the actions get the click. */}
+      {actions && <div className="relative z-10 grid grid-cols-2 gap-3">{actions}</div>}
     </Card>
   );
 }
