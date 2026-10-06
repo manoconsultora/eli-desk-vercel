@@ -21,7 +21,7 @@ import type { ResidentSummary } from "@/server/residents/resident-repository";
 
 import { ALL, communityOptions, filterResidents, type StatusFilter } from "./filter-residents";
 
-// Same list design as Signup (onboarding-requests-list).
+// Same list design as Solicitudes (resident-requests-list).
 export function ResidentsList({ residents }: { residents: ResidentSummary[] }) {
   const [search, setSearch] = React.useState("");
   const [communityId, setCommunityId] = React.useState(ALL);

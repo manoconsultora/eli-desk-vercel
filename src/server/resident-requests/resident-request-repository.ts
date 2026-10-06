@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { ConsorcioScope } from "@/lib/access/feature-scope-types";
 
-export type OnboardingRequest = {
+export type ResidentRequest = {
   id: string;
   name: string;
   phone: string | null;
@@ -34,11 +34,11 @@ function throwOnError<T>(result: { data: T | null; error: { message: string } | 
   return (result.data ?? []) as T;
 }
 
-export async function listOnboardingRequests(
+export async function listResidentRequests(
   supabase: SupabaseClient,
   organizationId: string,
   scope: ConsorcioScope,
-): Promise<OnboardingRequest[]> {
+): Promise<ResidentRequest[]> {
   if (scope.kind === "explicit" && scope.consorcioIds.length === 0) return [];
 
   let requestsQuery = supabase

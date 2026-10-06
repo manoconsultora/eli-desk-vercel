@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { listOnboardingRequests } from "./onboarding-repository";
+import { listResidentRequests } from "./resident-request-repository";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -78,7 +78,7 @@ const ROWS = {
 test("con todos los consorcios devuelve todas las solicitudes con consorcio y unidad", async () => {
   const { client } = createFakeClient(ROWS);
 
-  const requests = await listOnboardingRequests(client, ORGANIZATION_ID, { kind: "all_consorcios" });
+  const requests = await listResidentRequests(client, ORGANIZATION_ID, { kind: "all_consorcios" });
 
   assert.deepEqual(requests[0], {
     id: "q1",
@@ -103,7 +103,7 @@ test("con todos los consorcios devuelve todas las solicitudes con consorcio y un
 test("con consorcios asignados solo devuelve solicitudes de esos consorcios", async () => {
   const { client } = createFakeClient(ROWS);
 
-  const requests = await listOnboardingRequests(client, ORGANIZATION_ID, { kind: "explicit", consorcioIds: ["e1"] });
+  const requests = await listResidentRequests(client, ORGANIZATION_ID, { kind: "explicit", consorcioIds: ["e1"] });
 
   assert.deepEqual(
     requests.map((request) => request.id),
@@ -114,7 +114,7 @@ test("con consorcios asignados solo devuelve solicitudes de esos consorcios", as
 test("con scope explicit vacío no consulta", async () => {
   const { client, calls } = createFakeClient(ROWS);
 
-  const requests = await listOnboardingRequests(client, ORGANIZATION_ID, { kind: "explicit", consorcioIds: [] });
+  const requests = await listResidentRequests(client, ORGANIZATION_ID, { kind: "explicit", consorcioIds: [] });
 
   assert.deepEqual(requests, []);
   assert.equal(calls.length, 0);
@@ -123,7 +123,7 @@ test("con scope explicit vacío no consulta", async () => {
 test("filtra todas las tablas por organization_id", async () => {
   const { client, calls } = createFakeClient(ROWS);
 
-  await listOnboardingRequests(client, ORGANIZATION_ID, { kind: "all_consorcios" });
+  await listResidentRequests(client, ORGANIZATION_ID, { kind: "all_consorcios" });
 
   for (const table of ["resident_onboarding_requests", "unidades", "edificios"]) {
     const orgFilter = calls.find(
