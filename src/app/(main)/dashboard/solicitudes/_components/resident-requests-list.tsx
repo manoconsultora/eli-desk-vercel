@@ -24,6 +24,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { ResidentRequest } from "@/server/resident-requests/resident-request-repository";
 
 import { ResidentRequestCard } from "./resident-request-card";
+import { ResidentRequestDrawer } from "./resident-request-drawer";
 
 const ALL = "todos";
 // status is free text in the DB; unknown values fall back to a readable label and a neutral pill.
@@ -62,6 +63,8 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
   const [tab, setTab] = React.useState(TABS[0].status);
   const [view, setView] = React.useState<"cards" | "list">("cards");
   const [now] = React.useState(() => Date.now());
+  const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  const selected = requests.find((request) => request.id === selectedId) ?? null;
 
   const query = search.trim().toLowerCase();
   const communities = [...new Set(requests.map((request) => request.communityName))].sort();
@@ -155,7 +158,14 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
       ) : view === "cards" ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {visibleRequests.map((request) => (
-            <ResidentRequestCard key={request.id} request={request} index={requests.indexOf(request)} now={now} />
+            <ResidentRequestCard
+              key={request.id}
+              request={request}
+              index={requests.indexOf(request)}
+              now={now}
+              selected={request.id === selectedId}
+              onSelect={() => setSelectedId(request.id)}
+            />
           ))}
         </div>
       ) : (
@@ -196,7 +206,7 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
                 </ListCell>
                 <ListCell>
                   <div className="flex items-center gap-3">
-                    <ListActionButton>
+                    <ListActionButton onClick={() => setSelectedId(request.id)}>
                       <Eye className="size-4" />
                       Ver
                     </ListActionButton>
@@ -207,6 +217,13 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
           </TableBody>
         </ListTable>
       )}
+
+      <ResidentRequestDrawer
+        request={selected}
+        index={selected ? requests.indexOf(selected) : 0}
+        now={now}
+        onClose={() => setSelectedId(null)}
+      />
     </div>
   );
 }

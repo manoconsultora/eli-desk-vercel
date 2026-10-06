@@ -18,3 +18,17 @@ export function requestedAgo(createdAt: string, now: number) {
   if (elapsed < DAY) return `hace ${plural(Math.floor(elapsed / HOUR), "hora", "horas")}`;
   return `hace ${plural(Math.floor(elapsed / DAY), "día", "días")}`;
 }
+
+const dateTimeFormat = new Intl.DateTimeFormat("es-AR", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
+// "05/10/2026 22:45", without the comma es-AR puts between date and time.
+export function formatRequestDate(createdAt: string) {
+  return dateTimeFormat.format(new Date(createdAt)).replace(",", "");
+}
