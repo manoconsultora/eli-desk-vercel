@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableCell, TableHead } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-// Single look for the dashboard list tables (onboarding, consorcios and its drawer).
+// Single look for the dashboard list tables (solicitudes, consorcios and its drawer).
 // Tables compose these pieces without passing classes, so the design stays in one place.
 
 export type Tone = "green" | "red" | "amber" | "blue" | "violet" | "neutral";

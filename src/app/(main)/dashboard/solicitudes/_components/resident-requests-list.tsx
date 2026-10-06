@@ -19,7 +19,7 @@ import {
 } from "@/app/(main)/dashboard/_components/list-table";
 import { relationshipLabel, relationshipTone } from "@/app/(main)/dashboard/consorcios/_components/community-labels";
 import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
-import type { OnboardingRequest } from "@/server/onboarding/onboarding-repository";
+import type { ResidentRequest } from "@/server/resident-requests/resident-request-repository";
 
 const ALL = "todos";
 // status is free text in the DB; unknown values fall back to a readable label and a neutral pill.
@@ -36,7 +36,7 @@ function statusLabel(status: string) {
   return STATUS_LABELS[status] ?? text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-export function OnboardingRequestsList({ requests }: { requests: OnboardingRequest[] }) {
+export function ResidentRequestsList({ requests }: { requests: ResidentRequest[] }) {
   const [search, setSearch] = React.useState("");
   const [community, setCommunity] = React.useState(ALL);
   const [status, setStatus] = React.useState(ALL);
@@ -52,7 +52,7 @@ export function OnboardingRequestsList({ requests }: { requests: OnboardingReque
   );
 
   if (requests.length === 0) {
-    return <ListEmpty>Todavía no hay solicitudes de onboarding.</ListEmpty>;
+    return <ListEmpty>Todavía no hay solicitudes.</ListEmpty>;
   }
 
   return (

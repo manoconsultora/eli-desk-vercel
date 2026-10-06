@@ -86,8 +86,8 @@ export function JoinLinksTab({
       {!current ? (
         <div className="space-y-4 rounded-xl border border-dashed bg-card p-8 text-center">
           <p className="text-muted-foreground text-sm">
-            Este consorcio no tiene un link de acceso activo. Los vecinos se dan de alta con el link o el QR, y las
-            solicitudes llegan a Signup.
+            Este consorcio no tiene un link de acceso activo. Los vecinos se dan de alta con el link o el QR, y su
+            pedido llega a Solicitudes.
           </p>
           {createButton}
         </div>

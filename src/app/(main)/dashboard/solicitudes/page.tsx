@@ -1,9 +1,9 @@
 import { getRequestAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
 import { getDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
-import { listOnboardingRequests, type OnboardingRequest } from "@/server/onboarding/onboarding-repository";
+import { listResidentRequests, type ResidentRequest } from "@/server/resident-requests/resident-request-repository";
 
-import { OnboardingRequestsList } from "./_components/onboarding-requests-list";
+import { ResidentRequestsList } from "./_components/resident-requests-list";
 
 function MessageState({ title, body }: { title: string; body: string }) {
   return (
@@ -16,21 +16,21 @@ function MessageState({ title, body }: { title: string; body: string }) {
   );
 }
 
-// Onboarding requests add residents, so they follow the residentes access and consorcio scope.
-async function loadRequests(): Promise<OnboardingRequest[] | null> {
+// Solicitudes add residents, so they follow the residentes access and consorcio scope.
+async function loadRequests(): Promise<ResidentRequest[] | null> {
   try {
     const access = await getDeskFeatureAccess("residentes");
     if (access?.consorcioScope == null) return null;
     const supabase = await createClient();
     const context = await getRequestAuthContext();
     if (!context.authenticated || context.userType !== "tenant" || !context.organizationId) return null;
-    return await listOnboardingRequests(supabase, context.organizationId, access.consorcioScope);
+    return await listResidentRequests(supabase, context.organizationId, access.consorcioScope);
   } catch {
     return null;
   }
 }
 
-export default async function OnboardingPage() {
+export default async function SolicitudesPage() {
   // Auth starts alongside access; the loaders below reuse the cached result.
   const [access] = await Promise.all([getDeskFeatureAccess("residentes"), getRequestAuthContext()]);
   if (access?.state !== "resolved") {
@@ -46,11 +46,11 @@ export default async function OnboardingPage() {
     <div className="space-y-6">
       <header>
         <p className="font-medium text-muted-foreground text-sm">Administración</p>
-        <h1 className="font-semibold text-3xl tracking-tight">Onboarding</h1>
-        <p className="mt-1 text-muted-foreground">Solicitudes de alta de residentes en tus consorcios.</p>
+        <h1 className="font-semibold text-3xl tracking-tight">Solicitudes</h1>
+        <p className="mt-1 text-muted-foreground">Pedidos de alta de residentes.</p>
       </header>
 
-      <OnboardingRequestsList requests={requests} />
+      <ResidentRequestsList requests={requests} />
     </div>
   );
 }

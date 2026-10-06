@@ -21,7 +21,7 @@ export const unitStatusLabel = (value: string | null) => label(UNIT_STATUS_LABEL
 export const unitTypeLabel = (value: string | null) => label(UNIT_TYPE_LABELS, value);
 export const relationshipLabel = (value: string | null) => label(RELATIONSHIP_LABELS, value);
 
-// Same colors wherever a relationship shows as a pill (Signup, Residentes).
+// Same colors wherever a relationship shows as a pill (Solicitudes, Residentes).
 const RELATIONSHIP_TONES: Record<string, Tone> = { propietario: "blue", inquilino: "violet" };
 export const relationshipTone = (value: string | null): Tone =>
   (value && RELATIONSHIP_TONES[value.toLowerCase()]) || "neutral";
