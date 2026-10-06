@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { Ellipsis, Eye } from "lucide-react";
+import { Eye, LayoutGrid, List } from "lucide-react";
 
 import {
   FilterSelect,
@@ -20,7 +20,10 @@ import { relationshipLabel, relationshipTone } from "@/app/(main)/dashboard/cons
 import { Badge } from "@/components/ui/badge";
 import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { ResidentRequest } from "@/server/resident-requests/resident-request-repository";
+
+import { ResidentRequestCard } from "./resident-request-card";
 
 const ALL = "todos";
 // status is free text in the DB; unknown values fall back to a readable label and a neutral pill.
@@ -57,6 +60,8 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
   const [community, setCommunity] = React.useState(ALL);
   const [relationship, setRelationship] = React.useState(ALL);
   const [tab, setTab] = React.useState(TABS[0].status);
+  const [view, setView] = React.useState<"cards" | "list">("cards");
+  const [now] = React.useState(() => Date.now());
 
   const query = search.trim().toLowerCase();
   const communities = [...new Set(requests.map((request) => request.communityName))].sort();
@@ -125,6 +130,20 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
             </option>
           ))}
         </FilterSelect>
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          className="md:ml-auto"
+          value={view}
+          onValueChange={(value) => value && setView(value as "cards" | "list")}
+        >
+          <ToggleGroupItem value="cards" aria-label="Ver como tarjetas">
+            <LayoutGrid />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="list" aria-label="Ver como lista">
+            <List />
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
 
       {visibleRequests.length === 0 ? (
@@ -133,6 +152,12 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
             ? "No hay solicitudes que coincidan con la búsqueda."
             : TABS.find((item) => item.status === tab)?.empty}
         </ListEmpty>
+      ) : view === "cards" ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {visibleRequests.map((request) => (
+            <ResidentRequestCard key={request.id} request={request} index={requests.indexOf(request)} now={now} />
+          ))}
+        </div>
       ) : (
         <ListTable>
           <TableHeader>
@@ -174,9 +199,6 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
                     <ListActionButton>
                       <Eye className="size-4" />
                       Ver
-                    </ListActionButton>
-                    <ListActionButton size="icon" aria-label="Más acciones">
-                      <Ellipsis className="size-4" />
                     </ListActionButton>
                   </div>
                 </ListCell>
