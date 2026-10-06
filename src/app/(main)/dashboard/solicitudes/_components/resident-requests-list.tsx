@@ -9,7 +9,6 @@ import {
   InitialsAvatar,
   ListActionButton,
   ListCell,
-  ListCount,
   ListEmpty,
   ListHead,
   ListSearch,
@@ -18,17 +17,34 @@ import {
   type Tone,
 } from "@/app/(main)/dashboard/_components/list-table";
 import { relationshipLabel, relationshipTone } from "@/app/(main)/dashboard/consorcios/_components/community-labels";
+import { Badge } from "@/components/ui/badge";
 import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ResidentRequest } from "@/server/resident-requests/resident-request-repository";
 
 const ALL = "todos";
 // status is free text in the DB; unknown values fall back to a readable label and a neutral pill.
 const STATUS_LABELS: Record<string, string> = {
   PENDING_VERIFICATION: "Pendiente",
+  APPROVED: "Aceptada",
+  REJECTED: "Rechazada",
 };
 const STATUS_TONES: Record<string, Tone> = {
   PENDING_VERIFICATION: "amber",
+  APPROVED: "green",
+  REJECTED: "red",
 };
+// One tab per review state. CANCELLED and EXPIRED requests have no tab.
+const TABS = [
+  {
+    status: "PENDING_VERIFICATION",
+    label: "Pendientes de aprobación",
+    dot: "bg-amber-500",
+    empty: "No hay solicitudes pendientes.",
+  },
+  { status: "APPROVED", label: "Activos", dot: "bg-green-500", empty: "Todavía no hay solicitudes aceptadas." },
+  { status: "REJECTED", label: "Rechazados", dot: "bg-red-500", empty: "No hay solicitudes rechazadas." },
+];
 const dateFormat = new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short", year: "numeric" });
 
 function statusLabel(status: string) {
@@ -39,17 +55,24 @@ function statusLabel(status: string) {
 export function ResidentRequestsList({ requests }: { requests: ResidentRequest[] }) {
   const [search, setSearch] = React.useState("");
   const [community, setCommunity] = React.useState(ALL);
-  const [status, setStatus] = React.useState(ALL);
+  const [relationship, setRelationship] = React.useState(ALL);
+  const [tab, setTab] = React.useState(TABS[0].status);
 
   const query = search.trim().toLowerCase();
   const communities = [...new Set(requests.map((request) => request.communityName))].sort();
-  const statuses = [...new Set(requests.map((request) => request.status))];
-  const visibleRequests = requests.filter(
+  const relationships = [...new Set(requests.map((request) => request.relationship))];
+  // Tab counts follow the search and filters, so they match what each tab shows.
+  const filteredRequests = requests.filter(
     (request) =>
-      (!query || [request.name, request.phone, request.email].some((value) => value?.toLowerCase().includes(query))) &&
+      (!query ||
+        [request.name, request.phone, request.email, request.unitNumber].some((value) =>
+          value?.toLowerCase().includes(query),
+        )) &&
       (community === ALL || request.communityName === community) &&
-      (status === ALL || request.status === status),
+      (relationship === ALL || request.relationship === relationship),
   );
+  const visibleRequests = filteredRequests.filter((request) => request.status === tab);
+  const isFiltered = Boolean(query) || community !== ALL || relationship !== ALL;
 
   if (requests.length === 0) {
     return <ListEmpty>Todavía no hay solicitudes.</ListEmpty>;
@@ -57,10 +80,24 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
 
   return (
     <div className="space-y-4">
+      <Tabs value={tab} onValueChange={setTab}>
+        <TabsList className="h-auto w-full flex-wrap justify-start md:w-fit">
+          {TABS.map((item) => (
+            <TabsTrigger key={item.status} value={item.status} className="gap-2 px-3 py-1.5">
+              <span aria-hidden className={`size-2 rounded-full ${item.dot}`} />
+              {item.label}
+              <Badge variant="secondary">
+                {filteredRequests.filter((request) => request.status === item.status).length}
+              </Badge>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+
       <div className="flex flex-col gap-3 md:flex-row md:items-center">
         <ListSearch
           aria-label="Buscar solicitud"
-          placeholder="Buscar por nombre, teléfono o email…"
+          placeholder="Buscar por nombre, email, teléfono o unidad…"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
@@ -76,19 +113,26 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
             </option>
           ))}
         </FilterSelect>
-        <FilterSelect label="Filtrar por estado" value={status} onChange={(event) => setStatus(event.target.value)}>
-          <option value={ALL}>Estado: Todos</option>
-          {statuses.map((value) => (
+        <FilterSelect
+          label="Filtrar por relación"
+          value={relationship}
+          onChange={(event) => setRelationship(event.target.value)}
+        >
+          <option value={ALL}>Relación: Todas</option>
+          {relationships.map((value) => (
             <option key={value} value={value}>
-              Estado: {statusLabel(value)}
+              Relación: {relationshipLabel(value)}
             </option>
           ))}
         </FilterSelect>
-        <ListCount count={requests.length} singular="solicitud" plural="solicitudes" />
       </div>
 
       {visibleRequests.length === 0 ? (
-        <ListEmpty>No hay solicitudes que coincidan con la búsqueda.</ListEmpty>
+        <ListEmpty>
+          {isFiltered
+            ? "No hay solicitudes que coincidan con la búsqueda."
+            : TABS.find((item) => item.status === tab)?.empty}
+        </ListEmpty>
       ) : (
         <ListTable>
           <TableHeader>
