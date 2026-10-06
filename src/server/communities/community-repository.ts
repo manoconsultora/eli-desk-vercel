@@ -240,6 +240,7 @@ export type NewUnit = { number: string; floor: string | null };
 export type CreateUnitResult = { ok: true } | { ok: false; reason: "duplicate" | "forbidden" };
 
 // RLS decides who can insert (TENANT_OWNER, or ADMIN and OPERATOR assigned to the consorcio).
+// A new unit has no residents yet, so it starts as desocupado (the column defaults to ocupado).
 export async function createUnit(
   supabase: SupabaseClient,
   organizationId: string,
@@ -251,6 +252,7 @@ export async function createUnit(
     edificio_id: communityId,
     numero: unit.number,
     piso: unit.floor,
+    estado: "desocupado",
   });
   if (!error) return { ok: true };
   // unidades_edificio_id_numero_key: the number already exists in this consorcio.

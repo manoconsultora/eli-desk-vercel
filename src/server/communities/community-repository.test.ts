@@ -156,7 +156,7 @@ function createInsertClient(error: { code: string; message: string } | null) {
   return { client: client as unknown as SupabaseClient, inserted };
 }
 
-test("createUnit inserta la unidad con la organización y el consorcio", async () => {
+test("createUnit inserta la unidad desocupada, con la organización y el consorcio", async () => {
   const { client, inserted } = createInsertClient(null);
 
   const result = await createUnit(client, ORGANIZATION_ID, COMMUNITY_ID, { number: "2B", floor: null });
@@ -165,7 +165,13 @@ test("createUnit inserta la unidad con la organización y el consorcio", async (
   assert.deepEqual(inserted, [
     {
       table: "unidades",
-      row: { organization_id: ORGANIZATION_ID, edificio_id: COMMUNITY_ID, numero: "2B", piso: null },
+      row: {
+        organization_id: ORGANIZATION_ID,
+        edificio_id: COMMUNITY_ID,
+        numero: "2B",
+        piso: null,
+        estado: "desocupado",
+      },
     },
   ]);
 });
