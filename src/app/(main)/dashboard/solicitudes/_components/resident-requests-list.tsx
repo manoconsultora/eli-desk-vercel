@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { Ellipsis, Eye, LayoutGrid, List } from "lucide-react";
+import { Eye, LayoutGrid, List } from "lucide-react";
 
 import {
   FilterSelect,
@@ -199,9 +199,6 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
                     <ListActionButton>
                       <Eye className="size-4" />
                       Ver
-                    </ListActionButton>
-                    <ListActionButton size="icon" aria-label="Más acciones">
-                      <Ellipsis className="size-4" />
                     </ListActionButton>
                   </div>
                 </ListCell>

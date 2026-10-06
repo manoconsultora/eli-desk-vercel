@@ -1,6 +1,6 @@
-import { CalendarDays, Ellipsis, Mail, Phone } from "lucide-react";
+import { CalendarDays, Mail, Phone } from "lucide-react";
 
-import { Initials, ListActionButton, Pill } from "@/app/(main)/dashboard/_components/list-table";
+import { Initials, Pill } from "@/app/(main)/dashboard/_components/list-table";
 import { relationshipLabel, relationshipTone } from "@/app/(main)/dashboard/consorcios/_components/community-labels";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -31,16 +31,11 @@ export function ResidentRequestCard({ request, index, now }: { request: Resident
             {relationshipLabel(request.relationship) ?? "Sin definir"}
           </Pill>
         </div>
-        <div className="flex items-center gap-2">
-          {isNewRequest(request.createdAt, now) && (
-            <Badge variant="outline" className="border-blue-500/30 text-blue-700 dark:text-blue-400">
-              NEW
-            </Badge>
-          )}
-          <ListActionButton size="icon" aria-label="Más acciones">
-            <Ellipsis className="size-4" />
-          </ListActionButton>
-        </div>
+        {isNewRequest(request.createdAt, now) && (
+          <Badge variant="outline" className="border-blue-500/30 text-blue-700 dark:text-blue-400">
+            NEW
+          </Badge>
+        )}
       </div>
 
       <ul className="space-y-2 text-muted-foreground text-sm">
