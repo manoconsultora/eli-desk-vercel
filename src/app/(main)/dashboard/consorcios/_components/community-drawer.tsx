@@ -27,12 +27,13 @@ import type { CommunityDetail } from "@/server/communities/community-repository"
 import { ActiveTicketsTable } from "./active-tickets-table";
 import { CommunityStatusPill } from "./communities-list";
 import { relationshipLabel } from "./community-labels";
+import { CreateUnitDialog } from "./create-unit-dialog";
 import { sortUnits } from "./filter-units";
 import { JoinLinksTab, type JoinLinksTabData } from "./join-links-tab";
 import { UnitsTable } from "./units-table";
 
 export type CommunityDrawerResult =
-  | { kind: "ok"; community: CommunityDetail; joinLinks: JoinLinksTabData }
+  | { kind: "ok"; community: CommunityDetail; joinLinks: JoinLinksTabData; canManageUnits: boolean }
   | { kind: "not_found" }
   | { kind: "error" };
 
@@ -71,7 +72,15 @@ function InfoRow({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
-function CommunityDetailView({ community, joinLinks }: { community: CommunityDetail; joinLinks: JoinLinksTabData }) {
+function CommunityDetailView({
+  community,
+  joinLinks,
+  canManageUnits,
+}: {
+  community: CommunityDetail;
+  joinLinks: JoinLinksTabData;
+  canManageUnits: boolean;
+}) {
   const residents = sortUnits(community.units).flatMap((unit) =>
     unit.residents.map((resident) => ({ ...resident, unitNumber: unit.number })),
   );
@@ -125,7 +134,12 @@ function CommunityDetailView({ community, joinLinks }: { community: CommunityDet
           </section>
         </TabsContent>
 
-        <TabsContent value="unidades" className="pt-4">
+        <TabsContent value="unidades" className="space-y-4 pt-4">
+          {canManageUnits && (
+            <div className="flex justify-end">
+              <CreateUnitDialog communityId={community.id} communityName={community.name} />
+            </div>
+          )}
           {community.units.length === 0 ? (
             <ListEmpty>Este consorcio no tiene unidades cargadas.</ListEmpty>
           ) : (
@@ -206,7 +220,11 @@ export function CommunityDrawer({ result }: { result: CommunityDrawerResult }) {
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent className="w-full overflow-y-auto p-6 sm:max-w-2xl">
         {result.kind === "ok" ? (
-          <CommunityDetailView community={result.community} joinLinks={result.joinLinks} />
+          <CommunityDetailView
+            community={result.community}
+            joinLinks={result.joinLinks}
+            canManageUnits={result.canManageUnits}
+          />
         ) : (
           <div className="space-y-2 pt-8 text-center">
             <SheetTitle>

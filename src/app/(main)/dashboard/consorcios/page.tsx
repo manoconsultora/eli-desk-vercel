@@ -42,7 +42,8 @@ async function loadCommunity(communityId: string): Promise<CommunityDrawerResult
     if (!community) return { kind: "not_found" };
     // A failure here only empties the Accesos tab; the rest of the drawer still shows.
     const links = await listJoinLinks(supabase, community.id).catch(() => null);
-    return { kind: "ok", community, joinLinks: { links, canManage: context.role !== "VIEWER" } };
+    const canManage = context.role !== "VIEWER";
+    return { kind: "ok", community, joinLinks: { links, canManage }, canManageUnits: canManage };
   } catch {
     return { kind: "error" };
   }
