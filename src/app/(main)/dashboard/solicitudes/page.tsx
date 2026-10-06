@@ -45,9 +45,11 @@ export default async function SolicitudesPage() {
   return (
     <div className="space-y-6">
       <header>
-        <p className="font-medium text-muted-foreground text-sm">Administración</p>
         <h1 className="font-semibold text-3xl tracking-tight">Solicitudes</h1>
-        <p className="mt-1 text-muted-foreground">Pedidos de alta de residentes.</p>
+        <p className="mt-1 font-semibold text-lg">Gestión de vecinos</p>
+        <p className="text-muted-foreground">
+          Revisá las solicitudes de alta, administrá los residentes y controlá accesos al bot.
+        </p>
       </header>
 
       <ResidentRequestsList requests={requests} />
