@@ -1,6 +1,7 @@
 import { getRequestAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
 import { getDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
+import { type BlacklistEntry, listBlacklist } from "@/server/resident-blacklist/resident-blacklist-repository";
 import { listResidentRequests, type ResidentRequest } from "@/server/resident-requests/resident-request-repository";
 
 import { ResidentRequestsList } from "./_components/resident-requests-list";
@@ -30,6 +31,16 @@ async function loadRequests(): Promise<ResidentRequest[] | null> {
   }
 }
 
+async function loadBlacklist(): Promise<BlacklistEntry[] | null> {
+  try {
+    const context = await getRequestAuthContext();
+    if (!context.authenticated || context.userType !== "tenant" || !context.organizationId) return null;
+    return await listBlacklist(await createClient(), context.organizationId);
+  } catch {
+    return null;
+  }
+}
+
 export default async function SolicitudesPage() {
   // Auth starts alongside access; the loaders below reuse the cached result.
   const [access] = await Promise.all([getDeskFeatureAccess("residentes"), getRequestAuthContext()]);
@@ -37,7 +48,7 @@ export default async function SolicitudesPage() {
     return <MessageState title="Sin acceso" body="No se puede mostrar el módulo con el acceso actual." />;
   }
 
-  const requests = await loadRequests();
+  const [requests, blacklist, context] = await Promise.all([loadRequests(), loadBlacklist(), getRequestAuthContext()]);
   if (requests === null) {
     return <MessageState title="No se pudieron cargar las solicitudes" body="Probá de nuevo en unos minutos." />;
   }
@@ -52,7 +63,11 @@ export default async function SolicitudesPage() {
         </p>
       </header>
 
-      <ResidentRequestsList requests={requests} />
+      <ResidentRequestsList
+        requests={requests}
+        blacklist={blacklist}
+        canRemoveFromBlacklist={context.authenticated && ["TENANT_OWNER", "ADMIN"].includes(context.role ?? "")}
+      />
     </div>
   );
 }

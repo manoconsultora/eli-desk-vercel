@@ -24,12 +24,16 @@ import { Badge } from "@/components/ui/badge";
 import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { addToBlacklistAction } from "@/server/resident-blacklist/resident-blacklist-actions";
+import { type BlacklistEntry, isBlacklisted } from "@/server/resident-blacklist/resident-blacklist-repository";
 import {
   approveResidentRequestAction,
   rejectResidentRequestAction,
 } from "@/server/resident-requests/resident-request-actions";
 import type { ResidentRequest } from "@/server/resident-requests/resident-request-repository";
 
+import { BlacklistDialog } from "./blacklist-dialog";
+import { BlacklistList } from "./blacklist-list";
 import { RejectRequestDialog } from "./reject-request-dialog";
 import { ResidentRequestCard } from "./resident-request-card";
 import { ResidentRequestDrawer } from "./resident-request-drawer";
@@ -58,6 +62,7 @@ const TABS = [
   { status: "APPROVED", label: "Activos", dot: "bg-green-500", empty: "Todavía no hay solicitudes aceptadas." },
   { status: "REJECTED", label: "Rechazados", dot: "bg-red-500", empty: "No hay solicitudes rechazadas." },
 ];
+const BLACKLIST_TAB = "BLACKLIST";
 const dateFormat = new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short", year: "numeric" });
 
 function statusLabel(status: string) {
@@ -65,7 +70,15 @@ function statusLabel(status: string) {
   return STATUS_LABELS[status] ?? text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-export function ResidentRequestsList({ requests }: { requests: ResidentRequest[] }) {
+export function ResidentRequestsList({
+  requests,
+  blacklist,
+  canRemoveFromBlacklist,
+}: {
+  requests: ResidentRequest[];
+  blacklist: BlacklistEntry[] | null;
+  canRemoveFromBlacklist: boolean;
+}) {
   const [search, setSearch] = React.useState("");
   const [community, setCommunity] = React.useState(ALL);
   const [relationship, setRelationship] = React.useState(ALL);
@@ -78,6 +91,8 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
   const [busyId, setBusyId] = React.useState<string | null>(null);
   const [rejectId, setRejectId] = React.useState<string | null>(null);
   const rejecting = requests.find((request) => request.id === rejectId) ?? null;
+  const [blacklistId, setBlacklistId] = React.useState<string | null>(null);
+  const blacklisting = requests.find((request) => request.id === blacklistId) ?? null;
 
   async function runReview(
     request: ResidentRequest,
@@ -93,6 +108,7 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
     }
     toast.success(done);
     setRejectId(null);
+    setBlacklistId(null);
     setSelectedId(null);
     router.refresh();
   }
@@ -101,6 +117,8 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
     runReview(request, () => approveResidentRequestAction(request.id), `Solicitud de ${request.name} aceptada.`);
   const reject = (request: ResidentRequest, reason: string) =>
     runReview(request, () => rejectResidentRequestAction(request.id, reason), "Solicitud rechazada.");
+  const addToBlacklist = (request: ResidentRequest, reason: string) =>
+    runReview(request, () => addToBlacklistAction(request.id, reason), `${request.name} quedó en la blacklist.`);
 
   const query = search.trim().toLowerCase();
   const communities = [...new Set(requests.map((request) => request.communityName))].sort();
@@ -117,8 +135,14 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
   );
   const visibleRequests = filteredRequests.filter((request) => request.status === tab);
   const isFiltered = Boolean(query) || community !== ALL || relationship !== ALL;
+  const isBlacklistTab = tab === BLACKLIST_TAB;
+  // The blacklist has no consorcio or relationship: only the search applies.
+  const visibleBlacklist =
+    blacklist?.filter(
+      (entry) => !query || [entry.name, entry.email, entry.phone].some((value) => value?.toLowerCase().includes(query)),
+    ) ?? null;
 
-  if (requests.length === 0) {
+  if (requests.length === 0 && !blacklist?.length) {
     return <ListEmpty>Todavía no hay solicitudes.</ListEmpty>;
   }
 
@@ -135,57 +159,70 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
               </Badge>
             </TabsTrigger>
           ))}
+          <TabsTrigger value={BLACKLIST_TAB} className="gap-2 px-3 py-1.5">
+            <span aria-hidden className="size-2 rounded-full bg-slate-500" />
+            Blacklist
+            <Badge variant="secondary">{visibleBlacklist?.length ?? 0}</Badge>
+          </TabsTrigger>
         </TabsList>
       </Tabs>
 
       <div className="flex flex-col gap-3 md:flex-row md:items-center">
         <ListSearch
           aria-label="Buscar solicitud"
-          placeholder="Buscar por nombre, email, teléfono o unidad…"
+          placeholder={
+            isBlacklistTab ? "Buscar por nombre, email o teléfono…" : "Buscar por nombre, email, teléfono o unidad…"
+          }
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
-        <FilterSelect
-          label="Filtrar por consorcio"
-          value={community}
-          onChange={(event) => setCommunity(event.target.value)}
-        >
-          <option value={ALL}>Consorcio: Todos</option>
-          {communities.map((name) => (
-            <option key={name} value={name}>
-              Consorcio: {name}
-            </option>
-          ))}
-        </FilterSelect>
-        <FilterSelect
-          label="Filtrar por relación"
-          value={relationship}
-          onChange={(event) => setRelationship(event.target.value)}
-        >
-          <option value={ALL}>Relación: Todas</option>
-          {relationships.map((value) => (
-            <option key={value} value={value}>
-              Relación: {relationshipLabel(value)}
-            </option>
-          ))}
-        </FilterSelect>
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          className="md:ml-auto"
-          value={view}
-          onValueChange={(value) => value && setView(value as "cards" | "list")}
-        >
-          <ToggleGroupItem value="cards" aria-label="Ver como tarjetas">
-            <LayoutGrid />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="list" aria-label="Ver como lista">
-            <List />
-          </ToggleGroupItem>
-        </ToggleGroup>
+        {!isBlacklistTab && (
+          <>
+            <FilterSelect
+              label="Filtrar por consorcio"
+              value={community}
+              onChange={(event) => setCommunity(event.target.value)}
+            >
+              <option value={ALL}>Consorcio: Todos</option>
+              {communities.map((name) => (
+                <option key={name} value={name}>
+                  Consorcio: {name}
+                </option>
+              ))}
+            </FilterSelect>
+            <FilterSelect
+              label="Filtrar por relación"
+              value={relationship}
+              onChange={(event) => setRelationship(event.target.value)}
+            >
+              <option value={ALL}>Relación: Todas</option>
+              {relationships.map((value) => (
+                <option key={value} value={value}>
+                  Relación: {relationshipLabel(value)}
+                </option>
+              ))}
+            </FilterSelect>
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              className="md:ml-auto"
+              value={view}
+              onValueChange={(value) => value && setView(value as "cards" | "list")}
+            >
+              <ToggleGroupItem value="cards" aria-label="Ver como tarjetas">
+                <LayoutGrid />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="list" aria-label="Ver como lista">
+                <List />
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </>
+        )}
       </div>
 
-      {visibleRequests.length === 0 ? (
+      {isBlacklistTab ? (
+        <BlacklistList entries={visibleBlacklist} canRemove={canRemoveFromBlacklist} isFiltered={Boolean(query)} />
+      ) : visibleRequests.length === 0 ? (
         <ListEmpty>
           {isFiltered
             ? "No hay solicitudes que coincidan con la búsqueda."
@@ -274,6 +311,15 @@ export function ResidentRequestsList({ requests }: { requests: ResidentRequest[]
         busy={busyId !== null}
         onApprove={() => selected && approve(selected)}
         onReject={() => selected && setRejectId(selected.id)}
+        blacklisted={selected !== null && isBlacklisted(selected, blacklist ?? [])}
+        onBlacklist={() => selected && setBlacklistId(selected.id)}
+      />
+
+      <BlacklistDialog
+        request={blacklisting}
+        busy={busyId !== null}
+        onConfirm={(reason) => blacklisting && addToBlacklist(blacklisting, reason)}
+        onClose={() => setBlacklistId(null)}
       />
 
       <RejectRequestDialog
