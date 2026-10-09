@@ -88,7 +88,9 @@ export function ResidentRequestsList({
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const selected = requests.find((request) => request.id === selectedId) ?? null;
   const router = useRouter();
-  const [busyId, setBusyId] = React.useState<string | null>(null);
+  // Requests under review: only their own buttons lock, the rest of the grid stays usable.
+  const [busyIds, setBusyIds] = React.useState<ReadonlySet<string>>(new Set());
+  const isBusy = (request: ResidentRequest | null) => request !== null && busyIds.has(request.id);
   const [rejectId, setRejectId] = React.useState<string | null>(null);
   const rejecting = requests.find((request) => request.id === rejectId) ?? null;
   const [blacklistId, setBlacklistId] = React.useState<string | null>(null);
@@ -99,17 +101,23 @@ export function ResidentRequestsList({
     action: () => ReturnType<typeof approveResidentRequestAction>,
     done: string,
   ) {
-    setBusyId(request.id);
+    setBusyIds((ids) => new Set(ids).add(request.id));
     const result = await action();
-    setBusyId(null);
+    setBusyIds((ids) => {
+      const next = new Set(ids);
+      next.delete(request.id);
+      return next;
+    });
     if (!result.success) {
       toast.error(result.error);
       return;
     }
     toast.success(done);
-    setRejectId(null);
-    setBlacklistId(null);
-    setSelectedId(null);
+    // Another request may be open by now; close only what belongs to this one.
+    const closeIfReviewed = (id: string | null) => (id === request.id ? null : id);
+    setRejectId(closeIfReviewed);
+    setBlacklistId(closeIfReviewed);
+    setSelectedId(closeIfReviewed);
     router.refresh();
   }
 
@@ -241,10 +249,10 @@ export function ResidentRequestsList({
               actions={
                 request.status === "PENDING_VERIFICATION" && (
                   <>
-                    <ReviewButton kind="approve" disabled={busyId !== null} onClick={() => approve(request)}>
+                    <ReviewButton kind="approve" disabled={isBusy(request)} onClick={() => approve(request)}>
                       Aceptar
                     </ReviewButton>
-                    <ReviewButton kind="reject" disabled={busyId !== null} onClick={() => setRejectId(request.id)}>
+                    <ReviewButton kind="reject" disabled={isBusy(request)} onClick={() => setRejectId(request.id)}>
                       Rechazar
                     </ReviewButton>
                   </>
@@ -308,7 +316,7 @@ export function ResidentRequestsList({
         index={selected ? requests.indexOf(selected) : 0}
         now={now}
         onClose={() => setSelectedId(null)}
-        busy={busyId !== null}
+        busy={isBusy(selected)}
         onApprove={() => selected && approve(selected)}
         onReject={() => selected && setRejectId(selected.id)}
         blacklisted={selected !== null && isBlacklisted(selected, blacklist ?? [])}
@@ -317,14 +325,14 @@ export function ResidentRequestsList({
 
       <BlacklistDialog
         request={blacklisting}
-        busy={busyId !== null}
+        busy={isBusy(blacklisting)}
         onConfirm={(reason) => blacklisting && addToBlacklist(blacklisting, reason)}
         onClose={() => setBlacklistId(null)}
       />
 
       <RejectRequestDialog
         request={rejecting}
-        busy={busyId !== null}
+        busy={isBusy(rejecting)}
         onConfirm={(reason) => rejecting && reject(rejecting, reason)}
         onClose={() => setRejectId(null)}
       />
