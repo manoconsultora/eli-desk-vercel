@@ -33,7 +33,13 @@ import { JoinLinksTab, type JoinLinksTabData } from "./join-links-tab";
 import { UnitsTable } from "./units-table";
 
 export type CommunityDrawerResult =
-  | { kind: "ok"; community: CommunityDetail; joinLinks: JoinLinksTabData; canManageUnits: boolean }
+  | {
+      kind: "ok";
+      community: CommunityDetail;
+      joinLinks: JoinLinksTabData;
+      canManageUnits: boolean;
+      canDeleteUnits: boolean;
+    }
   | { kind: "not_found" }
   | { kind: "error" };
 
@@ -76,10 +82,12 @@ function CommunityDetailView({
   community,
   joinLinks,
   canManageUnits,
+  canDeleteUnits,
 }: {
   community: CommunityDetail;
   joinLinks: JoinLinksTabData;
   canManageUnits: boolean;
+  canDeleteUnits: boolean;
 }) {
   const residents = sortUnits(community.units).flatMap((unit) =>
     unit.residents.map((resident) => ({ ...resident, unitNumber: unit.number })),
@@ -143,7 +151,7 @@ function CommunityDetailView({
           {community.units.length === 0 ? (
             <ListEmpty>Este consorcio no tiene unidades cargadas.</ListEmpty>
           ) : (
-            <UnitsTable units={community.units} canManage={canManageUnits} />
+            <UnitsTable units={community.units} canManage={canManageUnits} canDelete={canDeleteUnits} />
           )}
         </TabsContent>
 
@@ -224,6 +232,7 @@ export function CommunityDrawer({ result }: { result: CommunityDrawerResult }) {
             community={result.community}
             joinLinks={result.joinLinks}
             canManageUnits={result.canManageUnits}
+            canDeleteUnits={result.canDeleteUnits}
           />
         ) : (
           <div className="space-y-2 pt-8 text-center">

@@ -283,3 +283,35 @@ export async function updateUnit(
   }
   return data && data.length > 0 ? { ok: true } : { ok: false, reason: "forbidden" };
 }
+
+export type DeleteUnitResult =
+  | { ok: true }
+  | { ok: false; reason: "forbidden" | "residents" | "tickets" | "requests" | "in_use" };
+
+// What still points to the unit, by the FK that blocked the delete. Postgres reports only the first one.
+const UNIT_REFERENCES: [constraint: string, reason: "residents" | "tickets" | "requests"][] = [
+  ["resident_unit_links_unidad_org_fk", "residents"],
+  ["tickets_unidad", "tickets"],
+  ["resident_onboarding_requests_unidad_id_fkey", "requests"],
+];
+
+// RLS decides who can delete (TENANT_OWNER, or ADMIN assigned to the consorcio); zero rows back means forbidden.
+// The FKs block a unit with residents (current or past), tickets or requests: deleting is for loading mistakes.
+export async function deleteUnit(
+  supabase: SupabaseClient,
+  organizationId: string,
+  unitId: string,
+): Promise<DeleteUnitResult> {
+  const { data, error } = await supabase
+    .from("unidades")
+    .delete()
+    .eq("id", unitId)
+    .eq("organization_id", organizationId)
+    .select("id");
+  if (error) {
+    if (error.code !== "23503") throw new Error(error.message);
+    const match = UNIT_REFERENCES.find(([constraint]) => error.message.includes(constraint));
+    return { ok: false, reason: match?.[1] ?? "in_use" };
+  }
+  return data && data.length > 0 ? { ok: true } : { ok: false, reason: "forbidden" };
+}
