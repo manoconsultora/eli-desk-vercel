@@ -16,11 +16,12 @@ import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import type { CommunityUnit } from "@/server/communities/community-repository";
 
 import { relationshipLabel, unitStatusLabel, unitTypeLabel } from "./community-labels";
+import { EditUnitDialog } from "./edit-unit-dialog";
 import { ALL, filterUnits, type ResidentsFilter, sortUnits, statusOptions } from "./filter-units";
 
 const STATUS_TONES: Record<string, Tone> = { ocupado: "green" };
 
-export function UnitsTable({ units }: { units: CommunityUnit[] }) {
+export function UnitsTable({ units, canManage }: { units: CommunityUnit[]; canManage: boolean }) {
   const [search, setSearch] = React.useState("");
   const [status, setStatus] = React.useState(ALL);
   const [residents, setResidents] = React.useState<ResidentsFilter>(ALL);
@@ -65,6 +66,11 @@ export function UnitsTable({ units }: { units: CommunityUnit[] }) {
               <ListHead desktopOnly>Tipo</ListHead>
               <ListHead>Estado</ListHead>
               <ListHead>Residentes</ListHead>
+              {canManage && (
+                <ListHead>
+                  <span className="sr-only">Acciones</span>
+                </ListHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -109,6 +115,11 @@ export function UnitsTable({ units }: { units: CommunityUnit[] }) {
                     </ul>
                   )}
                 </ListCell>
+                {canManage && (
+                  <ListCell>
+                    <EditUnitDialog unit={unit} />
+                  </ListCell>
+                )}
               </TableRow>
             ))}
           </TableBody>

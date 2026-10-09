@@ -260,3 +260,26 @@ export async function createUnit(
   if (error.code === "42501") return { ok: false, reason: "forbidden" };
   throw new Error(error.message);
 }
+
+export type UpdateUnitResult = { ok: true } | { ok: false; reason: "duplicate" | "forbidden" };
+
+// RLS decides who can edit (TENANT_OWNER, or ADMIN and OPERATOR assigned to the consorcio).
+// An UPDATE blocked by RLS matches no rows instead of failing, so zero rows back means forbidden.
+export async function updateUnit(
+  supabase: SupabaseClient,
+  organizationId: string,
+  unitId: string,
+  unit: NewUnit,
+): Promise<UpdateUnitResult> {
+  const { data, error } = await supabase
+    .from("unidades")
+    .update({ numero: unit.number, piso: unit.floor })
+    .eq("id", unitId)
+    .eq("organization_id", organizationId)
+    .select("id");
+  if (error) {
+    if (error.code === "23505") return { ok: false, reason: "duplicate" };
+    throw new Error(error.message);
+  }
+  return data && data.length > 0 ? { ok: true } : { ok: false, reason: "forbidden" };
+}

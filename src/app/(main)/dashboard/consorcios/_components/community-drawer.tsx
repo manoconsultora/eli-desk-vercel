@@ -143,7 +143,7 @@ function CommunityDetailView({
           {community.units.length === 0 ? (
             <ListEmpty>Este consorcio no tiene unidades cargadas.</ListEmpty>
           ) : (
-            <UnitsTable units={community.units} />
+            <UnitsTable units={community.units} canManage={canManageUnits} />
           )}
         </TabsContent>
 
