@@ -21,7 +21,15 @@ import { ALL, filterUnits, type ResidentsFilter, sortUnits, statusOptions } from
 
 const STATUS_TONES: Record<string, Tone> = { ocupado: "green" };
 
-export function UnitsTable({ units, canManage }: { units: CommunityUnit[]; canManage: boolean }) {
+export function UnitsTable({
+  units,
+  canManage,
+  canDelete,
+}: {
+  units: CommunityUnit[];
+  canManage: boolean;
+  canDelete: boolean;
+}) {
   const [search, setSearch] = React.useState("");
   const [status, setStatus] = React.useState(ALL);
   const [residents, setResidents] = React.useState<ResidentsFilter>(ALL);
@@ -117,7 +125,7 @@ export function UnitsTable({ units, canManage }: { units: CommunityUnit[]; canMa
                 </ListCell>
                 {canManage && (
                   <ListCell>
-                    <EditUnitDialog unit={unit} />
+                    <EditUnitDialog unit={unit} canDelete={canDelete} />
                   </ListCell>
                 )}
               </TableRow>

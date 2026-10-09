@@ -43,7 +43,9 @@ async function loadCommunity(communityId: string): Promise<CommunityDrawerResult
     // A failure here only empties the Accesos tab; the rest of the drawer still shows.
     const links = await listJoinLinks(supabase, community.id).catch(() => null);
     const canManage = context.role !== "VIEWER";
-    return { kind: "ok", community, joinLinks: { links, canManage }, canManageUnits: canManage };
+    // Deleting follows the RLS policy: TENANT_OWNER and ADMIN only.
+    const canDeleteUnits = ["TENANT_OWNER", "ADMIN"].includes(context.role ?? "");
+    return { kind: "ok", community, joinLinks: { links, canManage }, canManageUnits: canManage, canDeleteUnits };
   } catch {
     return { kind: "error" };
   }

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { createUnit, getCommunityDetail, listCommunities, updateUnit } from "./community-repository";
+import { createUnit, deleteUnit, getCommunityDetail, listCommunities, updateUnit } from "./community-repository";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -200,11 +200,11 @@ test("createUnit lanza ante otros errores de la base", async () => {
   });
 });
 
-/** Cliente falso para el update de unidades: devuelve las filas o el error dados y guarda los filtros. */
+/** Cliente falso para el update y el delete de unidades: devuelve las filas o el error dados y guarda los filtros. */
 function createUpdateClient(result: { data: unknown[] | null; error: { code: string; message: string } | null }) {
   const calls: { method: string; args: unknown[] }[] = [];
   const builder: Record<string, unknown> = {};
-  for (const method of ["update", "eq"]) {
+  for (const method of ["update", "delete", "eq"]) {
     builder[method] = (...args: unknown[]) => {
       calls.push({ method, args });
       return builder;
@@ -260,4 +260,46 @@ test("updateUnit lanza ante otros errores de la base", async () => {
   await assert.rejects(updateUnit(client, ORGANIZATION_ID, "u1", { number: "1A", floor: null }), {
     message: "connection failure",
   });
+});
+
+test("deleteUnit borra la unidad de la organización", async () => {
+  const { client, calls } = createUpdateClient({ data: [{ id: "u1" }], error: null });
+
+  const result = await deleteUnit(client, ORGANIZATION_ID, "u1");
+
+  assert.deepEqual(result, { ok: true });
+  assert.deepEqual(calls, [
+    { method: "from", args: ["unidades"] },
+    { method: "delete", args: [] },
+    { method: "eq", args: ["id", "u1"] },
+    { method: "eq", args: ["organization_id", ORGANIZATION_ID] },
+    { method: "select", args: ["id"] },
+  ]);
+});
+
+test("deleteUnit devuelve forbidden si RLS no deja borrar ninguna fila", async () => {
+  const { client } = createUpdateClient({ data: [], error: null });
+
+  assert.deepEqual(await deleteUnit(client, ORGANIZATION_ID, "u1"), { ok: false, reason: "forbidden" });
+});
+
+test("deleteUnit dice qué tiene la unidad según la FK que bloqueó el borrado", async () => {
+  const cases: [string, string][] = [
+    ["resident_unit_links_unidad_org_fk", "residents"],
+    ["tickets_unidad_edificio_org_fkey", "tickets"],
+    ["resident_onboarding_requests_unidad_id_fkey", "requests"],
+    ["conversation_sessions_unidad_edificio_org_fk", "in_use"],
+  ];
+  for (const [constraint, reason] of cases) {
+    const message = `update or delete on table "unidades" violates foreign key constraint "${constraint}"`;
+    const { client } = createUpdateClient({ data: null, error: { code: "23503", message } });
+
+    assert.deepEqual(await deleteUnit(client, ORGANIZATION_ID, "u1"), { ok: false, reason }, constraint);
+  }
+});
+
+test("deleteUnit lanza ante otros errores de la base", async () => {
+  const { client } = createUpdateClient({ data: null, error: { code: "08006", message: "connection failure" } });
+
+  await assert.rejects(deleteUnit(client, ORGANIZATION_ID, "u1"), { message: "connection failure" });
 });
