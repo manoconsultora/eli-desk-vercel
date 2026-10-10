@@ -8,7 +8,12 @@ import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { drainResidentEmailOutbox, resendConfigFromEnv } from "@/server/resident-emails/resident-email-outbox";
 
-import { approveResidentRequest, ResidentRequestReviewError, rejectResidentRequest } from "./resident-request-review";
+import {
+  approveResidentRequest,
+  correctResidentRequestEmail,
+  ResidentRequestReviewError,
+  rejectResidentRequest,
+} from "./resident-request-review";
 
 type ActionResult = { success: true } | { success: false; error: string };
 
@@ -53,5 +58,13 @@ export async function rejectResidentRequestAction(requestId: string, reason: str
   return review(
     async () => rejectResidentRequest(await createClient(), requestId, reason.trim() || null),
     "No se pudo rechazar la solicitud.",
+  );
+}
+
+export async function correctResidentRequestEmailAction(requestId: string, email: string): Promise<ActionResult> {
+  if (!requestId) return { success: false, error: "La solicitud es obligatoria." };
+  return review(
+    async () => correctResidentRequestEmail(await createClient(), requestId, email),
+    "No se pudo corregir el email.",
   );
 }
