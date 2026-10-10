@@ -8,7 +8,7 @@ test("el mail del código muestra el código y el edificio", () => {
   assert.equal(email.subject, "Tu código de verificación de ELI: 042317");
   assert.match(email.html, />042317</);
   assert.match(email.html, /Ugarte 2200/);
-  assert.match(email.html, /Vence en 10 minutos/);
+  assert.match(email.html, /Vence en 30 minutos/);
 });
 
 test("el mail del código escapa el HTML del payload", () => {

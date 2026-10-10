@@ -24,7 +24,7 @@ export function renderResidentEmail(key: ResidentEmailTemplateKey, payload: Resi
     const code = escapeHtml(payload.code ?? "");
     return {
       subject: `Tu código de verificación de ELI: ${payload.code ?? ""}`,
-      html: `<main><p>Tu código para pedir el alta en ${building} es:</p><p style="font-size:28px;font-weight:bold;letter-spacing:4px">${code}</p><p>Vence en 10 minutos. Si no lo pediste, ignorá este email.</p></main>`,
+      html: `<main><p>Tu código para pedir el alta en ${building} es:</p><p style="font-size:28px;font-weight:bold;letter-spacing:4px">${code}</p><p>Vence en 30 minutos. Si no lo pediste, ignorá este email.</p></main>`,
     };
   }
   if (key === "resident_request_approved") {
