@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { drainResidentEmailOutbox, resendConfigFromEnv } from "./resident-email-outbox";
+import { drainResidentEmailOutbox, MAX_ATTEMPTS, resendConfigFromEnv } from "./resident-email-outbox";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -13,6 +13,8 @@ const ROWS = [
     recipient_email: "laura@x.com",
     payload: { first_name: "Laura", edificio_nombre: "Ugarte 2200", unidad_numero: "2A" },
     attempts: 0,
+    status: "pending",
+    updated_at: "2026-10-10T12:00:00.000001+00:00",
   },
   {
     id: "m2",
@@ -20,6 +22,8 @@ const ROWS = [
     recipient_email: "carla@x.com",
     payload: { first_name: "<b>Carla</b>" },
     attempts: 1,
+    status: "sending",
+    updated_at: "2026-10-10T11:00:00+00:00",
   },
 ];
 
@@ -31,7 +35,7 @@ function createFakeAdmin(taken: string[] = []) {
       const calls: Call[] = [];
       queries.push(calls);
       const builder: Record<string, unknown> = {};
-      for (const method of ["select", "update", "eq", "in", "lte", "order", "limit"]) {
+      for (const method of ["select", "update", "eq", "in", "or", "lt", "lte", "order", "limit"]) {
         builder[method] = (...args: unknown[]) => {
           calls.push({ method, args });
           return builder;
@@ -52,7 +56,8 @@ function createFakeAdmin(taken: string[] = []) {
     queries
       .filter((calls) => calls.some((call) => call.method === "eq" && call.args[1] === id))
       .map((calls) => calls.find((call) => call.method === "update")?.args[0] as Record<string, unknown>);
-  return { admin: admin as unknown as SupabaseClient, updates };
+  const chain = (index: number) => queries[index] ?? [];
+  return { admin: admin as unknown as SupabaseClient, updates, chain };
 }
 
 function fakeResend(status = 200) {
@@ -132,4 +137,35 @@ test("si Resend falla lo marca failed y lo reprograma", async () => {
   assert.equal(failed.status, "failed");
   assert.equal(failed.last_error, "resend_failed:500");
   assert.ok(new Date(failed.next_attempt_at as string).getTime() > Date.now());
+});
+
+test("solo toma mails con intentos disponibles, incluidos los trabados en sending", async () => {
+  const { admin, chain } = createFakeAdmin();
+  const { send } = fakeResend();
+
+  await drainResidentEmailOutbox(admin, CONFIG, send);
+
+  const select = chain(0);
+  assert.deepEqual(select.find((call) => call.method === "lt")?.args, ["attempts", MAX_ATTEMPTS]);
+  const filter = String(select.find((call) => call.method === "or")?.args[0]);
+  assert.match(filter, /^status\.in\.\(pending,failed\),and\(status\.eq\.sending,updated_at\.lt\.(.+)\)$/);
+  const stuckBefore = new Date(filter.match(/updated_at\.lt\.(.+)\)$/)?.[1] ?? "").getTime();
+  assert.ok(Date.now() - stuckBefore >= 10 * 60_000 - 1000, "un sending se considera trabado recién a los 10 minutos");
+});
+
+test("reclama un mail trabado en sending solo si nadie lo tocó desde que se leyó", async () => {
+  const { admin, chain } = createFakeAdmin();
+  const { send, requests } = fakeResend();
+
+  await drainResidentEmailOutbox(admin, CONFIG, send);
+
+  const claim = chain(3)
+    .filter((call) => call.method === "eq")
+    .map((call) => call.args);
+  assert.deepEqual(claim, [
+    ["id", "m2"],
+    ["status", "sending"],
+    ["updated_at", "2026-10-10T11:00:00+00:00"],
+  ]);
+  assert.deepEqual(requests[1].headers["Idempotency-Key"], "eli-resident-email-m2", "Resend descarta el duplicado");
 });
