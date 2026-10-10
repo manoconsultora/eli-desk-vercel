@@ -1,6 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { approveResidentRequest, ResidentRequestReviewError, rejectResidentRequest } from "./resident-request-review";
+import {
+  approveResidentRequest,
+  correctResidentRequestEmail,
+  ResidentRequestReviewError,
+  rejectResidentRequest,
+} from "./resident-request-review";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -53,4 +58,30 @@ test("un error desconocido no se muestra como error de revisión", async () => {
     assert.ok(!(error instanceof ResidentRequestReviewError));
     return true;
   });
+});
+
+test("corregir el email llama a la RPC con el email tal cual lo escribió", async () => {
+  const { client, calls } = fakeRpc({});
+
+  await correctResidentRequestEmail(client, "q1", " Laura@X.com ");
+  assert.deepEqual(calls, [
+    { fn: "correct_resident_request_email", args: { p_request_id: "q1", p_email: " Laura@X.com " } },
+  ]);
+});
+
+test("traduce los errores de corregir el email", async () => {
+  for (const [code, message] of [
+    ["invalid_email", "Ingresá un email válido."],
+    ["email_unchanged", "Es el mismo email que ya tiene la solicitud."],
+    ["contact_blocked", "Ese email está en la blacklist."],
+    ["email_in_use", "Ese email ya lo usa otro vecino de la administración."],
+    ["request_not_editable", "Esta solicitud ya no se puede corregir."],
+  ]) {
+    const { client } = fakeRpc({ error: { message: code } });
+    await assert.rejects(correctResidentRequestEmail(client, "q1", "x@x.com"), (error: unknown) => {
+      assert.ok(error instanceof ResidentRequestReviewError);
+      assert.equal(error.message, message);
+      return true;
+    });
+  }
 });
