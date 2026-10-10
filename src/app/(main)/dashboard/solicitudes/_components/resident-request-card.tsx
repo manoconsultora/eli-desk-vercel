@@ -35,7 +35,7 @@ export function ResidentRequestCard({
       <button
         type="button"
         aria-label={`Ver solicitud de ${request.name}`}
-        className="absolute inset-0 rounded-xl"
+        className="absolute inset-0 cursor-pointer rounded-xl"
         onClick={onSelect}
       />
       <div className="flex items-start gap-3">
