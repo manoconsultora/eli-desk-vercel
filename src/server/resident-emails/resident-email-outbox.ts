@@ -12,6 +12,8 @@ type OutboxRow = {
   recipient_email: string;
   payload: ResidentEmailPayload;
   attempts: number;
+  status: "pending" | "failed" | "sending";
+  updated_at: string;
 };
 
 export type ResendConfig = { apiKey: string; from: string };
@@ -25,9 +27,15 @@ export function resendConfigFromEnv(env: Record<string, string | undefined> = pr
 }
 
 const RETRY_DELAY_MS = 5 * 60_000;
+// After this many attempts a failed email stays failed and is not retried again.
+export const MAX_ATTEMPTS = 5;
+// A row left in "sending" this long belongs to a drain that died mid-send, so it is retried.
+// Resend's Idempotency-Key keeps the retry from sending it twice.
+const STUCK_SENDING_MS = 10 * 60_000;
 
-// Sends the queued emails with Resend. Rows are claimed one by one (pending/failed → sending),
-// so two drains running at the same time never send the same email.
+// Sends the queued emails with Resend. Rows are claimed one by one (→ sending) only if they
+// have not changed since they were read, so two drains running at the same time never send
+// the same email.
 export async function drainResidentEmailOutbox(
   admin: SupabaseClient,
   config: ResendConfig | null,
@@ -38,9 +46,12 @@ export async function drainResidentEmailOutbox(
 
   const { data, error } = await admin
     .from("resident_email_outbox")
-    .select("id, template_key, recipient_email, payload, attempts")
-    .in("status", ["pending", "failed"])
+    .select("id, template_key, recipient_email, payload, attempts, status, updated_at")
+    .or(
+      `status.in.(pending,failed),and(status.eq.sending,updated_at.lt.${new Date(Date.now() - STUCK_SENDING_MS).toISOString()})`,
+    )
     .lte("next_attempt_at", new Date().toISOString())
+    .lt("attempts", MAX_ATTEMPTS)
     .order("created_at", { ascending: true })
     .limit(limit);
   if (error) throw new Error(error.message);
@@ -51,7 +62,8 @@ export async function drainResidentEmailOutbox(
       .from("resident_email_outbox")
       .update({ status: "sending", attempts: row.attempts + 1 })
       .eq("id", row.id)
-      .in("status", ["pending", "failed"])
+      .eq("status", row.status)
+      .eq("updated_at", row.updated_at)
       .select("id");
     if (claim.error) throw new Error(claim.error.message);
     if (!claim.data?.length) continue;
