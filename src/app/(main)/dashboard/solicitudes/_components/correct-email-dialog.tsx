@@ -4,7 +4,8 @@ import * as React from "react";
 
 import { useRouter } from "next/navigation";
 
-import { Pencil } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,15 +27,32 @@ const WHAT_HAPPENS: Record<string, string> = {
   REJECTED: "Se va a reenviar el email de rechazo a la dirección nueva.",
 };
 
+const RESENT: Record<string, string> = {
+  APPROVED: "el email de aceptación",
+  REJECTED: "el email de rechazo",
+};
+
 export function CorrectEmailDialog({ request }: { request: ResidentRequest }) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [email, setEmail] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
+  const [refreshing, startRefresh] = React.useTransition();
+  const [saved, setSaved] = React.useState<string | null>(null);
+  const saving = busy || saved !== null;
+
+  // Closes once the refreshed request reached the drawer, so it never shows the old email.
+  React.useEffect(() => {
+    if (saved === null || refreshing) return;
+    setOpen(false);
+    setSaved(null);
+    const resent = RESENT[request.status];
+    toast.success(resent ? `Email corregido. Reenviamos ${resent} a ${saved}.` : "Email corregido.");
+  }, [saved, refreshing, request.status]);
 
   function changeOpen(next: boolean) {
-    if (!next && busy) return;
+    if (!next && saving) return;
     setOpen(next);
     if (next) {
       setEmail(request.email);
@@ -52,8 +70,9 @@ export function CorrectEmailDialog({ request }: { request: ResidentRequest }) {
       setError(result.error);
       return;
     }
-    setOpen(false);
-    router.refresh();
+    // The database stores it trimmed and lowercased.
+    setSaved(email.trim().toLowerCase());
+    startRefresh(() => router.refresh());
   }
 
   return (
@@ -90,11 +109,12 @@ export function CorrectEmailDialog({ request }: { request: ResidentRequest }) {
             <div aria-live="polite">{error && <p className="text-destructive text-sm">{error}</p>}</div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" disabled={busy} onClick={() => changeOpen(false)}>
+              <Button type="button" variant="outline" disabled={saving} onClick={() => changeOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={busy || !email.trim()}>
-                Guardar
+              <Button type="submit" disabled={saving || !email.trim()}>
+                {saving && <Loader2 className="size-4 animate-spin" />}
+                {saving ? "Guardando…" : "Guardar"}
               </Button>
             </DialogFooter>
           </form>
