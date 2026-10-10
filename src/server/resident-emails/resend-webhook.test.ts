@@ -18,6 +18,11 @@ test("acepta la firma de Resend sobre el cuerpo crudo", () => {
   assert.equal(verifyResendSignature(sign('{"type":"email.delivered"}')), true);
 });
 
+test("acepta el secreto configurado con un salto de línea al final", () => {
+  const signed = sign('{"type":"email.delivered"}');
+  assert.equal(verifyResendSignature({ ...signed, secret: `${SECRET}\n` }), true);
+});
+
 test("acepta si alguna de las firmas del header coincide", () => {
   const signed = sign("{}");
   assert.equal(verifyResendSignature({ ...signed, signature: `v1,b3RyYQ== ${signed.signature}` }), true);
