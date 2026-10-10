@@ -33,11 +33,10 @@ export function BlacklistList({
   canRemove: boolean;
   isFiltered: boolean;
 }) {
-  const { refresh, refreshing } = useRefresh();
+  const { refreshing, runAction } = useRefresh();
   const [removing, setRemoving] = React.useState<BlacklistEntry | null>(null);
-  const [saving, setSaving] = React.useState(false);
-  // Also busy until the refreshed data is on screen.
-  const busy = saving || refreshing;
+  // Busy until the updated blacklist is on screen.
+  const busy = refreshing;
 
   if (entries === null) return <ListEmpty>No se pudo cargar la blacklist. Probá de nuevo en unos minutos.</ListEmpty>;
   if (entries.length === 0) {
@@ -48,18 +47,22 @@ export function BlacklistList({
     );
   }
 
-  async function remove(entry: BlacklistEntry) {
-    setSaving(true);
-    const result = await removeFromBlacklistAction(entry.id);
-    setSaving(false);
-    if (!result.success) {
-      toast.error(result.error);
-      return;
-    }
-    refresh(() => {
-      toast.success(`${entry.name} ya no está en la blacklist.`);
-      setRemoving(null);
-    });
+  function remove(entry: BlacklistEntry) {
+    runAction(
+      () => removeFromBlacklistAction(entry.id),
+      (result) => {
+        if (!result) {
+          toast.error("No se pudo completar. Recargá la página y probá de nuevo.");
+          return;
+        }
+        if (!result.success) {
+          toast.error(result.error);
+          return;
+        }
+        toast.success(`${entry.name} ya no está en la blacklist.`);
+        setRemoving(null);
+      },
+    );
   }
 
   return (

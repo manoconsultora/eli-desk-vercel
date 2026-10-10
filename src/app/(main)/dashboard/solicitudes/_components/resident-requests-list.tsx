@@ -86,7 +86,7 @@ export function ResidentRequestsList({
   const [now] = React.useState(() => Date.now());
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const selected = requests.find((request) => request.id === selectedId) ?? null;
-  const { refresh } = useRefresh();
+  const { runAction } = useRefresh();
   // Requests under review: only their own buttons lock, the rest of the grid stays usable.
   const [busyIds, setBusyIds] = React.useState<ReadonlySet<string>>(new Set());
   const isBusy = (request: ResidentRequest | null) => request !== null && busyIds.has(request.id);
@@ -95,35 +95,28 @@ export function ResidentRequestsList({
   const [blacklistId, setBlacklistId] = React.useState<string | null>(null);
   const blacklisting = requests.find((request) => request.id === blacklistId) ?? null;
 
-  async function runReview(
+  function runReview(
     request: ResidentRequest,
     action: () => ReturnType<typeof approveResidentRequestAction>,
     done: string,
   ) {
-    const release = () =>
+    setBusyIds((ids) => new Set(ids).add(request.id));
+    // The request stays locked until the updated list is on screen, so it can't be reviewed twice.
+    runAction(action, (result) => {
       setBusyIds((ids) => {
         const next = new Set(ids);
         next.delete(request.id);
         return next;
       });
-    setBusyIds((ids) => new Set(ids).add(request.id));
-    let result: Awaited<ReturnType<typeof action>>;
-    try {
-      result = await action();
-    } catch {
-      // No answer at all, e.g. a deploy since the page loaded left it with outdated actions.
-      release();
-      toast.error("No se pudo completar. Recargá la página y probá de nuevo.");
-      return;
-    }
-    if (!result.success) {
-      release();
-      toast.error(result.error);
-      return;
-    }
-    // The request stays locked until the refreshed list is on screen, so it can't be reviewed twice.
-    refresh(() => {
-      release();
+      if (!result) {
+        // No answer at all, e.g. a deploy since the page loaded left it with outdated actions.
+        toast.error("No se pudo completar. Recargá la página y probá de nuevo.");
+        return;
+      }
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
       toast.success(done);
       // Another request may be open by now; close only what belongs to this one.
       const closeIfReviewed = (id: string | null) => (id === request.id ? null : id);

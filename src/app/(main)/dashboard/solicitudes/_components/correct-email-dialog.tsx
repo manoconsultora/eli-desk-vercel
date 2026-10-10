@@ -32,13 +32,12 @@ const RESENT: Record<string, string> = {
 };
 
 export function CorrectEmailDialog({ request }: { request: ResidentRequest }) {
-  const { refresh, refreshing } = useRefresh();
+  const { refreshing, runAction } = useRefresh();
   const [open, setOpen] = React.useState(false);
   const [email, setEmail] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
-  const [busy, setBusy] = React.useState(false);
-  // Also busy until the refreshed request is in the drawer, so it never shows the old email.
-  const saving = busy || refreshing;
+  // Busy until the updated request is in the drawer, so it never shows the old email.
+  const saving = refreshing;
 
   function changeOpen(next: boolean) {
     if (!next && saving) return;
@@ -49,23 +48,27 @@ export function CorrectEmailDialog({ request }: { request: ResidentRequest }) {
     }
   }
 
-  async function save(event: React.FormEvent) {
+  function save(event: React.FormEvent) {
     event.preventDefault();
-    setBusy(true);
     setError(null);
-    const result = await correctResidentRequestEmailAction(request.id, email);
-    setBusy(false);
-    if (!result.success) {
-      setError(result.error);
-      return;
-    }
     // The database stores it trimmed and lowercased.
     const saved = email.trim().toLowerCase();
     const resent = RESENT[request.status];
-    refresh(() => {
-      setOpen(false);
-      toast.success(resent ? `Email corregido. Reenviamos ${resent} a ${saved}.` : "Email corregido.");
-    });
+    runAction(
+      () => correctResidentRequestEmailAction(request.id, email),
+      (result) => {
+        if (!result) {
+          setError("No se pudo completar. Recargá la página y probá de nuevo.");
+          return;
+        }
+        if (!result.success) {
+          setError(result.error);
+          return;
+        }
+        setOpen(false);
+        toast.success(resent ? `Email corregido. Reenviamos ${resent} a ${saved}.` : "Email corregido.");
+      },
+    );
   }
 
   return (
