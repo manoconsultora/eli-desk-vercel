@@ -2,8 +2,6 @@
 
 import * as React from "react";
 
-import { useRouter } from "next/navigation";
-
 import { CalendarDays, Mail, MessageSquareText, Phone } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useRefresh } from "@/hooks/use-refresh";
 import { removeFromBlacklistAction } from "@/server/resident-blacklist/resident-blacklist-actions";
 import type { BlacklistEntry } from "@/server/resident-blacklist/resident-blacklist-repository";
 
@@ -34,9 +33,11 @@ export function BlacklistList({
   canRemove: boolean;
   isFiltered: boolean;
 }) {
-  const router = useRouter();
+  const { refresh, refreshing } = useRefresh();
   const [removing, setRemoving] = React.useState<BlacklistEntry | null>(null);
-  const [busy, setBusy] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  // Also busy until the refreshed data is on screen.
+  const busy = saving || refreshing;
 
   if (entries === null) return <ListEmpty>No se pudo cargar la blacklist. Probá de nuevo en unos minutos.</ListEmpty>;
   if (entries.length === 0) {
@@ -48,16 +49,17 @@ export function BlacklistList({
   }
 
   async function remove(entry: BlacklistEntry) {
-    setBusy(true);
+    setSaving(true);
     const result = await removeFromBlacklistAction(entry.id);
-    setBusy(false);
+    setSaving(false);
     if (!result.success) {
       toast.error(result.error);
       return;
     }
-    toast.success(`${entry.name} ya no está en la blacklist.`);
-    setRemoving(null);
-    router.refresh();
+    refresh(() => {
+      toast.success(`${entry.name} ya no está en la blacklist.`);
+      setRemoving(null);
+    });
   }
 
   return (

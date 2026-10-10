@@ -2,8 +2,6 @@
 
 import * as React from "react";
 
-import { useRouter } from "next/navigation";
-
 import { Eye } from "lucide-react";
 
 import {
@@ -26,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
+import { useRefresh } from "@/hooks/use-refresh";
 import { revokeJoinLinkAction } from "@/server/join-links/join-link-actions";
 import type { JoinLinkSummary } from "@/server/join-links/join-link-repository";
 
@@ -53,10 +52,12 @@ export function JoinLinksTab({
   address: string;
   data: JoinLinksTabData;
 }) {
-  const router = useRouter();
+  const { refresh, refreshing } = useRefresh();
   const [viewing, setViewing] = React.useState<JoinLinkSummary | null>(null);
   const [revoking, setRevoking] = React.useState<JoinLinkSummary | null>(null);
-  const [busy, setBusy] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  // Also busy until the refreshed data is on screen.
+  const busy = saving || refreshing;
   const [error, setError] = React.useState<string | null>(null);
 
   if (data.links === null) return <ListEmpty>No se pudieron cargar los links de acceso.</ListEmpty>;
@@ -65,16 +66,15 @@ export function JoinLinksTab({
   const current = data.links.find((link) => link.status === "active");
 
   async function confirmRevoke(link: JoinLinkSummary) {
-    setBusy(true);
+    setSaving(true);
     setError(null);
     const result = await revokeJoinLinkAction(link.id);
-    setBusy(false);
+    setSaving(false);
     if (!result.success) {
       setError(result.error);
       return;
     }
-    setRevoking(null);
-    router.refresh();
+    refresh(() => setRevoking(null));
   }
 
   const createButton = data.canManage && (

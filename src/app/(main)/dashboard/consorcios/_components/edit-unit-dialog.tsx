@@ -2,8 +2,6 @@
 
 import * as React from "react";
 
-import { useRouter } from "next/navigation";
-
 import { Loader2, Pencil } from "lucide-react";
 
 import {
@@ -27,16 +25,19 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useRefresh } from "@/hooks/use-refresh";
 import { deleteUnitAction, updateUnitAction } from "@/server/communities/community-actions";
 import type { CommunityUnit } from "@/server/communities/community-repository";
 
 export function EditUnitDialog({ unit, canDelete }: { unit: CommunityUnit; canDelete: boolean }) {
-  const router = useRouter();
+  const { refresh, refreshing } = useRefresh();
   const [open, setOpen] = React.useState(false);
   const [number, setNumber] = React.useState("");
   const [floor, setFloor] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
-  const [busy, setBusy] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  // Also busy until the refreshed data is on screen.
+  const busy = saving || refreshing;
   const [confirmingDelete, setConfirmingDelete] = React.useState(false);
 
   function changeOpen(next: boolean) {
@@ -51,30 +52,31 @@ export function EditUnitDialog({ unit, canDelete }: { unit: CommunityUnit; canDe
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
-    setBusy(true);
+    setSaving(true);
     setError(null);
     const result = await updateUnitAction(unit.id, { number, floor });
-    setBusy(false);
+    setSaving(false);
     if (!result.success) {
       setError(result.error);
       return;
     }
-    setOpen(false);
-    router.refresh();
+    refresh(() => setOpen(false));
   }
 
   async function remove() {
-    setBusy(true);
+    setSaving(true);
     setError(null);
     const result = await deleteUnitAction(unit.id, unit.number ?? "");
-    setBusy(false);
-    setConfirmingDelete(false);
+    setSaving(false);
     if (!result.success) {
+      setConfirmingDelete(false);
       setError(result.error);
       return;
     }
-    setOpen(false);
-    router.refresh();
+    refresh(() => {
+      setConfirmingDelete(false);
+      setOpen(false);
+    });
   }
 
   return (

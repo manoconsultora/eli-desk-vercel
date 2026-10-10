@@ -2,8 +2,6 @@
 
 import * as React from "react";
 
-import { useRouter } from "next/navigation";
-
 import { Loader2, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -17,18 +15,21 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useRefresh } from "@/hooks/use-refresh";
 import { createUnitAction } from "@/server/communities/community-actions";
 
 // Stays open after each unit so several can be loaded in a row; the floor is kept for the next one.
 export function CreateUnitDialog({ communityId, communityName }: { communityId: string; communityName: string }) {
-  const router = useRouter();
+  const { refresh, refreshing } = useRefresh();
   const numberRef = React.useRef<HTMLInputElement>(null);
   const [open, setOpen] = React.useState(false);
   const [number, setNumber] = React.useState("");
   const [floor, setFloor] = React.useState("");
   const [created, setCreated] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
-  const [busy, setBusy] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  // Also busy until the refreshed data is on screen.
+  const busy = saving || refreshing;
 
   function changeOpen(next: boolean) {
     if (!next && busy) return;
@@ -43,19 +44,21 @@ export function CreateUnitDialog({ communityId, communityName }: { communityId: 
 
   async function create(event: React.FormEvent) {
     event.preventDefault();
-    setBusy(true);
+    setSaving(true);
     setError(null);
     setCreated(null);
     const result = await createUnitAction(communityId, { number, floor });
-    setBusy(false);
+    setSaving(false);
     if (!result.success) {
       setError(result.error);
       return;
     }
-    setCreated(number.trim());
-    setNumber("");
-    numberRef.current?.focus();
-    router.refresh();
+    const createdNumber = number.trim();
+    refresh(() => {
+      setCreated(createdNumber);
+      setNumber("");
+      numberRef.current?.focus();
+    });
   }
 
   return (

@@ -2,8 +2,6 @@
 
 import * as React from "react";
 
-import { useRouter } from "next/navigation";
-
 import { Eye, LayoutGrid, List } from "lucide-react";
 import { toast } from "sonner";
 
@@ -24,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useRefresh } from "@/hooks/use-refresh";
 import { addToBlacklistAction } from "@/server/resident-blacklist/resident-blacklist-actions";
 import { type BlacklistEntry, isBlacklisted } from "@/server/resident-blacklist/resident-blacklist-repository";
 import {
@@ -87,7 +86,7 @@ export function ResidentRequestsList({
   const [now] = React.useState(() => Date.now());
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const selected = requests.find((request) => request.id === selectedId) ?? null;
-  const router = useRouter();
+  const { refresh } = useRefresh();
   // Requests under review: only their own buttons lock, the rest of the grid stays usable.
   const [busyIds, setBusyIds] = React.useState<ReadonlySet<string>>(new Set());
   const isBusy = (request: ResidentRequest | null) => request !== null && busyIds.has(request.id);
@@ -101,24 +100,37 @@ export function ResidentRequestsList({
     action: () => ReturnType<typeof approveResidentRequestAction>,
     done: string,
   ) {
+    const release = () =>
+      setBusyIds((ids) => {
+        const next = new Set(ids);
+        next.delete(request.id);
+        return next;
+      });
     setBusyIds((ids) => new Set(ids).add(request.id));
-    const result = await action();
-    setBusyIds((ids) => {
-      const next = new Set(ids);
-      next.delete(request.id);
-      return next;
-    });
+    let result: Awaited<ReturnType<typeof action>>;
+    try {
+      result = await action();
+    } catch {
+      // No answer at all, e.g. a deploy since the page loaded left it with outdated actions.
+      release();
+      toast.error("No se pudo completar. Recargá la página y probá de nuevo.");
+      return;
+    }
     if (!result.success) {
+      release();
       toast.error(result.error);
       return;
     }
-    toast.success(done);
-    // Another request may be open by now; close only what belongs to this one.
-    const closeIfReviewed = (id: string | null) => (id === request.id ? null : id);
-    setRejectId(closeIfReviewed);
-    setBlacklistId(closeIfReviewed);
-    setSelectedId(closeIfReviewed);
-    router.refresh();
+    // The request stays locked until the refreshed list is on screen, so it can't be reviewed twice.
+    refresh(() => {
+      release();
+      toast.success(done);
+      // Another request may be open by now; close only what belongs to this one.
+      const closeIfReviewed = (id: string | null) => (id === request.id ? null : id);
+      setRejectId(closeIfReviewed);
+      setBlacklistId(closeIfReviewed);
+      setSelectedId(closeIfReviewed);
+    });
   }
 
   const approve = (request: ResidentRequest) =>
