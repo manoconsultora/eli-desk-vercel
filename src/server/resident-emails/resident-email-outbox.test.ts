@@ -169,3 +169,20 @@ test("reclama un mail trabado en sending solo si nadie lo tocó desde que se ley
   ]);
   assert.deepEqual(requests[1].headers["Idempotency-Key"], "eli-resident-email-m2", "Resend descarta el duplicado");
 });
+
+test("un mail con un tipo desconocido queda failed para reintentarlo, sin mandarse", async () => {
+  const { admin, updates } = createFakeAdmin();
+  const { send, requests } = fakeResend();
+  ROWS.push({ ...ROWS[0], id: "m3", template_key: "resident_something_new" as (typeof ROWS)[0]["template_key"] });
+
+  try {
+    await drainResidentEmailOutbox(admin, CONFIG, send);
+  } finally {
+    ROWS.pop();
+  }
+
+  assert.equal(requests.filter((request) => request.headers["Idempotency-Key"] === "eli-resident-email-m3").length, 0);
+  const [, failed] = updates("m3");
+  assert.equal(failed.status, "failed");
+  assert.match(String(failed.last_error), /unknown_template/);
+});

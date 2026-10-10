@@ -16,3 +16,10 @@ test("el mail del código escapa el HTML del payload", () => {
 
   assert.doesNotMatch(email.html, /<b>|<i>/);
 });
+
+test("un tipo de mail desconocido falla en vez de mandarse como rechazo", () => {
+  // The outbox can hold a template a newer database added before this Desk knows it.
+  const unknown = "resident_something_new" as Parameters<typeof renderResidentEmail>[0];
+
+  assert.throws(() => renderResidentEmail(unknown, {}), /unknown_template:resident_something_new/);
+});

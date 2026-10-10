@@ -33,8 +33,13 @@ export function renderResidentEmail(key: ResidentEmailTemplateKey, payload: Resi
       html: `<main><p>Hola ${name}:</p><p>La administración aprobó tu solicitud de alta en ${building}${unit}.</p></main>`,
     };
   }
-  return {
-    subject: "Tu solicitud de alta en ELI no fue aprobada",
-    html: `<main><p>Hola ${name}:</p><p>La administración no aprobó tu solicitud de alta en ${building}${unit}.</p></main>`,
-  };
+  if (key === "resident_request_rejected") {
+    return {
+      subject: "Tu solicitud de alta en ELI no fue aprobada",
+      html: `<main><p>Hola ${name}:</p><p>La administración no aprobó tu solicitud de alta en ${building}${unit}.</p></main>`,
+    };
+  }
+  // A template the database added before this Desk knows it: the drain marks the email failed and
+  // retries it, so it goes out once Desk is deployed instead of being sent as another email.
+  throw new Error(`unknown_template:${String(key)}`);
 }
