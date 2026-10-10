@@ -2,8 +2,6 @@
 
 import * as React from "react";
 
-import { useRouter } from "next/navigation";
-
 import { Link2, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useRefresh } from "@/hooks/use-refresh";
 import { createJoinLinkAction, revokeJoinLinkAction } from "@/server/join-links/join-link-actions";
 import type { CreatedJoinLink } from "@/server/join-links/join-link-repository";
 
@@ -32,12 +31,14 @@ export function CreateJoinLinkDialog({
   communityName: string;
   address: string;
 }) {
-  const router = useRouter();
+  const { refresh, refreshing } = useRefresh();
   const [open, setOpen] = React.useState(false);
   const [step, setStep] = React.useState<Step>("confirm");
   const [created, setCreated] = React.useState<CreatedJoinLink | null>(null);
   const [error, setError] = React.useState<string | null>(null);
-  const [busy, setBusy] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  // Also busy until the refreshed data is on screen.
+  const busy = saving || refreshing;
 
   // While a request runs the dialog stays open, because the request can't be cancelled
   // and its result has to be seen.
@@ -52,31 +53,33 @@ export function CreateJoinLinkDialog({
   }
 
   async function create() {
-    setBusy(true);
+    setSaving(true);
     setError(null);
     const result = await createJoinLinkAction(communityId);
-    setBusy(false);
+    setSaving(false);
     if (!result.success) {
       setError(result.error);
       return;
     }
-    setCreated(result.data);
-    setStep("created");
-    router.refresh();
+    refresh(() => {
+      setCreated(result.data);
+      setStep("created");
+    });
   }
 
   async function revoke(linkId: string) {
-    setBusy(true);
+    setSaving(true);
     setError(null);
     const result = await revokeJoinLinkAction(linkId);
-    setBusy(false);
+    setSaving(false);
     if (!result.success) {
       setError(result.error);
       return;
     }
-    setCreated(null);
-    setStep("revoked");
-    router.refresh();
+    refresh(() => {
+      setCreated(null);
+      setStep("revoked");
+    });
   }
 
   const descriptions: Record<Step, string> = {

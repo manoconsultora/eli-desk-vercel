@@ -2,8 +2,6 @@
 
 import * as React from "react";
 
-import { useRouter } from "next/navigation";
-
 import { Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
@@ -18,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useRefresh } from "@/hooks/use-refresh";
 import { correctResidentRequestEmailAction } from "@/server/resident-requests/resident-request-actions";
 import type { ResidentRequest } from "@/server/resident-requests/resident-request-repository";
 
@@ -33,23 +32,13 @@ const RESENT: Record<string, string> = {
 };
 
 export function CorrectEmailDialog({ request }: { request: ResidentRequest }) {
-  const router = useRouter();
+  const { refresh, refreshing } = useRefresh();
   const [open, setOpen] = React.useState(false);
   const [email, setEmail] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
-  const [refreshing, startRefresh] = React.useTransition();
-  const [saved, setSaved] = React.useState<string | null>(null);
-  const saving = busy || saved !== null;
-
-  // Closes once the refreshed request reached the drawer, so it never shows the old email.
-  React.useEffect(() => {
-    if (saved === null || refreshing) return;
-    setOpen(false);
-    setSaved(null);
-    const resent = RESENT[request.status];
-    toast.success(resent ? `Email corregido. Reenviamos ${resent} a ${saved}.` : "Email corregido.");
-  }, [saved, refreshing, request.status]);
+  // Also busy until the refreshed request is in the drawer, so it never shows the old email.
+  const saving = busy || refreshing;
 
   function changeOpen(next: boolean) {
     if (!next && saving) return;
@@ -71,8 +60,12 @@ export function CorrectEmailDialog({ request }: { request: ResidentRequest }) {
       return;
     }
     // The database stores it trimmed and lowercased.
-    setSaved(email.trim().toLowerCase());
-    startRefresh(() => router.refresh());
+    const saved = email.trim().toLowerCase();
+    const resent = RESENT[request.status];
+    refresh(() => {
+      setOpen(false);
+      toast.success(resent ? `Email corregido. Reenviamos ${resent} a ${saved}.` : "Email corregido.");
+    });
   }
 
   return (
