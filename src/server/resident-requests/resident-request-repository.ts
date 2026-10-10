@@ -1,6 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { ConsorcioScope } from "@/lib/access/feature-scope-types";
+import {
+  type EmailDelivery,
+  emailDeliveryOf,
+  type OutboxDeliveryRow,
+} from "@/server/resident-emails/resident-email-delivery";
 
 export type ResidentRequest = {
   id: string;
@@ -17,6 +22,8 @@ export type ResidentRequest = {
   status: string;
   rejectionReason: string | null;
   createdAt: string;
+  // The acceptance or rejection email; null while the request is pending.
+  emailDelivery: EmailDelivery | null;
 };
 
 type RequestRow = {
@@ -64,10 +71,19 @@ export async function listResidentRequests(
     communitiesQuery = communitiesQuery.in("id", scope.consorcioIds);
   }
 
-  const [requests, units, communities] = await Promise.all([
+  // RLS returns the emails of the requests this user can read.
+  const emailsQuery = supabase
+    .from("resident_email_outbox")
+    .select("request_id, recipient_email, status, attempts, sent_at, created_at, delivery_status, delivery_event_at")
+    .eq("organization_id", organizationId)
+    .not("request_id", "is", null)
+    .order("created_at", { ascending: false });
+
+  const [requests, units, communities, emails] = await Promise.all([
     requestsQuery.order("created_at", { ascending: false }),
     unitsQuery,
     communitiesQuery,
+    emailsQuery,
   ]);
   const unitRows = throwOnError<UnitRow[]>(units);
   const unitById = new Map(unitRows.map((unit) => [unit.id, unit]));
@@ -76,21 +92,30 @@ export async function listResidentRequests(
     unitCountByCommunity.set(unit.edificio_id, (unitCountByCommunity.get(unit.edificio_id) ?? 0) + 1);
   }
   const communityById = new Map(throwOnError<CommunityRow[]>(communities).map((row) => [row.id, row]));
+  // Newest first, so the first email seen for a request is its latest.
+  const emailByRequest = new Map<string, OutboxDeliveryRow>();
+  for (const email of throwOnError<OutboxDeliveryRow[]>(emails)) {
+    if (!emailByRequest.has(email.request_id)) emailByRequest.set(email.request_id, email);
+  }
 
-  return throwOnError<RequestRow[]>(requests).map((row) => ({
-    id: row.id,
-    name: `${row.first_name} ${row.last_name}`.trim(),
-    firstName: row.first_name,
-    lastName: row.last_name,
-    phone: row.phone,
-    email: row.email,
-    communityName: communityById.get(row.edificio_id)?.nombre ?? "Sin consorcio",
-    communityAddress: communityById.get(row.edificio_id)?.direccion ?? null,
-    communityUnitCount: unitCountByCommunity.get(row.edificio_id) ?? 0,
-    unitNumber: unitById.get(row.unidad_id)?.numero ?? null,
-    relationship: row.relationship_type_code,
-    status: row.status,
-    rejectionReason: row.rejection_reason,
-    createdAt: row.created_at,
-  }));
+  return throwOnError<RequestRow[]>(requests).map((row) => {
+    const email = emailByRequest.get(row.id);
+    return {
+      id: row.id,
+      name: `${row.first_name} ${row.last_name}`.trim(),
+      firstName: row.first_name,
+      lastName: row.last_name,
+      phone: row.phone,
+      email: row.email,
+      communityName: communityById.get(row.edificio_id)?.nombre ?? "Sin consorcio",
+      communityAddress: communityById.get(row.edificio_id)?.direccion ?? null,
+      communityUnitCount: unitCountByCommunity.get(row.edificio_id) ?? 0,
+      unitNumber: unitById.get(row.unidad_id)?.numero ?? null,
+      relationship: row.relationship_type_code,
+      status: row.status,
+      rejectionReason: row.rejection_reason,
+      createdAt: row.created_at,
+      emailDelivery: email ? emailDeliveryOf(email) : null,
+    };
+  });
 }

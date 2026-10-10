@@ -17,7 +17,7 @@ function createFakeClient(rows: Record<string, Record<string, unknown>[]>) {
       calls.push({ table, method: "from", args: [] });
       let data = rows[table] ?? [];
       const builder = {} as Record<string, unknown>;
-      for (const method of ["select", "eq", "order"]) {
+      for (const method of ["select", "eq", "not", "order"]) {
         builder[method] = (...args: unknown[]) => {
           calls.push({ table, method, args });
           return builder;
@@ -76,6 +76,29 @@ const ROWS = {
     { id: "e1", nombre: "Ugarte 2200", direccion: "Ugarte 2200, CABA" },
     { id: "e2", nombre: "Sandbox Belgrano", direccion: null },
   ],
+  // Newest first, as the query orders them.
+  resident_email_outbox: [
+    {
+      request_id: "q2",
+      recipient_email: "b@x.com",
+      status: "sent",
+      attempts: 1,
+      sent_at: "2026-09-23T11:00:00Z",
+      created_at: "2026-09-23T11:00:00Z",
+      delivery_status: "bounced",
+      delivery_event_at: "2026-09-23T11:01:00Z",
+    },
+    {
+      request_id: "q2",
+      recipient_email: "viejo@x.com",
+      status: "sent",
+      attempts: 1,
+      sent_at: "2026-09-22T11:00:00Z",
+      created_at: "2026-09-22T11:00:00Z",
+      delivery_status: "delivered",
+      delivery_event_at: "2026-09-22T11:01:00Z",
+    },
+  ],
 };
 
 test("con todos los consorcios devuelve todas las solicitudes con consorcio y unidad", async () => {
@@ -98,12 +121,27 @@ test("con todos los consorcios devuelve todas las solicitudes con consorcio y un
     status: "PENDING_VERIFICATION",
     rejectionReason: null,
     createdAt: "2026-09-24T10:00:00Z",
+    emailDelivery: null,
   });
   assert.deepEqual(
     requests.map((request) => [request.name, request.communityName, request.unitNumber]),
     [
       ["Ana Paz", "Ugarte 2200", "1A"],
       ["Beto Ruiz", "Sandbox Belgrano", "7B"],
+    ],
+  );
+});
+
+test("cada solicitud trae el estado de su último mail", async () => {
+  const { client } = createFakeClient(ROWS);
+
+  const requests = await listResidentRequests(client, ORGANIZATION_ID, { kind: "all_consorcios" });
+
+  assert.deepEqual(
+    requests.map((request) => [request.id, request.emailDelivery?.state ?? null, request.emailDelivery?.recipient]),
+    [
+      ["q1", null, undefined],
+      ["q2", "not_delivered", "b@x.com"],
     ],
   );
 });
@@ -133,7 +171,7 @@ test("filtra todas las tablas por organization_id", async () => {
 
   await listResidentRequests(client, ORGANIZATION_ID, { kind: "all_consorcios" });
 
-  for (const table of ["resident_onboarding_requests", "unidades", "edificios"]) {
+  for (const table of ["resident_onboarding_requests", "unidades", "edificios", "resident_email_outbox"]) {
     const orgFilter = calls.find(
       (call) => call.table === table && call.method === "eq" && call.args[0] === "organization_id",
     );
