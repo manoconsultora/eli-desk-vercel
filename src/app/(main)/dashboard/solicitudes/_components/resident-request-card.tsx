@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { ResidentRequest } from "@/server/resident-requests/resident-request-repository";
 
+import { EmailDeliveryNote } from "./email-delivery";
 import { formatRequestDate, isNewRequest, requestedAgo } from "./request-time";
 
 export function ResidentRequestCard({
@@ -56,9 +57,12 @@ export function ResidentRequestCard({
       </div>
 
       <ul className="space-y-2 text-muted-foreground text-sm">
-        <li className="flex items-center gap-2.5">
-          <Mail className="size-4 shrink-0" />
-          <span className="truncate">{request.email}</span>
+        <li className="flex items-start gap-2.5">
+          <Mail className="mt-0.5 size-4 shrink-0" />
+          <span className="min-w-0">
+            <span className="block truncate">{request.email}</span>
+            <EmailDeliveryNote delivery={request.emailDelivery} />
+          </span>
         </li>
         <li className="flex items-center gap-2.5">
           <Phone className="size-4 shrink-0" />

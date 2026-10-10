@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import type { ResidentRequest } from "@/server/resident-requests/resident-request-repository";
 
+import { EmailDeliveryDetail } from "./email-delivery";
 import { formatRequestDate, requestedAgo } from "./request-time";
 import { ReviewButton } from "./review-buttons";
 
@@ -157,6 +158,13 @@ function RequestDetail({
             <h3 className="font-semibold">Motivo del rechazo</h3>
             <p className="text-muted-foreground text-sm">{request.rejectionReason ?? "Sin motivo."}</p>
           </section>
+        </>
+      )}
+
+      {request.emailDelivery && (
+        <>
+          <Separator />
+          <EmailDeliveryDetail delivery={request.emailDelivery} />
         </>
       )}
     </div>
