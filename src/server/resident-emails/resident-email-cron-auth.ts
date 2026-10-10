@@ -7,6 +7,8 @@ export function isResidentEmailCronAuthorized(
   authorization: string | null,
   secret = process.env.RESIDENT_EMAIL_CRON_SECRET ?? "",
 ) {
-  if (!secret || !authorization) return false;
-  return timingSafeEqual(digest(authorization), digest(`Bearer ${secret}`));
+  // Trimmed like the Resend variables: a pasted value can carry a trailing newline.
+  const expected = secret.trim();
+  if (!expected || !authorization) return false;
+  return timingSafeEqual(digest(authorization), digest(`Bearer ${expected}`));
 }
