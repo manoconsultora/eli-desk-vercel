@@ -1,10 +1,14 @@
 // Provisional copy: replace subject and body when the final texts are ready.
-export type ResidentEmailTemplateKey = "resident_request_approved" | "resident_request_rejected";
+export type ResidentEmailTemplateKey =
+  | "resident_request_approved"
+  | "resident_request_rejected"
+  | "resident_email_verification";
 
 export type ResidentEmailPayload = {
   first_name?: string;
   edificio_nombre?: string;
   unidad_numero?: string;
+  code?: string;
 };
 
 function escapeHtml(value: string) {
@@ -16,6 +20,13 @@ export function renderResidentEmail(key: ResidentEmailTemplateKey, payload: Resi
   const building = escapeHtml(payload.edificio_nombre ?? "tu edificio");
   const unit = payload.unidad_numero ? ` (unidad ${escapeHtml(payload.unidad_numero)})` : "";
 
+  if (key === "resident_email_verification") {
+    const code = escapeHtml(payload.code ?? "");
+    return {
+      subject: `Tu código de verificación de ELI: ${payload.code ?? ""}`,
+      html: `<main><p>Tu código para pedir el alta en ${building} es:</p><p style="font-size:28px;font-weight:bold;letter-spacing:4px">${code}</p><p>Vence en 10 minutos. Si no lo pediste, ignorá este email.</p></main>`,
+    };
+  }
   if (key === "resident_request_approved") {
     return {
       subject: `Ya sos parte de ${payload.edificio_nombre ?? "tu edificio"} en ELI`,
