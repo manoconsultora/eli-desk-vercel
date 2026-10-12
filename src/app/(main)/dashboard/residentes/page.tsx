@@ -49,7 +49,7 @@ export default async function ResidentesPage() {
         <p className="mt-1 text-muted-foreground">Residentes de tus consorcios, con sus unidades.</p>
       </header>
 
-      <ResidentsList residents={residents} canEnd={context.authenticated && context.role !== "VIEWER"} />
+      <ResidentsList residents={residents} canManage={context.authenticated && context.role !== "VIEWER"} />
     </div>
   );
 }
