@@ -34,10 +34,11 @@ import { useRefresh } from "@/hooks/use-refresh";
 import { endResidentUnitLinkAction } from "@/server/residents/resident-actions";
 import type { ResidentSummary, ResidentUnit } from "@/server/residents/resident-repository";
 
+import { EditResidentDialog } from "./edit-resident-dialog";
 import { ALL, communityOptions, filterResidents, type StatusFilter } from "./filter-residents";
 
 // Same list design as Solicitudes (resident-requests-list).
-export function ResidentsList({ residents, canEnd }: { residents: ResidentSummary[]; canEnd: boolean }) {
+export function ResidentsList({ residents, canManage }: { residents: ResidentSummary[]; canManage: boolean }) {
   const [search, setSearch] = React.useState("");
   const [communityId, setCommunityId] = React.useState(ALL);
   const [status, setStatus] = React.useState<StatusFilter>(ALL);
@@ -119,7 +120,10 @@ export function ResidentsList({ residents, canEnd }: { residents: ResidentSummar
             {visibleResidents.map((resident) => (
               <TableRow key={resident.id}>
                 <ListCell>
-                  <InitialsAvatar name={resident.name} index={residents.indexOf(resident)} />
+                  <div className="flex items-center gap-1">
+                    <InitialsAvatar name={resident.name} index={residents.indexOf(resident)} />
+                    {canManage && <EditResidentDialog resident={resident} />}
+                  </div>
                 </ListCell>
                 <ListCell muted>
                   <p>{resident.phone ?? "Sin teléfono"}</p>
@@ -142,7 +146,7 @@ export function ResidentsList({ residents, canEnd }: { residents: ResidentSummar
                             Unidad {unit.unitNumber ?? "s/n"}
                             {unit.isPrimary && " · Principal"}
                           </p>
-                          {canEnd && (
+                          {canManage && (
                             <Button
                               type="button"
                               variant="link"
