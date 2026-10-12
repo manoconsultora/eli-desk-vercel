@@ -37,7 +37,7 @@ export function UnitsTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+      <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
         <ListSearch
           aria-label="Buscar unidad o residente"
           placeholder="Buscar unidad o residente…"

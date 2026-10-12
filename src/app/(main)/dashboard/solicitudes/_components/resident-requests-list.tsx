@@ -162,9 +162,10 @@ export function ResidentRequestsList({
   return (
     <div className="space-y-4">
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="h-auto w-full flex-wrap justify-start md:w-fit">
+        {/* One row that scrolls sideways on narrow screens; the list keeps its fixed height. */}
+        <TabsList className="w-full justify-start overflow-x-auto [scrollbar-width:none] md:w-fit">
           {TABS.map((item) => (
-            <TabsTrigger key={item.status} value={item.status} className="gap-2 px-3 py-1.5">
+            <TabsTrigger key={item.status} value={item.status} className="flex-none gap-2 px-3 py-1.5">
               <span aria-hidden className={`size-2 rounded-full ${item.dot}`} />
               {item.label}
               <Badge variant="secondary">
@@ -172,7 +173,7 @@ export function ResidentRequestsList({
               </Badge>
             </TabsTrigger>
           ))}
-          <TabsTrigger value={BLACKLIST_TAB} className="gap-2 px-3 py-1.5">
+          <TabsTrigger value={BLACKLIST_TAB} className="flex-none gap-2 px-3 py-1.5">
             <span aria-hidden className="size-2 rounded-full bg-slate-500" />
             Blacklist
             <Badge variant="secondary">{visibleBlacklist?.length ?? 0}</Badge>
@@ -180,7 +181,7 @@ export function ResidentRequestsList({
         </TabsList>
       </Tabs>
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+      <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
         <ListSearch
           aria-label="Buscar solicitud"
           placeholder={

@@ -33,7 +33,7 @@ function initials(name: string) {
 
 export function ListSearch(props: React.ComponentProps<typeof Input>) {
   return (
-    <div className="relative w-full md:max-w-120 md:flex-1">
+    <div className="relative w-full md:max-w-120 md:min-w-64 md:flex-1">
       <Search className="-translate-y-1/2 absolute top-1/2 left-4 size-4 text-muted-foreground" />
       <Input className="h-11 rounded-lg pl-11" {...props} />
     </div>
@@ -42,10 +42,10 @@ export function ListSearch(props: React.ComponentProps<typeof Input>) {
 
 export function FilterSelect({ label, ...props }: React.ComponentProps<"select"> & { label: string }) {
   return (
-    <div className="relative">
+    <div className="relative w-full md:w-auto">
       <select
         aria-label={label}
-        className="h-11 appearance-none rounded-lg border bg-background pr-10 pl-4 font-medium text-sm shadow-xs"
+        className="h-11 w-full appearance-none rounded-lg border bg-background pr-10 pl-4 font-medium text-sm shadow-xs"
         {...props}
       />
       <ChevronDown className="-translate-y-1/2 pointer-events-none absolute top-1/2 right-3.5 size-4" />
