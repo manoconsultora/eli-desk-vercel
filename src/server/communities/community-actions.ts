@@ -3,7 +3,7 @@
 import { getRequestAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
 
-import { createUnit, deleteUnit, updateUnit } from "./community-repository";
+import { createUnit, deleteUnit, importUnits, updateUnit } from "./community-repository";
 
 type ActionResult = { success: true } | { success: false; error: string };
 
@@ -42,6 +42,41 @@ export async function createUnitAction(
     };
   } catch {
     return { success: false, error: "No se pudo cargar la unidad." };
+  }
+}
+
+const MAX_IMPORT_UNITS = 500;
+
+// The dialog already shows a preview; this checks again because the action can be called directly.
+export async function importUnitsAction(
+  communityId: string,
+  units: { number: string; floor: string | null }[],
+): Promise<{ success: true; created: number } | { success: false; error: string }> {
+  if (!communityId) return { success: false, error: "Elegí un consorcio." };
+  const cleaned = units.map((unit) => ({ number: unit.number.trim(), floor: unit.floor?.trim() || null }));
+  if (cleaned.length === 0) return { success: false, error: "No hay unidades para cargar." };
+  if (cleaned.length > MAX_IMPORT_UNITS) {
+    return { success: false, error: `Se pueden cargar hasta ${MAX_IMPORT_UNITS} unidades por vez.` };
+  }
+  if (cleaned.some((unit) => !unit.number)) return { success: false, error: "Hay unidades sin número." };
+
+  try {
+    const context = await getRequestAuthContext();
+    if (
+      !context.authenticated ||
+      context.userType !== "tenant" ||
+      !context.organizationId ||
+      context.role === "VIEWER"
+    ) {
+      return { success: false, error: "No tenés permiso para cargar unidades." };
+    }
+
+    const supabase = await createClient();
+    const result = await importUnits(supabase, context.organizationId, communityId, cleaned);
+    if (result.ok) return { success: true, created: result.created };
+    return { success: false, error: "No tenés permiso para cargar unidades en este consorcio." };
+  } catch {
+    return { success: false, error: "No se pudieron cargar las unidades." };
   }
 }
 
