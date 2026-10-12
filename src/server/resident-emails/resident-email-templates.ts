@@ -18,25 +18,30 @@ const MANO_LOGO = `${ASSETS}/isologo_mano_gy.png`;
 
 const TEXT = "color:#555B65;font-size:16px;line-height:1.7;margin:0 0 16px;";
 
-function escapeHtml(value: string) {
+export function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
 }
 
-type EmailContent = {
+export type EmailContent = {
   subject: string;
   title: string;
   // Already escaped HTML, one per paragraph.
   paragraphs: string[];
   code?: string;
+  // Already escaped label and URL.
+  button?: { label: string; url: string };
   note?: string;
   footer: string;
   text: string;
 };
 
-function layout({ title, paragraphs, code, note, footer }: EmailContent) {
+export function layout({ title, paragraphs, code, button, note, footer }: EmailContent) {
   const body = paragraphs.map((paragraph) => `<p style="${TEXT}">${paragraph}</p>`).join("");
   const codeBlock = code
     ? `<p style="margin:10px 0 26px;text-align:center;font-size:34px;font-weight:700;letter-spacing:8px;color:#2346DD;">${code}</p>`
+    : "";
+  const buttonBlock = button
+    ? `<p style="margin:10px 0 26px;text-align:center;"><a href="${button.url}" style="display:inline-block;background-color:#2346DD;color:#FFFFFF;font-size:16px;font-weight:700;text-decoration:none;padding:14px 28px;border-radius:8px;">${button.label}</a></p>`
     : "";
   const noteBlock = note ? `<p style="color:#7A808A;font-size:14px;line-height:1.6;margin:0 0 16px;">${note}</p>` : "";
   return `<!DOCTYPE html>
@@ -49,7 +54,7 @@ function layout({ title, paragraphs, code, note, footer }: EmailContent) {
 <img src="${ELI_LOGO}" alt="ELI" width="150" style="display:block;width:150px;max-width:100%;height:auto;border:0;" />
 </td></tr></table>
 <h1 style="color:#414650;font-size:25px;line-height:1.3;font-weight:700;margin:0 0 26px;">${title}</h1>
-${body}${codeBlock}${noteBlock}
+${body}${codeBlock}${buttonBlock}${noteBlock}
 <p style="color:#9A9FA8;font-size:12px;line-height:1.6;margin:40px 0 24px;">${footer}</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">
 <img src="${MANO_LOGO}" alt="MANO Consultora" width="82" style="display:block;width:92px;max-width:100%;height:auto;border:0;" />
