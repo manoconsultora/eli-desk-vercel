@@ -4,6 +4,8 @@ import * as React from "react";
 
 import Link from "next/link";
 
+import { toast } from "sonner";
+
 import {
   FilterSelect,
   InitialsAvatar,
@@ -16,17 +18,52 @@ import {
   Pill,
 } from "@/app/(main)/dashboard/_components/list-table";
 import { relationshipLabel, relationshipTone } from "@/app/(main)/dashboard/consorcios/_components/community-labels";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
-import type { ResidentSummary } from "@/server/residents/resident-repository";
+import { useRefresh } from "@/hooks/use-refresh";
+import { endResidentUnitLinkAction } from "@/server/residents/resident-actions";
+import type { ResidentSummary, ResidentUnit } from "@/server/residents/resident-repository";
 
 import { ALL, communityOptions, filterResidents, type StatusFilter } from "./filter-residents";
 
 // Same list design as Solicitudes (resident-requests-list).
-export function ResidentsList({ residents }: { residents: ResidentSummary[] }) {
+export function ResidentsList({ residents, canEnd }: { residents: ResidentSummary[]; canEnd: boolean }) {
   const [search, setSearch] = React.useState("");
   const [communityId, setCommunityId] = React.useState(ALL);
   const [status, setStatus] = React.useState<StatusFilter>(ALL);
   const visibleResidents = filterResidents(residents, { search, communityId, status });
+  const { refreshing, runAction } = useRefresh();
+  const [ending, setEnding] = React.useState<{ resident: ResidentSummary; unit: ResidentUnit } | null>(null);
+  // Busy until the updated list is on screen.
+  const busy = refreshing;
+
+  function end({ resident, unit }: { resident: ResidentSummary; unit: ResidentUnit }) {
+    runAction(
+      () => endResidentUnitLinkAction(unit.linkId),
+      (result) => {
+        if (!result) {
+          toast.error("No se pudo completar. Recargá la página y probá de nuevo.");
+          return;
+        }
+        if (!result.success) {
+          toast.error(result.error);
+          return;
+        }
+        toast.success(`${resident.name} ya no es residente de la unidad ${unit.unitNumber ?? "s/n"}.`);
+        setEnding(null);
+      },
+    );
+  }
 
   if (residents.length === 0) {
     return <ListEmpty>Todavía no hay residentes cargados.</ListEmpty>;
@@ -105,6 +142,18 @@ export function ResidentsList({ residents }: { residents: ResidentSummary[] }) {
                             Unidad {unit.unitNumber ?? "s/n"}
                             {unit.isPrimary && " · Principal"}
                           </p>
+                          {canEnd && (
+                            <Button
+                              type="button"
+                              variant="link"
+                              size="sm"
+                              className="h-auto p-0 text-muted-foreground text-xs"
+                              disabled={busy}
+                              onClick={() => setEnding({ resident, unit })}
+                            >
+                              Dar de baja
+                            </Button>
+                          )}
                         </li>
                       ))}
                     </ul>
@@ -127,6 +176,31 @@ export function ResidentsList({ residents }: { residents: ResidentSummary[] }) {
           </TableBody>
         </ListTable>
       )}
+
+      <AlertDialog open={ending !== null} onOpenChange={(open) => !open && !busy && setEnding(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Dar de baja de la unidad</AlertDialogTitle>
+            <AlertDialogDescription>
+              {ending?.resident.name} deja de ser residente de la unidad {ending?.unit.unitNumber ?? "s/n"} de{" "}
+              {ending?.unit.communityName}. Si no tiene otras unidades, queda inactivo y el bot deja de reconocerlo. Si
+              vuelve, puede pedir el alta de nuevo por Join.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={busy}
+              onClick={(event) => {
+                event.preventDefault();
+                if (ending) end(ending);
+              }}
+            >
+              {busy ? "Dando de baja…" : "Dar de baja"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

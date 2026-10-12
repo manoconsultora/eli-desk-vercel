@@ -44,8 +44,8 @@ const ROWS = {
     { id: "r3", nombre_completo: "Caro", telefono: null, email: null, activo: true },
   ],
   resident_unit_links: [
-    { residente_id: "r1", unidad_id: "u1", relationship_type: "propietario", is_primary: true },
-    { residente_id: "r2", unidad_id: "u2", relationship_type: "inquilino", is_primary: false },
+    { id: "l1", residente_id: "r1", unidad_id: "u1", relationship_type: "propietario", is_primary: true },
+    { id: "l2", residente_id: "r2", unidad_id: "u2", relationship_type: "inquilino", is_primary: false },
   ],
   unidades: [
     { id: "u1", numero: "1A", edificio_id: "e1" },
@@ -82,6 +82,7 @@ test("con consorcios asignados solo devuelve residentes de unidades de esos cons
     ["r1"],
   );
   assert.deepEqual(residents[0].units[0], {
+    linkId: "l1",
     unitId: "u1",
     unitNumber: "1A",
     communityId: "e1",
