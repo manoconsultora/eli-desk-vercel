@@ -1,5 +1,7 @@
 import type * as React from "react";
 
+import Link from "next/link";
+
 import { Ban, Building2, Home, Mail, Phone, User, Users } from "lucide-react";
 
 import { Initials, Pill, type Tone } from "@/app/(main)/dashboard/_components/list-table";
@@ -9,7 +11,6 @@ import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import type { ResidentRequest } from "@/server/resident-requests/resident-request-repository";
 
-import { CorrectEmailDialog } from "./correct-email-dialog";
 import { EmailDeliveryDetail } from "./email-delivery";
 import { formatRequestDate, requestedAgo } from "./request-time";
 import { ReviewButton } from "./review-buttons";
@@ -19,9 +20,6 @@ const STATUS: Record<string, { label: string; tone: Tone }> = {
   APPROVED: { label: "Solicitud aceptada", tone: "green" },
   REJECTED: { label: "Solicitud rechazada", tone: "red" },
 };
-
-// The statuses the database lets reviewers correct the email of.
-const CORRECTABLE = ["PENDING_VERIFICATION", "APPROVED", "REJECTED"];
 
 function DataRow({ icon: Icon, label, children }: { icon: typeof User; label: string; children: React.ReactNode }) {
   return (
@@ -119,10 +117,7 @@ function RequestDetail({
             {request.lastName}
           </DataRow>
           <DataRow icon={Mail} label="Email">
-            <span className="flex items-center gap-1">
-              <span className="truncate">{request.email}</span>
-              {CORRECTABLE.includes(request.status) && <CorrectEmailDialog request={request} />}
-            </span>
+            {request.email}
           </DataRow>
           <DataRow icon={Phone} label="Teléfono">
             {request.phone ?? "Sin teléfono"}
@@ -155,6 +150,21 @@ function RequestDetail({
         <>
           <Separator />
           <ReviewActions {...review} />
+        </>
+      )}
+
+      {request.status === "APPROVED" && (
+        <>
+          <Separator />
+          <section className="space-y-2">
+            <h3 className="font-semibold">Ya es residente</h3>
+            <p className="text-muted-foreground text-sm">
+              Estos son los datos con los que pidió el alta. Para cambiarlos, editalo en Residentes.
+            </p>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/dashboard/residentes">Ver en Residentes</Link>
+            </Button>
+          </section>
         </>
       )}
 
