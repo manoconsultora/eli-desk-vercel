@@ -31,14 +31,24 @@ import {
 import { Button } from "@/components/ui/button";
 import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import { useRefresh } from "@/hooks/use-refresh";
+import type { RelationshipOption, UnitOption } from "@/server/residents/add-resident-to-unit";
 import { endResidentUnitLinkAction } from "@/server/residents/resident-actions";
 import type { ResidentSummary, ResidentUnit } from "@/server/residents/resident-repository";
 
+import { AddResidentDialog } from "./add-resident-dialog";
 import { EditResidentDialog } from "./edit-resident-dialog";
 import { ALL, communityOptions, filterResidents, type StatusFilter } from "./filter-residents";
 
 // Same list design as Solicitudes (resident-requests-list).
-export function ResidentsList({ residents, canManage }: { residents: ResidentSummary[]; canManage: boolean }) {
+// `manage` is null for VIEWER: no edit, add or end actions.
+export function ResidentsList({
+  residents,
+  manage,
+}: {
+  residents: ResidentSummary[];
+  manage: { units: UnitOption[]; relationships: RelationshipOption[] } | null;
+}) {
+  const canManage = manage !== null;
   const [search, setSearch] = React.useState("");
   const [communityId, setCommunityId] = React.useState(ALL);
   const [status, setStatus] = React.useState<StatusFilter>(ALL);
@@ -146,7 +156,7 @@ export function ResidentsList({ residents, canManage }: { residents: ResidentSum
                             Unidad {unit.unitNumber ?? "s/n"}
                             {unit.isPrimary && " · Principal"}
                           </p>
-                          {canManage && (
+                          {manage && (
                             <Button
                               type="button"
                               variant="link"
@@ -161,6 +171,9 @@ export function ResidentsList({ residents, canManage }: { residents: ResidentSum
                         </li>
                       ))}
                     </ul>
+                  )}
+                  {manage && (
+                    <AddResidentDialog units={manage.units} relationships={manage.relationships} resident={resident} />
                   )}
                 </ListCell>
                 <ListCell>

@@ -1,8 +1,15 @@
 import { getRequestAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
 import { getDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
+import {
+  listRelationshipOptions,
+  listUnitOptions,
+  type RelationshipOption,
+  type UnitOption,
+} from "@/server/residents/add-resident-to-unit";
 import { listResidents, type ResidentSummary } from "@/server/residents/resident-repository";
 
+import { AddResidentDialog } from "./_components/add-resident-dialog";
 import { ResidentsList } from "./_components/residents-list";
 
 function MessageState({ title, body }: { title: string; body: string }) {
@@ -16,14 +23,23 @@ function MessageState({ title, body }: { title: string; body: string }) {
   );
 }
 
-async function loadResidents(): Promise<ResidentSummary[] | null> {
+type Manage = { units: UnitOption[]; relationships: RelationshipOption[] };
+
+// `manage` (units and relationships to add residents) only for roles that can change the padrón.
+async function loadResidents(): Promise<{ residents: ResidentSummary[]; manage: Manage | null } | null> {
   try {
     const access = await getDeskFeatureAccess("residentes");
     if (access?.consorcioScope == null) return null;
     const supabase = await createClient();
     const context = await getRequestAuthContext();
     if (!context.authenticated || context.userType !== "tenant" || !context.organizationId) return null;
-    return await listResidents(supabase, context.organizationId, access.consorcioScope);
+    const canManage = context.role !== "VIEWER";
+    const [residents, units, relationships] = await Promise.all([
+      listResidents(supabase, context.organizationId, access.consorcioScope),
+      canManage ? listUnitOptions(supabase, context.organizationId, access.consorcioScope) : [],
+      canManage ? listRelationshipOptions(supabase) : [],
+    ]);
+    return { residents, manage: canManage ? { units, relationships } : null };
   } catch {
     return null;
   }
@@ -31,25 +47,28 @@ async function loadResidents(): Promise<ResidentSummary[] | null> {
 
 export default async function ResidentesPage() {
   // Auth starts alongside access; the loaders below reuse the cached result.
-  const [access, context] = await Promise.all([getDeskFeatureAccess("residentes"), getRequestAuthContext()]);
+  const [access] = await Promise.all([getDeskFeatureAccess("residentes"), getRequestAuthContext()]);
   if (access?.state !== "resolved") {
     return <MessageState title="Sin acceso" body="No se puede mostrar el módulo con el acceso actual." />;
   }
 
-  const residents = await loadResidents();
-  if (residents === null) {
+  const loaded = await loadResidents();
+  if (loaded === null) {
     return <MessageState title="No se pudieron cargar los residentes" body="Probá de nuevo en unos minutos." />;
   }
 
   return (
     <div className="space-y-6">
-      <header>
-        <p className="font-medium text-muted-foreground text-sm">Administración</p>
-        <h1 className="font-semibold text-3xl tracking-tight">Residentes</h1>
-        <p className="mt-1 text-muted-foreground">Residentes de tus consorcios, con sus unidades.</p>
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="font-medium text-muted-foreground text-sm">Administración</p>
+          <h1 className="font-semibold text-3xl tracking-tight">Residentes</h1>
+          <p className="mt-1 text-muted-foreground">Residentes de tus consorcios, con sus unidades.</p>
+        </div>
+        {loaded.manage && <AddResidentDialog units={loaded.manage.units} relationships={loaded.manage.relationships} />}
       </header>
 
-      <ResidentsList residents={residents} canManage={context.authenticated && context.role !== "VIEWER"} />
+      <ResidentsList residents={loaded.residents} manage={loaded.manage} />
     </div>
   );
 }
