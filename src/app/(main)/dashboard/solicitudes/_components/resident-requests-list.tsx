@@ -58,7 +58,7 @@ const TABS = [
     dot: "bg-amber-500",
     empty: "No hay solicitudes pendientes.",
   },
-  { status: "APPROVED", label: "Activos", dot: "bg-green-500", empty: "Todavía no hay solicitudes aceptadas." },
+  { status: "APPROVED", label: "Aceptados", dot: "bg-green-500", empty: "Todavía no hay solicitudes aceptadas." },
   { status: "REJECTED", label: "Rechazados", dot: "bg-red-500", empty: "No hay solicitudes rechazadas." },
 ];
 const BLACKLIST_TAB = "BLACKLIST";
