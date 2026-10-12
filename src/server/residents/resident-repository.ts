@@ -4,6 +4,7 @@ import type { ConsorcioScope } from "@/lib/access/feature-scope-types";
 
 // Domain uses resident/unit/community; the DB still names them residentes/unidades/edificios.
 export type ResidentUnit = {
+  linkId: string;
   unitId: string;
   unitNumber: string | null;
   communityId: string;
@@ -29,6 +30,7 @@ type ResidentRow = {
   activo: boolean | null;
 };
 type LinkRow = {
+  id: string;
   residente_id: string;
   unidad_id: string;
   relationship_type: string | null;
@@ -64,7 +66,7 @@ export async function listResidents(
       .order("nombre_completo"),
     supabase
       .from("resident_unit_links")
-      .select("residente_id, unidad_id, relationship_type, is_primary")
+      .select("id, residente_id, unidad_id, relationship_type, is_primary")
       .eq("organization_id", organizationId)
       .eq("active", true),
     unitsQuery,
@@ -82,6 +84,7 @@ export async function listResidents(
     if (!unit || !community) continue;
     const residentUnits = unitsByResident.get(link.residente_id) ?? [];
     residentUnits.push({
+      linkId: link.id,
       unitId: unit.id,
       unitNumber: unit.numero,
       communityId: community.id,

@@ -31,7 +31,7 @@ async function loadResidents(): Promise<ResidentSummary[] | null> {
 
 export default async function ResidentesPage() {
   // Auth starts alongside access; the loaders below reuse the cached result.
-  const [access] = await Promise.all([getDeskFeatureAccess("residentes"), getRequestAuthContext()]);
+  const [access, context] = await Promise.all([getDeskFeatureAccess("residentes"), getRequestAuthContext()]);
   if (access?.state !== "resolved") {
     return <MessageState title="Sin acceso" body="No se puede mostrar el módulo con el acceso actual." />;
   }
@@ -49,7 +49,7 @@ export default async function ResidentesPage() {
         <p className="mt-1 text-muted-foreground">Residentes de tus consorcios, con sus unidades.</p>
       </header>
 
-      <ResidentsList residents={residents} />
+      <ResidentsList residents={residents} canEnd={context.authenticated && context.role !== "VIEWER"} />
     </div>
   );
 }

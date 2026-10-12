@@ -6,6 +6,7 @@ import { test } from "node:test";
 
 function unit(communityId: string, communityName: string): ResidentUnit {
   return {
+    linkId: `${communityId}-l`,
     unitId: `${communityId}-u`,
     unitNumber: "1A",
     communityId,
