@@ -1,6 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { createUnit, deleteUnit, getCommunityDetail, listCommunities, updateUnit } from "./community-repository";
+import {
+  createUnit,
+  deleteUnit,
+  getCommunityDetail,
+  importUnits,
+  listCommunities,
+  updateUnit,
+} from "./community-repository";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -200,11 +207,11 @@ test("createUnit lanza ante otros errores de la base", async () => {
   });
 });
 
-/** Cliente falso para el update y el delete de unidades: devuelve las filas o el error dados y guarda los filtros. */
+/** Cliente falso para el update, el delete y el upsert de unidades: devuelve las filas o el error dados y guarda los filtros. */
 function createUpdateClient(result: { data: unknown[] | null; error: { code: string; message: string } | null }) {
   const calls: { method: string; args: unknown[] }[] = [];
   const builder: Record<string, unknown> = {};
-  for (const method of ["update", "delete", "eq"]) {
+  for (const method of ["update", "delete", "upsert", "eq"]) {
     builder[method] = (...args: unknown[]) => {
       calls.push({ method, args });
       return builder;
@@ -222,6 +229,39 @@ function createUpdateClient(result: { data: unknown[] | null; error: { code: str
   };
   return { client: client as unknown as SupabaseClient, calls };
 }
+
+test("importUnits inserta las unidades salteando los números que ya existen", async () => {
+  const { client, calls } = createUpdateClient({ data: [{ id: "u1" }], error: null });
+
+  const result = await importUnits(client, ORGANIZATION_ID, COMMUNITY_ID, [
+    { number: "1A", floor: "1" },
+    { number: "PB", floor: null },
+  ]);
+
+  assert.deepEqual(result, { ok: true, created: 1 });
+  assert.deepEqual(calls.slice(0, 2), [
+    { method: "from", args: ["unidades"] },
+    {
+      method: "upsert",
+      args: [
+        [
+          { organization_id: ORGANIZATION_ID, edificio_id: COMMUNITY_ID, numero: "1A", piso: "1" },
+          { organization_id: ORGANIZATION_ID, edificio_id: COMMUNITY_ID, numero: "PB", piso: null },
+        ],
+        { onConflict: "edificio_id,numero", ignoreDuplicates: true },
+      ],
+    },
+  ]);
+});
+
+test("importUnits devuelve forbidden si RLS rechaza el insert", async () => {
+  const { client } = createUpdateClient({ data: null, error: { code: "42501", message: "row-level security" } });
+
+  assert.deepEqual(await importUnits(client, ORGANIZATION_ID, COMMUNITY_ID, [{ number: "1A", floor: null }]), {
+    ok: false,
+    reason: "forbidden",
+  });
+});
 
 test("updateUnit cambia número y piso de la unidad de la organización", async () => {
   const { client, calls } = createUpdateClient({ data: [{ id: "u1" }], error: null });

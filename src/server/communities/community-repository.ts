@@ -240,7 +240,7 @@ export type NewUnit = { number: string; floor: string | null };
 export type CreateUnitResult = { ok: true } | { ok: false; reason: "duplicate" | "forbidden" };
 
 // RLS decides who can insert (TENANT_OWNER, or ADMIN and OPERATOR assigned to the consorcio).
-// A new unit has no residents yet, so it starts as desocupado (the column defaults to ocupado).
+// A new unit has no residents yet, so it starts as desocupado (the database also enforces it).
 export async function createUnit(
   supabase: SupabaseClient,
   organizationId: string,
@@ -259,6 +259,35 @@ export async function createUnit(
   if (error.code === "23505") return { ok: false, reason: "duplicate" };
   if (error.code === "42501") return { ok: false, reason: "forbidden" };
   throw new Error(error.message);
+}
+
+export type ImportUnitsResult = { ok: true; created: number } | { ok: false; reason: "forbidden" };
+
+// Same permissions as createUnit. Numbers that already exist in the consorcio are skipped
+// (ON CONFLICT DO NOTHING), so a unit created meanwhile doesn't fail the whole import.
+export async function importUnits(
+  supabase: SupabaseClient,
+  organizationId: string,
+  communityId: string,
+  units: NewUnit[],
+): Promise<ImportUnitsResult> {
+  const { data, error } = await supabase
+    .from("unidades")
+    .upsert(
+      units.map((unit) => ({
+        organization_id: organizationId,
+        edificio_id: communityId,
+        numero: unit.number,
+        piso: unit.floor,
+      })),
+      { onConflict: "edificio_id,numero", ignoreDuplicates: true },
+    )
+    .select("id");
+  if (error) {
+    if (error.code === "42501") return { ok: false, reason: "forbidden" };
+    throw new Error(error.message);
+  }
+  return { ok: true, created: data?.length ?? 0 };
 }
 
 export type UpdateUnitResult = { ok: true } | { ok: false; reason: "duplicate" | "forbidden" };

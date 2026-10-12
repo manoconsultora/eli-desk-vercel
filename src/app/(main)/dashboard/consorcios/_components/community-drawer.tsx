@@ -29,6 +29,7 @@ import { CommunityStatusPill } from "./communities-list";
 import { relationshipLabel } from "./community-labels";
 import { CreateUnitDialog } from "./create-unit-dialog";
 import { sortUnits } from "./filter-units";
+import { ImportUnitsDialog } from "./import-units-dialog";
 import { JoinLinksTab, type JoinLinksTabData } from "./join-links-tab";
 import { UnitsTable } from "./units-table";
 
@@ -144,7 +145,12 @@ function CommunityDetailView({
 
         <TabsContent value="unidades" className="space-y-4 pt-4">
           {canManageUnits && (
-            <div className="flex justify-end">
+            <div className="flex flex-wrap justify-end gap-2">
+              <ImportUnitsDialog
+                communityId={community.id}
+                communityName={community.name}
+                existingNumbers={community.units.flatMap((unit) => (unit.number ? [unit.number] : []))}
+              />
               <CreateUnitDialog communityId={community.id} communityName={community.name} />
             </div>
           )}
