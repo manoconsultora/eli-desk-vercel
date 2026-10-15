@@ -21,6 +21,7 @@ import { AccountSwitcher } from "./sidebar/account-switcher";
 import { LayoutControls } from "./sidebar/layout-controls";
 import { SearchDialog } from "./sidebar/search-dialog";
 import { ThemeSwitcher } from "./sidebar/theme-switcher";
+import { TicketRslProvider } from "./ticket-rsl-provider";
 
 type CurrentUser = {
   id: string;
@@ -38,6 +39,11 @@ type DashboardShellClientProps = {
   children: React.ReactNode;
   deskAccess: readonly DeskFeatureAccessPresentation[];
   planMenu: DeskPlanMenuData;
+  deploymentVersion: string;
+  ticketRealtimeScope: {
+    organizationId: string | null;
+    consorcioIds: readonly string[];
+  };
 };
 
 type DashboardUserContextValue = Pick<DashboardShellClientProps, "currentUser" | "logoutAction" | "planMenu">;
@@ -111,6 +117,8 @@ export function DashboardShellClient({
   logoutAction,
   deskAccess,
   planMenu,
+  deploymentVersion,
+  ticketRealtimeScope,
   children,
 }: DashboardShellClientProps) {
   const [mounted, setMounted] = React.useState(false);
@@ -122,7 +130,7 @@ export function DashboardShellClient({
 
   const content = !mounted ? (
     <div className="flex min-h-dvh flex-col">
-      <div className={cn("h-full p-4 md:p-6")}>{children}</div>
+      <div className="flex flex-1 flex-col p-4 md:p-6">{children}</div>
     </div>
   ) : isMobile ? (
     <div className="min-h-dvh bg-[linear-gradient(180deg,#fffdf8_0%,#f7f8fc_58%,#f3f6fb_100%)]">
@@ -143,6 +151,7 @@ export function DashboardShellClient({
         collapsible={collapsible}
         logoutAction={logoutAction}
         planMenu={planMenu}
+        deploymentVersion={deploymentVersion}
       />
       <SidebarInset
         className={cn(
@@ -169,7 +178,7 @@ export function DashboardShellClient({
             </div>
           </div>
         </header>
-        <div className="h-full p-4 md:p-6">{children}</div>
+        <div className="flex flex-1 flex-col p-4 md:p-6">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );
@@ -177,7 +186,12 @@ export function DashboardShellClient({
   return (
     <DeskAccessProvider value={deskAccess}>
       <DashboardUserContext.Provider value={{ currentUser, logoutAction, planMenu }}>
-        {content}
+        <TicketRslProvider
+          organizationId={ticketRealtimeScope.organizationId}
+          consorcioIds={ticketRealtimeScope.consorcioIds}
+        >
+          {content}
+        </TicketRslProvider>
       </DashboardUserContext.Provider>
     </DeskAccessProvider>
   );

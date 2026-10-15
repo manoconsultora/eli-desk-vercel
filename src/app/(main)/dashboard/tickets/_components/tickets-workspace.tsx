@@ -19,10 +19,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
+import { subscribeTicketRslEvent } from "@/lib/realtime/ticket-rsl-events";
 import {
   changeTicketStatus,
   closeTicket,
   createTicket,
+  getTicketById,
   listTicketEdificios,
   listTickets,
   updateTicket,
@@ -70,7 +72,7 @@ function csvValue(value: string | null | undefined) {
   return `"${safeText.replaceAll('"', '""')}"`;
 }
 
-export function TicketsWorkspace() {
+export function TicketsWorkspace({ initialEdificioFilter }: { initialEdificioFilter?: string }) {
   const [tickets, setTickets] = React.useState<TicketRecord[]>([]);
   const [edificios, setEdificios] = React.useState<{ id: string; nombre: string }[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -78,7 +80,7 @@ export function TicketsWorkspace() {
   const [search, setSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("todos");
   const [priorityFilter, setPriorityFilter] = React.useState("todas");
-  const [edificioFilter, setEdificioFilter] = React.useState("todos");
+  const [edificioFilter, setEdificioFilter] = React.useState(initialEdificioFilter ?? "todos");
   const [selected, setSelected] = React.useState<TicketRecord | null>(null);
   const [formOpen, setFormOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<TicketRecord | null>(null);
@@ -87,6 +89,9 @@ export function TicketsWorkspace() {
   const [closeReason, setCloseReason] = React.useState("");
   const [saving, setSaving] = React.useState(false);
   const [actionError, setActionError] = React.useState<string | null>(null);
+  const [realtimeUpdatedAt, setRealtimeUpdatedAt] = React.useState<Record<string, string>>({});
+  const [realtimeHighlightAt, setRealtimeHighlightAt] = React.useState<Record<string, number>>({});
+  const [realtimeNewAt, setRealtimeNewAt] = React.useState<Record<string, number>>({});
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -94,14 +99,100 @@ export function TicketsWorkspace() {
     const [ticketResult, edificioResult] = await Promise.all([listTickets(), listTicketEdificios()]);
     if (!ticketResult.success) setError(ticketResult.error);
     else setTickets(ticketResult.data);
-    if (edificioResult.success) setEdificios(edificioResult.data);
-    else if (!ticketResult.success) setError(edificioResult.error);
+    if (edificioResult.success) {
+      setEdificios(edificioResult.data);
+      // A consorcio from the URL that is unknown or not assigned falls back to all.
+      setEdificioFilter((current) =>
+        current === "todos" || edificioResult.data.some((edificio) => edificio.id === current) ? current : "todos",
+      );
+    } else if (!ticketResult.success) setError(edificioResult.error);
     setLoading(false);
   }, []);
 
   React.useEffect(() => {
     void load();
   }, [load]);
+
+  React.useEffect(() => {
+    return subscribeTicketRslEvent((event) => {
+      void (async () => {
+        const result = await getTicketById(event.ticketId);
+
+        if (!result.success) {
+          console.error("[RSL] Could not hydrate ticket", {
+            ticketId: event.ticketId,
+            eventType: event.type,
+            error: result.error,
+          });
+          return;
+        }
+
+        const ticket = result.data;
+
+        if (!ticket) {
+          setTickets((current) => current.filter((currentTicket) => currentTicket.id !== event.ticketId));
+          return;
+        }
+
+        const timestamp = new Intl.DateTimeFormat("es-AR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        }).format(new Date());
+
+        setRealtimeUpdatedAt((current) => ({
+          ...current,
+          [ticket.id]: timestamp,
+        }));
+
+        const highlightMarker = Date.now();
+
+        setRealtimeHighlightAt((current) => ({
+          ...current,
+          [ticket.id]: highlightMarker,
+        }));
+
+        window.setTimeout(() => {
+          setRealtimeHighlightAt((current) => {
+            if (current[ticket.id] !== highlightMarker) return current;
+
+            const next = { ...current };
+            delete next[ticket.id];
+            return next;
+          });
+        }, 8000);
+
+        if (event.type === "ticket.created") {
+          const newMarker = Date.now();
+
+          setRealtimeNewAt((current) => ({
+            ...current,
+            [ticket.id]: newMarker,
+          }));
+
+          window.setTimeout(() => {
+            setRealtimeNewAt((current) => {
+              if (current[ticket.id] !== newMarker) return current;
+
+              const next = { ...current };
+              delete next[ticket.id];
+              return next;
+            });
+          }, 30000);
+        }
+
+        setTickets((current) => [ticket, ...current.filter((currentTicket) => currentTicket.id !== ticket.id)]);
+
+        setSelected((current) => (current?.id === ticket.id ? ticket : current));
+
+        console.info("[RSL] Ticket patched", {
+          ticketId: ticket.id,
+          eventType: event.type,
+          updatedAt: timestamp,
+        });
+      })();
+    });
+  }, []);
 
   const filtered = React.useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -204,7 +295,6 @@ export function TicketsWorkspace() {
       setSelected(result.data);
       setCloseOpen(false);
       setCloseReason("");
-      void load();
     } catch {
       setActionError("No se pudo cerrar el ticket.");
     } finally {
@@ -234,6 +324,47 @@ export function TicketsWorkspace() {
 
   return (
     <div className="space-y-6">
+      <style>{`
+        @keyframes eli-ticket-arrival {
+          0% {
+            opacity: 0;
+            transform: translateY(-10px) scale(0.995);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        @keyframes eli-ticket-spark {
+          0% {
+            opacity: 0;
+            transform: translate(0, 2px) scale(0.4);
+          }
+          35% {
+            opacity: 0.9;
+          }
+          100% {
+            opacity: 0;
+            transform: translate(var(--spark-x), var(--spark-y)) scale(1.15);
+          }
+        }
+
+        .eli-ticket-arrival {
+          animation: eli-ticket-arrival 380ms cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .eli-ticket-spark {
+          animation: eli-ticket-spark 850ms ease-out both;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .eli-ticket-arrival,
+          .eli-ticket-spark {
+            animation: none !important;
+          }
+        }
+      `}</style>
       <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="font-medium text-muted-foreground text-sm">Operación diaria</p>
@@ -326,27 +457,101 @@ export function TicketsWorkspace() {
             </div>
           ) : (
             <div className="space-y-2">
-              {filtered.map((ticket) => (
-                <button
-                  key={ticket.id}
-                  type="button"
-                  onClick={() => setSelected(ticket)}
-                  className="grid w-full gap-3 rounded-lg border p-4 text-left transition-colors hover:bg-muted/50 md:grid-cols-[minmax(0,1fr)_180px_110px_110px] md:items-center"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold">{ticket.ticket_code}</p>
-                    <p className="truncate text-muted-foreground text-sm">{ticket.description || "Sin descripción"}</p>
-                    <p className="mt-1 text-muted-foreground text-xs">{ticket.edificio_nombre || "Sin consorcio"}</p>
-                  </div>
-                  <span className="text-muted-foreground text-sm">
-                    {TYPE_LABELS[ticket.ticket_type as TicketType] ?? ticket.ticket_type}
-                  </span>
-                  <span className="text-sm capitalize">{ticket.priority}</span>
-                  <Badge variant="outline" className={`w-fit ${statusClass(ticket.status)}`}>
-                    {STATUS_LABELS[ticket.status as keyof typeof STATUS_LABELS] ?? ticket.status}
-                  </Badge>
-                </button>
-              ))}
+              {filtered.map((ticket) => {
+                const realtimeUpdated = realtimeUpdatedAt[ticket.id];
+                const isRealtimeHighlighted = Boolean(realtimeHighlightAt[ticket.id]);
+                const isRealtimeNew = Boolean(realtimeNewAt[ticket.id]);
+
+                return (
+                  <button
+                    key={ticket.id}
+                    type="button"
+                    onClick={() => setSelected(ticket)}
+                    className={`relative grid w-full gap-3 overflow-hidden rounded-lg border p-4 text-left transition-[background-color,border-color,box-shadow,transform] duration-300 hover:bg-muted/50 md:grid-cols-[minmax(0,1fr)_180px_110px_110px] md:items-center ${
+                      isRealtimeHighlighted
+                        ? "eli-ticket-arrival border-sky-200 bg-sky-50/80 shadow-sm ring-1 ring-sky-200/60 dark:bg-sky-950/20"
+                        : ""
+                    }`}
+                  >
+                    {isRealtimeNew ? (
+                      <span aria-hidden="true" className="pointer-events-none absolute top-2 right-3 h-7 w-12">
+                        <span
+                          className="eli-ticket-spark absolute top-3 right-5 size-1 rounded-full bg-sky-400"
+                          style={
+                            {
+                              "--spark-x": "12px",
+                              "--spark-y": "-10px",
+                            } as React.CSSProperties
+                          }
+                        />
+                        <span
+                          className="eli-ticket-spark absolute top-2 right-6 size-1 rounded-full bg-sky-300"
+                          style={
+                            {
+                              "--spark-x": "-10px",
+                              "--spark-y": "-9px",
+                              animationDelay: "90ms",
+                            } as React.CSSProperties
+                          }
+                        />
+                        <span
+                          className="eli-ticket-spark absolute top-4 right-4 size-1.5 rounded-full bg-sky-400"
+                          style={
+                            {
+                              "--spark-x": "13px",
+                              "--spark-y": "7px",
+                              animationDelay: "160ms",
+                            } as React.CSSProperties
+                          }
+                        />
+                        <span
+                          className="eli-ticket-spark absolute top-4 right-7 size-1 rounded-full bg-sky-300"
+                          style={
+                            {
+                              "--spark-x": "-12px",
+                              "--spark-y": "8px",
+                              animationDelay: "230ms",
+                            } as React.CSSProperties
+                          }
+                        />
+                      </span>
+                    ) : null}
+
+                    <div className="min-w-0">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <p className="truncate font-semibold">{ticket.ticket_code}</p>
+
+                        {isRealtimeNew ? <Badge className="h-5 px-1.5 text-[10px] tracking-wide">NUEVO</Badge> : null}
+
+                        {realtimeUpdated ? (
+                          <Badge
+                            variant="outline"
+                            className="h-5 border-sky-200 bg-sky-50 px-1.5 text-[10px] text-sky-700 dark:bg-sky-950/30 dark:text-sky-300"
+                          >
+                            UPDATED {realtimeUpdated}
+                          </Badge>
+                        ) : null}
+                      </div>
+
+                      <p className="truncate text-muted-foreground text-sm">
+                        {ticket.description || "Sin descripción"}
+                      </p>
+
+                      <p className="mt-1 text-muted-foreground text-xs">{ticket.edificio_nombre || "Sin consorcio"}</p>
+                    </div>
+
+                    <span className="text-muted-foreground text-sm">
+                      {TYPE_LABELS[ticket.ticket_type as TicketType] ?? ticket.ticket_type}
+                    </span>
+
+                    <span className="text-sm capitalize">{ticket.priority}</span>
+
+                    <Badge variant="outline" className={`w-fit ${statusClass(ticket.status)}`}>
+                      {STATUS_LABELS[ticket.status as keyof typeof STATUS_LABELS] ?? ticket.status}
+                    </Badge>
+                  </button>
+                );
+              })}
             </div>
           )}
         </CardContent>

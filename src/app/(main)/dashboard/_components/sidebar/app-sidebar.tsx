@@ -26,6 +26,7 @@ export function AppSidebar({
   currentUser,
   logoutAction,
   planMenu,
+  deploymentVersion,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   currentUser: {
@@ -36,6 +37,7 @@ export function AppSidebar({
   };
   logoutAction: () => Promise<void>;
   planMenu: DeskPlanMenuData;
+  deploymentVersion: string;
 }) {
   const { sidebarVariant, sidebarCollapsible, isSynced } = usePreferencesStore(
     useShallow((s) => ({
@@ -65,6 +67,9 @@ export function AppSidebar({
                 />
               </Link>
             </SidebarMenuButton>
+            <p className="px-2 pt-0.5 font-medium text-[9px] text-muted-foreground/50 tracking-wide group-data-[collapsible=icon]:hidden">
+              Ver. {deploymentVersion}
+            </p>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

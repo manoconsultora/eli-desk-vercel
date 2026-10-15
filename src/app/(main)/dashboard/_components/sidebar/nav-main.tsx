@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 
 import { useDeskNavigationState } from "@/app/(main)/dashboard/_components/desk-access-context";
@@ -12,10 +12,17 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Spinner } from "@/components/ui/spinner";
 import type { DeskNavigationItem } from "@/navigation/sidebar/sidebar-items";
 
 function AvailabilityLabel({ state }: { state: "resolved" | "coming_soon" | "unavailable" }) {
   return <span className="ml-auto text-xs">{state === "coming_soon" ? "Próximamente" : "No disponible"}</span>;
+}
+
+// Must render inside the Link: shows the item is loading from the moment it is clicked.
+function PendingIndicator() {
+  const { pending } = useLinkStatus();
+  return pending ? <Spinner className="ml-auto" /> : null;
 }
 
 function DeskNavItem({ item, pathname }: { item: DeskNavigationItem; pathname: string }) {
@@ -33,6 +40,7 @@ function DeskNavItem({ item, pathname }: { item: DeskNavigationItem; pathname: s
           <Link prefetch={false} href={href}>
             <Icon />
             <span>{item.label}</span>
+            <PendingIndicator />
           </Link>
         </SidebarMenuButton>
       ) : (

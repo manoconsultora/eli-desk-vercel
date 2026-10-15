@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { ClipboardList, FileText, MessageSquareText, TriangleAlert } from "lucide-react";
 
+import { useDashboardUser } from "@/app/(main)/dashboard/_components/dashboard-shell-client";
 import { useDeskFeatureAccess } from "@/app/(main)/dashboard/_components/desk-access-context";
 import { type TicketRow, useTickets } from "@/hooks/use-eli-data";
 import { cn } from "@/lib/utils";
@@ -97,6 +98,8 @@ function DesktopRecentActivity() {
 }
 
 export default function Page() {
+  const { currentUser } = useDashboardUser();
+
   const [hydrated, setHydrated] = React.useState(false);
   const ticketsAccess = useDeskFeatureAccess("tickets");
 
@@ -129,6 +132,13 @@ export default function Page() {
 
   return (
     <div className="@container/main flex flex-col gap-4 md:gap-6">
+      <section className="dashboard-greeting px-1 py-4 lg:py-6">
+        <h1 className="text-[clamp(4.5rem,7vw,8rem)] text-slate-900 leading-[0.88] tracking-[-0.06em]">
+          <span className="font-light">Hola </span>
+          <span className="font-bold">{currentUser.name}</span>
+        </h1>
+      </section>
+
       <SectionCards />
       <ChartAreaInteractive />
       <DesktopRecentActivity />

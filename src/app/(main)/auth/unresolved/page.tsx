@@ -1,4 +1,4 @@
-import { getAuthContext } from "@/lib/auth/get-auth-context";
+import { getRequestAuthContext } from "@/lib/auth/get-auth-context";
 import type { UnresolvedReason } from "@/lib/auth/types";
 import { logoutAction } from "@/server/server-actions";
 
@@ -16,7 +16,7 @@ const UNRESOLVED_REASON_COPY: Record<UnresolvedReason, string> = {
 };
 
 export default async function AuthUnresolvedPage() {
-  const context = await getAuthContext();
+  const context = await getRequestAuthContext();
   const message =
     context.authenticated && context.status === "unresolved"
       ? UNRESOLVED_REASON_COPY[context.reason]

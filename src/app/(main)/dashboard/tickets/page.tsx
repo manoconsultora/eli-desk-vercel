@@ -17,8 +17,9 @@ function NonOperationalState({ state }: { state: string }) {
   );
 }
 
-export default async function TicketsPage() {
+export default async function TicketsPage({ searchParams }: { searchParams: Promise<{ consorcio?: string }> }) {
   const access = await getDeskFeatureAccess("tickets");
   if (access?.state !== "resolved") return <NonOperationalState state={access?.state ?? "error"} />;
-  return <TicketsWorkspace />;
+  const { consorcio } = await searchParams;
+  return <TicketsWorkspace initialEdificioFilter={typeof consorcio === "string" ? consorcio : undefined} />;
 }

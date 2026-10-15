@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { subscribeTicketRslEvent } from "@/lib/realtime/ticket-rsl-events";
 import {
   changeTicketStatus,
   closeTicket,
@@ -106,6 +107,8 @@ export function useDashboardMetrics() {
     fetchMetrics();
   }, [fetchMetrics]);
 
+  useEffect(() => subscribeTicketRslEvent(() => void fetchMetrics()), [fetchMetrics]);
+
   return { metrics, loading, error, refetch: fetchMetrics };
 }
 
@@ -169,6 +172,8 @@ export function useTickets() {
   useEffect(() => {
     fetchTickets();
   }, [fetchTickets]);
+
+  useEffect(() => subscribeTicketRslEvent(() => void fetchTickets()), [fetchTickets]);
 
   return { tickets, loading, error, refetch: fetchTickets };
 }
