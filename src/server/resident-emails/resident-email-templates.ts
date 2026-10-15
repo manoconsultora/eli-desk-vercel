@@ -16,6 +16,9 @@ const ASSETS = "https://tnrmjgjtjzdiaomoeyat.supabase.co/storage/v1/object/publi
 const ELI_LOGO = `${ASSETS}/isologo_eli.svg`;
 const MANO_LOGO = `${ASSETS}/isologo_mano_gy.png`;
 
+// Provisional bot link. It doesn't identify the resident yet: nothing links the chat to them.
+const TELEGRAM_BOT_URL = "https://t.me/ori_edificio_bot";
+
 const TEXT = "color:#555B65;font-size:16px;line-height:1.7;margin:0 0 16px;";
 
 export function escapeHtml(value: string) {
@@ -86,6 +89,7 @@ function content(key: ResidentEmailTemplateKey, payload: ResidentEmailPayload): 
     };
   }
   if (key === "resident_request_approved") {
+    const botUrl = escapeHtml(TELEGRAM_BOT_URL);
     return {
       subject: "Tu cuenta de ELI está activa",
       title: "Tu cuenta de ELI está activa",
@@ -93,8 +97,10 @@ function content(key: ResidentEmailTemplateKey, payload: ResidentEmailPayload): 
         `¡Hola, ${name}!`,
         `La administración aprobó tu solicitud de alta en ${building}${unit}. Ya podés empezar a utilizar ELI.`,
       ],
+      button: { label: "Empezar a utilizar ELI", url: botUrl },
+      note: `ELI te atiende por Telegram. Si el botón no funciona, copiá este link: <a href="${botUrl}" style="color:#2346DD;">${botUrl}</a>`,
       footer,
-      text: `¡Hola, ${payload.first_name ?? ""}!\n\nLa administración aprobó tu solicitud de alta en ${rawBuilding}${unitText}. Ya podés empezar a utilizar ELI.`,
+      text: `¡Hola, ${payload.first_name ?? ""}!\n\nLa administración aprobó tu solicitud de alta en ${rawBuilding}${unitText}. Ya podés empezar a utilizar ELI: ${TELEGRAM_BOT_URL}\n\nELI te atiende por Telegram.`,
     };
   }
   if (key === "resident_request_rejected") {

@@ -38,6 +38,27 @@ test("la aceptación usa el diseño del mail de alta y dice que la cuenta está 
   assert.match(email.html, /Sandbox Belgrano \(unidad 1B\)\. Ya podés empezar a utilizar ELI\./);
 });
 
+test("la aceptación lleva al bot de Telegram con el botón, el link visible y el texto plano", () => {
+  const email = renderResidentEmail("resident_request_approved", {
+    first_name: "Pedro",
+    edificio_nombre: "Ugarte 2200",
+  });
+
+  assert.match(email.html, /<a href="https:\/\/t\.me\/ori_edificio_bot"[^>]*>Empezar a utilizar ELI<\/a>/);
+  assert.match(email.html, />https:\/\/t\.me\/ori_edificio_bot<\/a>/);
+  assert.match(email.text, /https:\/\/t\.me\/ori_edificio_bot/);
+});
+
+test("el rechazo no lleva al bot", () => {
+  const email = renderResidentEmail("resident_request_rejected", {
+    first_name: "Pedro",
+    edificio_nombre: "Ugarte 2200",
+  });
+
+  assert.doesNotMatch(email.html, /t\.me/);
+  assert.doesNotMatch(email.text, /t\.me/);
+});
+
 test("cada mail tiene versión en texto plano, sin HTML", () => {
   for (const key of [
     "resident_request_approved",
