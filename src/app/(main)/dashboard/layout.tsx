@@ -3,9 +3,12 @@ import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 
 import { DashboardShellClient } from "@/app/(main)/dashboard/_components/dashboard-shell-client";
+import { FiscalProvider } from "@/app/(main)/dashboard/_components/fiscal-chat/fiscal-provider";
 import { SIDEBAR_COLLAPSIBLE_VALUES, SIDEBAR_VARIANT_VALUES } from "@/lib/preferences/layout";
 import { createClient } from "@/lib/supabase/server";
 import { resolveDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
+import { getDeskPlanMenuData } from "@/server/desk-account";
+import { getDeskFiscalInitial } from "@/server/desk-fiscal";
 import { getPreference, logoutAction } from "@/server/server-actions";
 
 export default async function Layout({ children }: Readonly<{ children: ReactNode }>) {
@@ -19,11 +22,13 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
     getPreference("sidebar_variant", SIDEBAR_VARIANT_VALUES, "inset"),
     getPreference("sidebar_collapsible", SIDEBAR_COLLAPSIBLE_VALUES, "icon"),
   ]);
-  const deskAccess = (await resolveDeskFeatureAccess()).map(({ featureId, lifecycle, state }) => ({
+  const [accessRows, planMenu] = await Promise.all([resolveDeskFeatureAccess(), getDeskPlanMenuData()]);
+  const deskAccess = accessRows.map(({ featureId, lifecycle, state }) => ({
     featureId,
     lifecycle,
     state,
   }));
+  const fiscal = await getDeskFiscalInitial();
   const email = user?.email ?? "";
   const fullName = typeof user?.user_metadata?.full_name === "string" ? user.user_metadata.full_name.trim() : "";
   const name = typeof user?.user_metadata?.name === "string" ? user.user_metadata.name.trim() : "";
@@ -37,15 +42,18 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
   };
 
   return (
-    <DashboardShellClient
-      defaultOpen={defaultOpen}
-      variant={variant}
-      collapsible={collapsible}
-      currentUser={currentUser}
-      logoutAction={logoutAction}
-      deskAccess={deskAccess}
-    >
-      {children}
-    </DashboardShellClient>
+    <FiscalProvider key={fiscal.sessionKey ?? "fiscal-unavailable"} initial={fiscal}>
+      <DashboardShellClient
+        defaultOpen={defaultOpen}
+        variant={variant}
+        collapsible={collapsible}
+        currentUser={currentUser}
+        logoutAction={logoutAction}
+        deskAccess={deskAccess}
+        planMenu={planMenu}
+      >
+        {children}
+      </DashboardShellClient>
+    </FiscalProvider>
   );
 }

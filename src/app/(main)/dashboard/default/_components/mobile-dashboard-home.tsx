@@ -1,20 +1,15 @@
 "use client";
 
-import * as React from "react";
+import type * as React from "react";
 
 import { Building2, ClipboardList, Clock3, FileText, MessageSquareText, TriangleAlert } from "lucide-react";
 
-import { AccountActions } from "@/app/(main)/dashboard/_components/account-actions";
 import { useDashboardUser } from "@/app/(main)/dashboard/_components/dashboard-shell-client";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { FiscalAlertDot } from "@/app/(main)/dashboard/_components/fiscal-chat/fiscal-provider";
+import { TenantAccountMenu } from "@/app/(main)/dashboard/_components/sidebar/tenant-account-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { type TicketRow, useDashboardMetrics, useTickets } from "@/hooks/use-eli-data";
-import { cn } from "@/lib/utils";
+import { cn, getInitials } from "@/lib/utils";
 
 import { ChartAreaInteractive } from "./chart-area-interactive";
 
@@ -37,43 +32,30 @@ function getTicketIcon(ticket: TicketRow) {
 }
 
 function MobileGreetingMenu() {
-  const { currentUser, logoutAction } = useDashboardUser();
+  const { currentUser, logoutAction, planMenu } = useDashboardUser();
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <TenantAccountMenu
+      user={currentUser}
+      logoutAction={logoutAction}
+      planMenu={planMenu}
+      align="start"
+      trigger={
         <button
           type="button"
-          className="min-w-0 rounded-2xl border border-white/80 bg-white/85 px-4 py-3 text-left font-semibold text-slate-700 text-sm shadow-sm"
+          className="flex min-w-0 items-center gap-3 rounded-2xl border border-white/80 bg-white/85 px-4 py-3 text-left font-semibold text-slate-700 text-sm shadow-sm"
           aria-label="Abrir menú de usuario"
         >
+          <span className="relative inline-flex">
+            <Avatar className="size-9 rounded-lg">
+              <AvatarImage src={currentUser.avatar || undefined} alt={currentUser.name} />
+              <AvatarFallback className="rounded-lg">{getInitials(currentUser.name)}</AvatarFallback>
+              <FiscalAlertDot className="absolute -right-1 -top-1 size-3 ring-2 ring-background" />
+            </Avatar>
+          </span>
           <span className="block truncate">Hola, {currentUser.name} 👋</span>
         </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-52 rounded-2xl p-1">
-        <AccountActions
-          includeSettings
-          logoutAction={logoutAction}
-          renderAction={(action) => {
-            const Icon = action.icon;
-            const item = (
-              <DropdownMenuItem key={action.id} disabled={action.disabled} onSelect={() => void action.onSelect?.()}>
-                <Icon />
-                {action.label}
-                {action.disabled && <span className="ml-auto text-muted-foreground text-xs">No disponible</span>}
-              </DropdownMenuItem>
-            );
-            return action.id === "logout" ? (
-              <React.Fragment key={action.id}>
-                <DropdownMenuSeparator />
-                {item}
-              </React.Fragment>
-            ) : (
-              item
-            );
-          }}
-        />
-      </DropdownMenuContent>
-    </DropdownMenu>
+      }
+    />
   );
 }
 

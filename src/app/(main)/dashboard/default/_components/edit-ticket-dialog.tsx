@@ -1,8 +1,12 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useEdificios, updateTicket, tagSuggestions, type TicketRow } from "@/hooks/use-eli-data"
-import { getSessionUser } from "@/lib/session"
+import * as React from "react";
+
+import { AlertCircle, Loader2, Pencil, X } from "lucide-react";
+import { toast } from "sonner";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,167 +14,160 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { X, Loader2, Pencil, AlertCircle } from "lucide-react"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { type TicketRow, tagSuggestions, updateTicket, useEdificios } from "@/hooks/use-eli-data";
+import { getSessionUser } from "@/lib/session";
 
 interface EditTicketDialogProps {
-  ticket: TicketRow | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onUpdated?: () => void
+  ticket: TicketRow | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onUpdated?: () => void;
 }
 
 export function EditTicketDialog({ ticket, open, onOpenChange, onUpdated }: EditTicketDialogProps) {
-  const { edificios } = useEdificios()
-  const [edificioId, setEdificioId] = React.useState("")
-  const [ticketType, setTicketType] = React.useState("")
-  const [priority, setPriority] = React.useState("")
-  const [status, setStatus] = React.useState("")
-  const [description, setDescription] = React.useState("")
-  const [category, setCategory] = React.useState("")
-  const [tags, setTags] = React.useState<string[]>([])
-  const [tagInput, setTagInput] = React.useState("")
-  const [closedReason, setClosedReason] = React.useState("")
-  const [saving, setSaving] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const { edificios } = useEdificios();
+  const [edificioId, setEdificioId] = React.useState("");
+  const [ticketType, setTicketType] = React.useState("");
+  const [priority, setPriority] = React.useState("");
+  const [status, setStatus] = React.useState("");
+  const [description, setDescription] = React.useState("");
+  const [category, setCategory] = React.useState("");
+  const [tags, setTags] = React.useState<string[]>([]);
+  const [tagInput, setTagInput] = React.useState("");
+  const [closedReason, setClosedReason] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const originalDbStatus = React.useRef<string>("")
+  const originalDbStatus = React.useRef<string>("");
 
   React.useEffect(() => {
     if (ticket && open) {
-      setEdificioId(ticket.edificio_id ?? "")
-      setTicketType(ticket.ticket_type ?? "")
-      setPriority(ticket.priority ?? "media")
-      setStatus(ticket.status ?? "abierto")
-      setDescription(ticket.description ?? "")
-      setCategory(ticket.category ?? "")
-      const existingTags = (ticket.data as any)?.tags ?? []
-      setTags(Array.isArray(existingTags) ? existingTags : [])
-      setTagInput("")
-      setClosedReason("")
-      setError(null)
+      setEdificioId(ticket.edificio_id ?? "");
+      setTicketType(ticket.ticket_type ?? "");
+      setPriority(ticket.priority ?? "media");
+      setStatus(ticket.status ?? "abierto");
+      setDescription(ticket.description ?? "");
+      setCategory(ticket.category ?? "");
+      const existingTags = (ticket.data as any)?.tags ?? [];
+      setTags(Array.isArray(existingTags) ? existingTags : []);
+      setTagInput("");
+      setClosedReason("");
+      setError(null);
 
-      const hasClosedAt = !!(ticket as any).closed_at
+      const hasClosedAt = !!(ticket as any).closed_at;
       if (ticket.status === "cerrado" && !hasClosedAt) {
-        originalDbStatus.current = "abierto"
+        originalDbStatus.current = "abierto";
       } else {
-        originalDbStatus.current = ticket.status ?? "abierto"
+        originalDbStatus.current = ticket.status ?? "abierto";
       }
     }
-  }, [ticket, open])
+  }, [ticket, open]);
 
-  const isClosing = status === "cerrado" && originalDbStatus.current !== "cerrado"
-  const alreadyClosed = status === "cerrado" && originalDbStatus.current === "cerrado"
+  const isClosing = status === "cerrado" && originalDbStatus.current !== "cerrado";
+  const alreadyClosed = status === "cerrado" && originalDbStatus.current === "cerrado";
 
   const suggestions = React.useMemo(() => {
-    if (!ticketType) return []
-    return (tagSuggestions[ticketType] ?? []).filter((s) => !tags.includes(s))
-  }, [ticketType, tags])
+    if (!ticketType) return [];
+    return (tagSuggestions[ticketType] ?? []).filter((s) => !tags.includes(s));
+  }, [ticketType, tags]);
 
   function addTag(tag: string) {
-    const clean = tag.trim().toLowerCase()
+    const clean = tag.trim().toLowerCase();
     if (clean && !tags.includes(clean)) {
-      setTags([...tags, clean])
+      setTags([...tags, clean]);
     }
-    setTagInput("")
+    setTagInput("");
   }
 
   function removeTag(tag: string) {
-    setTags(tags.filter((t) => t !== tag))
+    setTags(tags.filter((t) => t !== tag));
   }
 
   function handleTagKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter" || e.key === ",") {
-      e.preventDefault()
-      addTag(tagInput)
+      e.preventDefault();
+      addTag(tagInput);
     }
   }
 
   async function handleSave() {
-    if (!ticket) return
+    if (!ticket) return;
     if (!edificioId || !ticketType || !description.trim()) {
-      setError("Completá consorcio, tipo y descripción.")
-      return
+      setError("Completá consorcio, tipo y descripción.");
+      return;
     }
 
     if (isClosing && !closedReason.trim()) {
-      setError("Indicá el motivo de cierre para poder cerrar el ticket.")
-      return
+      setError("Indicá el motivo de cierre para poder cerrar el ticket.");
+      return;
     }
 
-    setSaving(true)
-    setError(null)
+    setSaving(true);
+    setError(null);
 
-    const session = getSessionUser()
-    const closedBy = session?.email || session?.name || "dashboard-admin"
+    const session = getSessionUser();
+    const closedBy = session?.email || session?.name || "dashboard-admin";
 
     const updateFields: Record<string, unknown> = {
       ticket_type: ticketType,
       priority,
       status,
       category: tags[0] ?? category ?? null,
-      data: { ...(ticket.data as object ?? {}), tags, source: (ticket.data as any)?.source ?? "chatbot" },
-    }
+      data: { ...((ticket.data as object) ?? {}), tags, source: (ticket.data as any)?.source ?? "chatbot" },
+    };
 
     if (isClosing) {
-      updateFields.closed_reason = closedReason.trim()
-      updateFields.closed_by = closedBy
-      updateFields.closed_at = new Date().toISOString()
+      updateFields.closed_reason = closedReason.trim();
+      updateFields.closed_by = closedBy;
+      updateFields.closed_at = new Date().toISOString();
     }
 
-    const result = await updateTicket(ticket.id, updateFields)
+    const result = await updateTicket(ticket.id, updateFields);
 
     if (result.success) {
-      const { supabase } = await import("@/lib/supabase")
-      const extraFields: Record<string, unknown> = { description: description.trim() }
+      const { supabase } = await import("@/lib/supabase");
+      const extraFields: Record<string, unknown> = { description: description.trim() };
       if (edificioId !== ticket.edificio_id) {
-        extraFields.edificio_id = edificioId
+        extraFields.edificio_id = edificioId;
       }
-      await supabase
-        .from("tickets")
-        .update(extraFields)
-        .eq("id", ticket.id)
+      await supabase.from("tickets").update(extraFields).eq("id", ticket.id);
     }
 
-    setSaving(false)
+    setSaving(false);
 
     if (!result.success) {
-      setError(result.error ?? "Error al guardar")
-      return
+      setError(result.error ?? "Error al guardar");
+      return;
     }
 
-    onOpenChange(false)
+    onOpenChange(false);
 
-    // Notify vecino via Telegram when closing a chatbot ticket
+    // Notify vecino from the authenticated server boundary when closing a chatbot ticket.
     if (isClosing && ticket.data && (ticket.data as any).source !== "dashboard") {
       try {
-        fetch("https://n8n.ma-no.work/webhook/eli-ticket-closed", {
+        const notificationResponse = await fetch("/api/tickets/close-notification", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            chat_id: (ticket as any).chat_id || "",
-            ticket_code: ticket.ticket_code,
-            closed_reason: closedReason.trim(),
-            closed_by: closedBy,
-            description: ticket.description || "",
+            ticketId: ticket.id,
+            closedReason: closedReason.trim(),
           }),
-        }).catch(() => {})
-      } catch {}
+        });
+
+        if (!notificationResponse.ok) {
+          toast.warning("El ticket se cerró, pero no se pudo enviar la notificación.");
+        }
+      } catch {
+        toast.warning("El ticket se cerró, pero no se pudo enviar la notificación.");
+      }
     }
 
-    onUpdated?.()
+    onUpdated?.();
   }
 
   return (
@@ -181,9 +178,7 @@ export function EditTicketDialog({ ticket, open, onOpenChange, onUpdated }: Edit
             <Pencil className="h-5 w-5" />
             Editar ticket
           </DialogTitle>
-          <DialogDescription>
-            {ticket?.ticket_code ?? ""}
-          </DialogDescription>
+          <DialogDescription>{ticket?.ticket_code ?? ""}</DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
@@ -313,9 +308,7 @@ export function EditTicketDialog({ ticket, open, onOpenChange, onUpdated }: Edit
             )}
           </div>
 
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
 
         <DialogFooter>
@@ -329,5 +322,5 @@ export function EditTicketDialog({ ticket, open, onOpenChange, onUpdated }: Edit
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

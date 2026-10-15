@@ -16,6 +16,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { deskDesktopNavigationItems } from "@/navigation/sidebar/sidebar-items";
+import type { DeskPlanMenuData } from "@/server/desk-account";
 import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 
 import { NavMain } from "./nav-main";
@@ -24,6 +25,7 @@ import { NavUser } from "./nav-user";
 export function AppSidebar({
   currentUser,
   logoutAction,
+  planMenu,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   currentUser: {
@@ -33,6 +35,7 @@ export function AppSidebar({
     avatar: string;
   };
   logoutAction: () => Promise<void>;
+  planMenu: DeskPlanMenuData;
 }) {
   const { sidebarVariant, sidebarCollapsible, isSynced } = usePreferencesStore(
     useShallow((s) => ({
@@ -72,7 +75,7 @@ export function AppSidebar({
         <NavMain items={deskDesktopNavigationItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={currentUser} logoutAction={logoutAction} />
+        <NavUser user={currentUser} logoutAction={logoutAction} planMenu={planMenu} />
       </SidebarFooter>
     </Sidebar>
   );

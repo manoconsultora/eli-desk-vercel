@@ -10,6 +10,7 @@ import { ThemeBootScript } from "@/scripts/theme-boot";
 import { PreferencesStoreProvider } from "@/stores/preferences/preferences-provider";
 
 import "./globals.css";
+import "./(main)/dashboard/_components/fiscal-chat/fiscal-chat.css";
 
 export const metadata: Metadata = {
   title: APP_CONFIG.meta.title,
