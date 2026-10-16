@@ -95,13 +95,16 @@ export function FiscalProvider({ initial, children }: { initial: DeskFiscalIniti
   );
 }
 
-export function FiscalAlertDot({ className = "" }: { className?: string }) {
+export function FiscalAlertDot({ className = "", count }: { className?: string; count?: number }) {
   const { pending } = useFiscalSetup();
-  return pending ? (
+  const alertCount = count ?? (pending ? 1 : 0);
+  return alertCount > 0 ? (
     <span
       role="img"
-      aria-label="Datos fiscales pendientes"
-      className={`inline-block size-2 shrink-0 rounded-full bg-red-600 ${className}`}
-    />
+      aria-label={`${alertCount} ${alertCount === 1 ? "alerta pendiente" : "alertas pendientes"}: datos fiscales`}
+      className={`pointer-events-none z-20 inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full border-2 border-white bg-red-600 px-1 text-[11px] font-semibold leading-none text-white tabular-nums ${className}`}
+    >
+      {alertCount}
+    </span>
   ) : null;
 }

@@ -34,11 +34,13 @@ export function NavUser({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="relative h-8 w-8 rounded-lg grayscale">
-                <AvatarImage src={user.avatar || undefined} alt={user.name} />
-                <AvatarFallback className="rounded-lg">{getInitials(user.name)}</AvatarFallback>
-                <FiscalAlertDot className="absolute -right-1 -top-1 size-3 ring-2 ring-sidebar" />
-              </Avatar>
+              <span className="relative isolate shrink-0">
+                <Avatar className="h-8 w-8 rounded-lg grayscale">
+                  <AvatarImage src={user.avatar || undefined} alt={user.name} />
+                  <AvatarFallback className="rounded-lg">{getInitials(user.name)}</AvatarFallback>
+                </Avatar>
+                <FiscalAlertDot className="absolute -right-1.5 -top-1.5" />
+              </span>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
                 <span className="truncate text-muted-foreground text-xs">{user.email}</span>

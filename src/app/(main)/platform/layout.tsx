@@ -1,11 +1,18 @@
 import type { ReactNode } from "react";
 
 import { PlatformShellClient } from "@/app/(main)/platform/_components/platform-shell-client";
+import { getAuthContext } from "@/lib/auth/get-auth-context";
+import { canAccessPlatformOnboarding } from "@/lib/platform-onboarding/authorization-policy";
 import { createClient } from "@/lib/supabase/server";
 import { logoutAction } from "@/server/server-actions";
 
 export default async function PlatformLayout({ children }: Readonly<{ children: ReactNode }>) {
   const supabase = await createClient();
+  const authContext = await getAuthContext(supabase);
+  const platformUserRows =
+    authContext.authenticated && authContext.status === "resolved" && authContext.userType === "platform"
+      ? await supabase.from("platform_users").select("role, status").eq("user_id", authContext.userId).limit(2)
+      : { data: [], error: null };
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -21,6 +28,12 @@ export default async function PlatformLayout({ children }: Readonly<{ children: 
         name: fullName || name || email,
         email,
         avatar: avatarUrl || picture || "",
+        canAccessOnboarding:
+          !platformUserRows.error &&
+          canAccessPlatformOnboarding(
+            authContext,
+            (platformUserRows.data ?? []) as Array<{ role: string; status: string }>,
+          ),
       }}
       logoutAction={logoutAction}
     >

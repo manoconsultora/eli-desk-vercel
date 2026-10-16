@@ -219,6 +219,7 @@ export function FiscalChat({
   const [started, setStarted] = useState(false);
   const [hasEntered, setHasEntered] = useState(false);
   const [opening, setOpening] = useState(false);
+  const [welcomeTitleTyped, setWelcomeTitleTyped] = useState(false);
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -230,7 +231,7 @@ export function FiscalChat({
   const [reviewMode, setReviewMode] = useState<"confirm" | "chooseField" | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [typedMessageIds, setTypedMessageIds] = useState<Set<number>>(() => new Set());
-  const listRef = useRef<HTMLDivElement>(null);
+  const [messageList, setMessageList] = useState<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const queuedMessageRef = useRef<{ afterId: number; message: ChatMessage } | null>(null);
 
@@ -425,12 +426,14 @@ export function FiscalChat({
   }
 
   useEffect(() => {
-    if (!started) return;
-    const messageList = listRef.current;
     if (!messageList) return;
 
+    let frame = 0;
     const scrollToLatest = () => {
-      messageList.scrollTo({ top: messageList.scrollHeight, behavior: "smooth" });
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        messageList.scrollTo({ top: messageList.scrollHeight, behavior: "instant" });
+      });
     };
     scrollToLatest();
 
@@ -439,20 +442,22 @@ export function FiscalChat({
     const resizeObserver = new ResizeObserver(scrollToLatest);
     resizeObserver.observe(messageList);
     return () => {
+      window.cancelAnimationFrame(frame);
       observer.disconnect();
       resizeObserver.disconnect();
     };
-  }, [started]);
+  }, [messageList]);
 
   useEffect(() => {
     if (!open) {
       setStarted(false);
       setHasEntered(false);
+      setWelcomeTitleTyped(false);
     }
   }, [open]);
 
   async function startConversation() {
-    if (!snapshot || conflict || pendingRef.current || saving || opening) return;
+    if (conflict || pendingRef.current || saving || opening) return;
     setOpening(true);
     setSaveError(false);
     setSaveStatus("Recuperando datos…");
@@ -536,6 +541,9 @@ export function FiscalChat({
       setLoading(true);
       setThinking(false);
       window.setTimeout(() => inputRef.current?.focus(), 450);
+    } catch {
+      setSaveError(true);
+      setSaveStatus("No pudimos recuperar tus datos. Volvé a pulsar Comenzar para reintentar.");
     } finally {
       setOpening(false);
     }
@@ -729,10 +737,14 @@ export function FiscalChat({
                   </div>
                   <div className="eli-welcome-copy">
                     <p>
-                      <strong>Hola, soy ELI</strong>
+                      <strong>
+                        <TypewriterText text="Hola, soy ELI" speed={68} onComplete={() => setWelcomeTitleTyped(true)} />
+                      </strong>
                       <br />
                       <span id="fiscal-welcome-description" className="eli-welcome-copy__business">
-                        Te acompaño a completar los datos fiscales del servicio.
+                        {welcomeTitleTyped && (
+                          <TypewriterText text="Quiero conocer un poco más tu negocio." speed={32} />
+                        )}
                       </span>
                     </p>
                     {saveError && (
@@ -746,7 +758,7 @@ export function FiscalChat({
                       disabled={opening || saving || !!conflict || !!pendingRef.current}
                       onClick={() => void startConversation()}
                     >
-                      Comenzar <ChevronRight aria-hidden="true" size={20} />
+                      {opening ? "Recuperando datos…" : "Comenzar"} <ChevronRight aria-hidden="true" size={20} />
                     </button>
                     <button type="button" className="eli-welcome-postpone" onClick={reset}>
                       Recordármelo más tarde
@@ -824,7 +836,7 @@ export function FiscalChat({
                     </button>
                   )}
                 </div>
-                <div className="eli-chat-content" ref={listRef}>
+                <div className="eli-chat-content" ref={setMessageList}>
                   {messages.length > 0 && (
                     <div className="eli-message-list">
                       {messages.map((message, index) => (

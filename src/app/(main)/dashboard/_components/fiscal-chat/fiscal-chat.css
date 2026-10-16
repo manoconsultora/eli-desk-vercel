@@ -377,16 +377,22 @@
 
 .eli-modal-backdrop {
   position: fixed;
-  z-index: 5;
+  z-index: 100;
   inset: 0;
   display: grid;
   place-items: center;
   padding: 24px;
-  background: #17233c55;
-  backdrop-filter: blur(7px);
+  background: rgb(12 18 32 / 64%);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
   animation: eli-fade-in 0.22s ease-out;
 }
 .eli-chat-window {
+  --eli-blue: #2346dd;
+  --eli-ink: #17233c;
+  --eli-muted: #758197;
+  --eli-line: #e9edf4;
+  color: var(--eli-ink);
   position: relative;
   display: flex;
   width: min(100%, 760px);
@@ -401,6 +407,7 @@
   animation: eli-rise-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .eli-welcome-modal {
+  font-family: var(--font-sans), system-ui, sans-serif;
   width: min(100%, 860px);
   height: auto;
   overflow: visible;
@@ -408,6 +415,9 @@
   border-radius: 38px;
   background: transparent;
   box-shadow: none;
+}
+.eli-chat-window:not(.eli-welcome-modal) {
+  background: #e5e7eb;
 }
 .eli-welcome-modal .eli-welcome-card {
   width: 100%;
@@ -886,7 +896,7 @@
   .eli-modal-backdrop {
     align-items: end;
     padding: 0;
-    background: #17233c52;
+    background: rgb(12 18 32 / 64%);
   }
   .eli-chat-window {
     width: 100%;
