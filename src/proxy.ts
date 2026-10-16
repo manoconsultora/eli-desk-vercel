@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 
+import { ACTIVE_ORGANIZATION_COOKIE } from "@/lib/auth/active-organization";
 import { getAuthContextForIdentity } from "@/lib/auth/get-auth-context";
 import {
   getAuthDestination,
@@ -79,7 +80,11 @@ export async function proxy(request: NextRequest) {
     return withNoStore(applySupabaseProxyResponse(NextResponse.redirect(loginUrl), supabaseResponse));
   }
 
-  const context = await getAuthContextForIdentity(supabase, { userId, email });
+  const context = await getAuthContextForIdentity(
+    supabase,
+    { userId, email },
+    request.cookies.get(ACTIVE_ORGANIZATION_COOKIE)?.value,
+  );
   const destination = getAuthDestination(context);
 
   if (isLoginPage || !isAllowedPathForDestination(pathname, destination)) {

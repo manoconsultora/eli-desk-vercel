@@ -14,6 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { deskMobilePrimaryItems } from "@/navigation/sidebar/sidebar-items";
 import type { DeskFeatureAccessPresentation } from "@/server/access/resolve-desk-feature-access";
+import type { DeskPlanMenuData } from "@/server/desk-account";
 
 import { MobileMoreMenu } from "./mobile-more-menu";
 import { AccountSwitcher } from "./sidebar/account-switcher";
@@ -37,6 +38,7 @@ type DashboardShellClientProps = {
   logoutAction: () => Promise<void>;
   children: React.ReactNode;
   deskAccess: readonly DeskFeatureAccessPresentation[];
+  planMenu: DeskPlanMenuData;
   deploymentVersion: string;
   ticketRealtimeScope: {
     organizationId: string | null;
@@ -44,7 +46,7 @@ type DashboardShellClientProps = {
   };
 };
 
-type DashboardUserContextValue = Pick<DashboardShellClientProps, "currentUser" | "logoutAction">;
+type DashboardUserContextValue = Pick<DashboardShellClientProps, "currentUser" | "logoutAction" | "planMenu">;
 
 const DashboardUserContext = React.createContext<DashboardUserContextValue | null>(null);
 
@@ -114,6 +116,7 @@ export function DashboardShellClient({
   currentUser,
   logoutAction,
   deskAccess,
+  planMenu,
   deploymentVersion,
   ticketRealtimeScope,
   children,
@@ -131,8 +134,11 @@ export function DashboardShellClient({
     </div>
   ) : isMobile ? (
     <div className="min-h-dvh bg-[linear-gradient(180deg,#fffdf8_0%,#f7f8fc_58%,#f3f6fb_100%)]">
-      <header className="mx-auto max-w-md px-4 pt-5">
-        <ConsorcioContext />
+      <header className="mx-auto flex max-w-md items-center justify-between gap-3 px-4 pt-5">
+        <div className="min-w-0 flex-1">
+          <ConsorcioContext />
+        </div>
+        <AccountSwitcher user={currentUser} logoutAction={logoutAction} planMenu={planMenu} />
       </header>
       <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pt-4 pb-28">{children}</main>
       <MobileBottomNav />
@@ -144,6 +150,7 @@ export function DashboardShellClient({
         variant={variant}
         collapsible={collapsible}
         logoutAction={logoutAction}
+        planMenu={planMenu}
         deploymentVersion={deploymentVersion}
       />
       <SidebarInset
@@ -167,7 +174,7 @@ export function DashboardShellClient({
             <div className="flex items-center gap-2">
               <LayoutControls />
               <ThemeSwitcher />
-              <AccountSwitcher user={currentUser} logoutAction={logoutAction} />
+              <AccountSwitcher user={currentUser} logoutAction={logoutAction} planMenu={planMenu} />
             </div>
           </div>
         </header>
@@ -178,7 +185,7 @@ export function DashboardShellClient({
 
   return (
     <DeskAccessProvider value={deskAccess}>
-      <DashboardUserContext.Provider value={{ currentUser, logoutAction }}>
+      <DashboardUserContext.Provider value={{ currentUser, logoutAction, planMenu }}>
         <TicketRslProvider
           organizationId={ticketRealtimeScope.organizationId}
           consorcioIds={ticketRealtimeScope.consorcioIds}

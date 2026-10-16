@@ -5,7 +5,6 @@ import * as React from "react";
 import { Ellipsis } from "lucide-react";
 
 import { useDeskNavigationState } from "@/app/(main)/dashboard/_components/desk-access-context";
-import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,
@@ -33,11 +32,11 @@ function MoreModuleItem({ item }: { item: DeskNavigationItem }) {
   if (state === "denied" || state === "unavailable" || state === "error") return null;
 
   return (
-    <Button disabled variant="ghost" className="h-12 w-full justify-start gap-3 px-3 text-left opacity-70">
+    <div className="flex h-12 items-center gap-3 px-3 text-sm opacity-70">
       <Icon aria-hidden="true" className="size-5" />
       <span className="flex-1">{item.label}</span>
       <AvailabilityLabel state={state} />
-    </Button>
+    </div>
   );
 }
 

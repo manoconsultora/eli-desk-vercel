@@ -1,20 +1,15 @@
 "use client";
 
-import * as React from "react";
+import type * as React from "react";
 
 import { Building2, ClipboardList, Clock3, FileText, MessageSquareText, TriangleAlert } from "lucide-react";
 
-import { AccountActions } from "@/app/(main)/dashboard/_components/account-actions";
 import { useDashboardUser } from "@/app/(main)/dashboard/_components/dashboard-shell-client";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { FiscalAlertDot } from "@/app/(main)/dashboard/_components/fiscal-chat/fiscal-provider";
+import { TenantAccountMenu } from "@/app/(main)/dashboard/_components/sidebar/tenant-account-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { type TicketRow, useDashboardMetrics, useTickets } from "@/hooks/use-eli-data";
-import { cn } from "@/lib/utils";
+import { cn, getInitials } from "@/lib/utils";
 
 import { ChartAreaInteractive } from "./chart-area-interactive";
 
@@ -37,42 +32,33 @@ function getTicketIcon(ticket: TicketRow) {
 }
 
 function MobileGreetingMenu() {
-  const { currentUser, logoutAction } = useDashboardUser();
+  const { currentUser, logoutAction, planMenu } = useDashboardUser();
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button type="button" className="dashboard-greeting w-full text-left" aria-label="Abrir menú de usuario">
-          <span className="block text-[clamp(3.75rem,13vw,7rem)] text-slate-900 leading-[0.88] tracking-[-0.06em]">
+    <TenantAccountMenu
+      user={currentUser}
+      logoutAction={logoutAction}
+      planMenu={planMenu}
+      align="start"
+      trigger={
+        <button
+          type="button"
+          className="dashboard-greeting flex w-full min-w-0 items-center gap-4 rounded-2xl border border-white/80 bg-white/85 px-4 py-3 text-left font-semibold text-slate-700 text-sm shadow-sm"
+          aria-label="Abrir menú de usuario"
+        >
+          <span className="relative inline-flex">
+            <Avatar className="size-9 rounded-lg">
+              <AvatarImage src={currentUser.avatar || undefined} alt={currentUser.name} />
+              <AvatarFallback className="rounded-lg">{getInitials(currentUser.name)}</AvatarFallback>
+              <FiscalAlertDot className="absolute -right-1 -top-1 size-3 ring-2 ring-background" />
+            </Avatar>
+          </span>
+          <span className="block min-w-0 truncate text-[clamp(1.5rem,6vw,2.5rem)] text-slate-900 leading-tight tracking-[-0.04em]">
             <span className="font-light">Hola </span>
-            <span className="font-bold">{currentUser.name}</span>
+            <span className="font-bold">{currentUser.name} 👋</span>
           </span>
         </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-52 rounded-2xl p-1">
-        <AccountActions
-          includeSettings
-          logoutAction={logoutAction}
-          renderAction={(action) => {
-            const Icon = action.icon;
-            const item = (
-              <DropdownMenuItem key={action.id} disabled={action.disabled} onSelect={() => void action.onSelect?.()}>
-                <Icon />
-                {action.label}
-                {action.disabled && <span className="ml-auto text-muted-foreground text-xs">No disponible</span>}
-              </DropdownMenuItem>
-            );
-            return action.id === "logout" ? (
-              <React.Fragment key={action.id}>
-                <DropdownMenuSeparator />
-                {item}
-              </React.Fragment>
-            ) : (
-              item
-            );
-          }}
-        />
-      </DropdownMenuContent>
-    </DropdownMenu>
+      }
+    />
   );
 }
 

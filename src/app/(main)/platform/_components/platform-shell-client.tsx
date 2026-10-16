@@ -42,6 +42,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { isPlatformNavigationActive } from "@/lib/platform-onboarding/route-policy";
 import { cn, getInitials } from "@/lib/utils";
 import {
   PLATFORM_MOBILE_MORE_LABEL,
@@ -56,6 +57,7 @@ type PlatformUser = {
   name: string;
   email: string;
   avatar: string;
+  canAccessOnboarding: boolean;
 };
 
 type PlatformShellClientProps = {
@@ -68,10 +70,19 @@ function AvailabilityLabel() {
   return <span className="ml-auto text-xs">No disponible</span>;
 }
 
-function PlatformNavigationButton({ item, pathname }: { item: PlatformNavigationItem; pathname: string }) {
+function PlatformNavigationButton({
+  item,
+  pathname,
+  canAccessOnboarding,
+}: {
+  item: PlatformNavigationItem;
+  pathname: string;
+  canAccessOnboarding: boolean;
+}) {
   const Icon = item.icon;
+  if (item.id === "onboarding" && !canAccessOnboarding) return null;
   const isAvailable = item.availability === "available" && Boolean(item.href);
-  const isActive = isAvailable && pathname === item.href;
+  const isActive = isAvailable && item.href ? isPlatformNavigationActive(pathname, item.href) : false;
 
   return (
     <SidebarMenuItem>
@@ -191,7 +202,12 @@ function PlatformSidebar({ user, logoutAction }: { user: PlatformUser; logoutAct
           <SidebarGroupContent>
             <SidebarMenu>
               {platformDesktopPrimaryItems.map((item) => (
-                <PlatformNavigationButton key={item.id} item={item} pathname={pathname} />
+                <PlatformNavigationButton
+                  key={item.id}
+                  item={item}
+                  pathname={pathname}
+                  canAccessOnboarding={user.canAccessOnboarding}
+                />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -201,7 +217,12 @@ function PlatformSidebar({ user, logoutAction }: { user: PlatformUser; logoutAct
           <SidebarGroupContent>
             <SidebarMenu>
               {platformDesktopAdministrationItems.map((item) => (
-                <PlatformNavigationButton key={item.id} item={item} pathname={pathname} />
+                <PlatformNavigationButton
+                  key={item.id}
+                  item={item}
+                  pathname={pathname}
+                  canAccessOnboarding={user.canAccessOnboarding}
+                />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -214,7 +235,7 @@ function PlatformSidebar({ user, logoutAction }: { user: PlatformUser; logoutAct
   );
 }
 
-function PlatformMobileMoreMenu() {
+function PlatformMobileMoreMenu({ canAccessOnboarding }: { canAccessOnboarding: boolean }) {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -238,22 +259,32 @@ function PlatformMobileMoreMenu() {
           <DrawerDescription>Administración de ELI Platform</DrawerDescription>
         </DrawerHeader>
         <div className="space-y-1 px-4 pb-4">
-          {platformMobileMoreItems.map((item) => {
-            const Icon = item.icon;
+          {platformMobileMoreItems
+            .filter((item) => item.id !== "onboarding" || canAccessOnboarding)
+            .map((item) => {
+              const Icon = item.icon;
+              const isAvailable = item.availability === "available" && Boolean(item.href);
 
-            return (
-              <Button
-                key={item.id}
-                disabled
-                variant="ghost"
-                className="h-12 w-full justify-start gap-3 px-3 opacity-70"
-              >
-                <Icon aria-hidden="true" className="size-5" />
-                <span className="flex-1 text-left">{item.label}</span>
-                <span className="text-muted-foreground text-xs">No disponible</span>
-              </Button>
-            );
-          })}
+              return isAvailable && item.href ? (
+                <Button key={item.id} asChild variant="ghost" className="h-12 w-full justify-start gap-3 px-3">
+                  <Link prefetch={false} href={item.href} onClick={() => setOpen(false)}>
+                    <Icon aria-hidden="true" className="size-5" />
+                    <span className="flex-1 text-left">{item.label}</span>
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  key={item.id}
+                  disabled
+                  variant="ghost"
+                  className="h-12 w-full justify-start gap-3 px-3 opacity-70"
+                >
+                  <Icon aria-hidden="true" className="size-5" />
+                  <span className="flex-1 text-left">{item.label}</span>
+                  <span className="text-muted-foreground text-xs">No disponible</span>
+                </Button>
+              );
+            })}
         </div>
       </DrawerContent>
     </Drawer>
@@ -289,7 +320,7 @@ function PlatformMobileShell({
           {platformMobilePrimaryItems.map((item) => {
             const Icon = item.icon;
             const isAvailable = item.availability === "available" && Boolean(item.href);
-            const isActive = isAvailable && pathname === item.href;
+            const isActive = isAvailable && item.href ? isPlatformNavigationActive(pathname, item.href) : false;
 
             return isAvailable && item.href ? (
               <Link
@@ -317,7 +348,7 @@ function PlatformMobileShell({
               </button>
             );
           })}
-          <PlatformMobileMoreMenu />
+          <PlatformMobileMoreMenu canAccessOnboarding={user.canAccessOnboarding} />
         </div>
       </nav>
     </div>
@@ -347,7 +378,7 @@ export function PlatformShellClient({ children, currentUser, logoutAction }: Pla
   return (
     <SidebarProvider>
       <PlatformSidebar user={currentUser} logoutAction={logoutAction} />
-      <SidebarInset>
+      <SidebarInset className="min-w-0">
         <header className="flex h-14 shrink-0 items-center border-b px-4 lg:px-6">
           <div className="flex items-center gap-3">
             <SidebarTrigger className="-ml-1" />
@@ -357,7 +388,7 @@ export function PlatformShellClient({ children, currentUser, logoutAction }: Pla
             </div>
           </div>
         </header>
-        <div className="p-4 md:p-6">{children}</div>
+        <div className="min-w-0 p-4 md:p-6">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

@@ -1,7 +1,10 @@
 import { cache } from "react";
 
+import { cookies } from "next/headers";
+
 import { createClient } from "@/lib/supabase/server";
 
+import { ACTIVE_ORGANIZATION_COOKIE } from "./active-organization";
 import type { AuthContext, PlatformRole, TenantRole, UnresolvedReason } from "./types";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
@@ -141,11 +144,20 @@ async function getAuthMembershipStates(supabase: SupabaseServerClient): Promise<
   return (data ?? []) as AuthMembershipStateRow[];
 }
 
+async function getPaidOrganizationIds(supabase: SupabaseServerClient): Promise<Set<string>> {
+  const { data, error } = await supabase.rpc("get_postpay_paid_organization_ids");
+  if (error) throw new Error(`Failed to verify post-payment access: ${error.message}`);
+  return new Set(Array.isArray(data) ? data.filter((id): id is string => typeof id === "string") : []);
+}
+
 function getUnresolvedContext(identity: AuthIdentity, reason: UnresolvedReason): AuthContext {
   return getControlledAuthenticatedContext(identity, "unresolved", reason);
 }
 
-export async function getAuthContext(client?: SupabaseServerClient): Promise<AuthContext> {
+export async function getAuthContext(
+  client?: SupabaseServerClient,
+  selectedOrganizationId?: string,
+): Promise<AuthContext> {
   const supabase = client ?? (await createClient());
   const {
     data: { user },
@@ -156,10 +168,15 @@ export async function getAuthContext(client?: SupabaseServerClient): Promise<Aut
     return getUnauthenticatedContext();
   }
 
-  return getAuthContextForIdentity(supabase, {
-    userId: user.id,
-    email: user.email ?? null,
-  });
+  const organizationId = selectedOrganizationId ?? (await cookies()).get(ACTIVE_ORGANIZATION_COOKIE)?.value;
+  return getAuthContextForIdentity(
+    supabase,
+    {
+      userId: user.id,
+      email: user.email ?? null,
+    },
+    organizationId,
+  );
 }
 
 // Resolved once per server render and shared by the layout, the page and its loaders.
@@ -169,6 +186,7 @@ export const getRequestAuthContext = cache(() => getAuthContext());
 export async function getAuthContextForIdentity(
   supabase: SupabaseServerClient,
   identity: AuthIdentity,
+  selectedOrganizationId?: string,
 ): Promise<AuthContext> {
   const base = getAuthenticatedBase({
     id: identity.userId,
@@ -198,19 +216,28 @@ export async function getAuthContextForIdentity(
   }
 
   const membershipStates = await membershipStatesPromise;
+  const paidOrganizationIds = membershipStates.some((state) => state.organization_status === "pending_payment")
+    ? await getPaidOrganizationIds(supabase)
+    : new Set<string>();
   const validMemberships = membershipStates.filter(
     (membershipState): membershipState is ValidTenantMembership =>
       isTenantRole(membershipState.membership_role) &&
       membershipState.membership_status === ACTIVE_STATUS &&
-      membershipState.organization_status === ACTIVE_STATUS,
+      (membershipState.organization_status === ACTIVE_STATUS ||
+        (membershipState.organization_status === "pending_payment" &&
+          paidOrganizationIds.has(membershipState.organization_id))),
   );
 
-  if (validMemberships.length === 1) {
+  const selectedMembership = validMemberships.find(
+    (membership) => membership.organization_id === selectedOrganizationId,
+  );
+  const resolvedMembership = selectedMembership ?? (validMemberships.length === 1 ? validMemberships[0] : null);
+  if (resolvedMembership) {
     return {
       ...base,
       userType: "tenant",
-      role: validMemberships[0].membership_role,
-      organizationId: validMemberships[0].organization_id,
+      role: resolvedMembership.membership_role,
+      organizationId: resolvedMembership.organization_id,
       status: "resolved",
     };
   }
