@@ -40,7 +40,7 @@ El estilo de formato (comillas dobles, `;`, 120 columnas) lo aplica Biome; no se
 ## Antes de dar un cambio por terminado
 
 ```bash
-pnpm exec biome ci   # formato y lint
+pnpm exec biome ci --error-on-warnings   # formato y lint; un warning también falla
 pnpm deps:check      # knip
 pnpm typecheck       # next typegen + tsc
 pnpm test

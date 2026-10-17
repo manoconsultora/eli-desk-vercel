@@ -227,10 +227,11 @@ export function OnboardingList({ cases, loadError = false }: { cases: Onboarding
               onChange={(event) => setPeriod(event.target.value as OnboardingPeriod)}
               className="h-8 rounded-md border bg-background px-2 text-foreground text-xs"
             >
-              <option value="all">Todos los períodos</option>
-              <option value="week">Esta semana</option>
-              <option value="month">Este mes</option>
-              <option value="year">Este año</option>
+              {periods.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </label>
           <Button
@@ -407,6 +408,7 @@ export function OnboardingList({ cases, loadError = false }: { cases: Onboarding
                     >
                       {Array.from({ length: 5 }, (_, index) => (
                         <span
+                          // biome-ignore lint/suspicious/noArrayIndexKey: barra fija de 5 segmentos que no se reordenan
                           key={index}
                           className={`h-[5px] flex-1 rounded-full ${index < progress ? progressDone : progressTodo}`}
                         />

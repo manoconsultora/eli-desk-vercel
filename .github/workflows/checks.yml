@@ -26,7 +26,7 @@ jobs:
           cache: pnpm
           node-version-file: .nvmrc
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec biome ci
+      - run: pnpm exec biome ci --error-on-warnings
       - run: pnpm deps:check
       - run: pnpm typecheck
       - run: pnpm test

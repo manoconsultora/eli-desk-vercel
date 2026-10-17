@@ -37,8 +37,9 @@ export function ChartAreaInteractive() {
   }, [isMobile]);
 
   const filteredData = React.useMemo(() => {
-    if (!chartData.length) return [];
-    const referenceDate = new Date(chartData[chartData.length - 1]!.date);
+    const last = chartData.at(-1);
+    if (!last) return [];
+    const referenceDate = new Date(last.date);
     const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90;
     const start = new Date(referenceDate);
     start.setDate(start.getDate() - days);
