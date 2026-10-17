@@ -83,6 +83,7 @@ export default function LoginPage() {
       <div className="absolute bottom-5 flex w-full items-center justify-between px-6 sm:px-10">
         <div className="text-muted-foreground text-sm">{APP_CONFIG.copyright}</div>
         <div className="flex items-center gap-2">
+          {/* biome-ignore lint/performance/noImgElement: SVG estático; next/image no optimiza SVG */}
           <img src="/mano-gr.svg" alt="MA-NO" className="h-5 w-auto opacity-40 transition-opacity hover:opacity-70" />
           <span className="flex items-center gap-1 text-muted-foreground text-sm">
             <Globe className="size-4" />

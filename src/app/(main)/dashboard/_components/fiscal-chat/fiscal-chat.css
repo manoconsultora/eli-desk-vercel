@@ -483,6 +483,7 @@
   font-weight: 700;
   letter-spacing: 0.16em;
 }
+/* biome-ignore lint/style/noDescendingSpecificity: bloques distintos del chat; ningún strong está dentro de los dos */
 .eli-header-copy strong {
   color: #24324b;
   font-size: 13px;
@@ -677,6 +678,7 @@
   color: #73819a;
   font-size: 10px;
 }
+/* biome-ignore lint/style/noDescendingSpecificity: bloques distintos del chat; ningún strong está dentro de los dos */
 .eli-review-field__value strong {
   overflow-wrap: anywhere;
   color: #293854;

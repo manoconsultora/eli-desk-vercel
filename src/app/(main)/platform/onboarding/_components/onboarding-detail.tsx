@@ -140,6 +140,7 @@ export function OnboardingDetail({
           aria-valuenow={progress}
         >
           {Array.from({ length: 5 }, (_, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: barra fija de 5 segmentos que no se reordenan
             <span key={index} className={`h-2 flex-1 rounded-full ${index < progress ? "bg-primary" : "bg-muted"}`} />
           ))}
         </div>
