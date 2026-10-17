@@ -26,9 +26,9 @@ export default function LoginPage() {
       <div className="mx-auto flex w-full flex-col items-center justify-center gap-6 px-4 sm:w-[380px]">
         {/* ELI Bot with rocket fire */}
         <div className="relative flex flex-col items-center">
-          <div className="absolute -bottom-4 h-16 w-20 rounded-full bg-orange-500/20 blur-2xl animate-pulse" />
-          <div className="absolute -bottom-2 h-10 w-12 rounded-full bg-amber-400/30 blur-xl animate-pulse" />
-          <div className="absolute -bottom-6 flex items-center justify-center gap-0.5">
+          <div className="-bottom-4 absolute h-16 w-20 animate-pulse rounded-full bg-orange-500/20 blur-2xl" />
+          <div className="-bottom-2 absolute h-10 w-12 animate-pulse rounded-full bg-amber-400/30 blur-xl" />
+          <div className="-bottom-6 absolute flex items-center justify-center gap-0.5">
             <div
               className="h-8 w-1.5 rounded-full bg-gradient-to-t from-transparent via-orange-500 to-amber-300 opacity-90"
               style={{ animation: "flicker 0.15s ease-in-out infinite alternate" }}
@@ -56,7 +56,7 @@ export default function LoginPage() {
         </div>
 
         {/* Title */}
-        <div className="space-y-1 text-center pt-2">
+        <div className="space-y-1 pt-2 text-center">
           <h1 className="font-semibold text-2xl tracking-tight">Iniciar sesión</h1>
           <p className="text-muted-foreground text-sm">Ingresá tus credenciales para acceder al panel.</p>
         </div>
@@ -83,7 +83,7 @@ export default function LoginPage() {
       <div className="absolute bottom-5 flex w-full items-center justify-between px-6 sm:px-10">
         <div className="text-muted-foreground text-sm">{APP_CONFIG.copyright}</div>
         <div className="flex items-center gap-2">
-          <img src="/mano-gr.svg" alt="MA-NO" className="h-5 w-auto opacity-40 hover:opacity-70 transition-opacity" />
+          <img src="/mano-gr.svg" alt="MA-NO" className="h-5 w-auto opacity-40 transition-opacity hover:opacity-70" />
           <span className="flex items-center gap-1 text-muted-foreground text-sm">
             <Globe className="size-4" />
             ES

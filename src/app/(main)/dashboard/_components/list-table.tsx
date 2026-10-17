@@ -33,7 +33,7 @@ function initials(name: string) {
 
 export function ListSearch(props: React.ComponentProps<typeof Input>) {
   return (
-    <div className="relative w-full md:max-w-120 md:min-w-64 md:flex-1">
+    <div className="relative w-full md:min-w-64 md:max-w-120 md:flex-1">
       <Search className="-translate-y-1/2 absolute top-1/2 left-4 size-4 text-muted-foreground" />
       <Input className="h-11 rounded-lg pl-11" {...props} />
     </div>

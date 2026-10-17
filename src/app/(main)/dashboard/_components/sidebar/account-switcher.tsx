@@ -36,7 +36,7 @@ export function AccountSwitcher({
             <AvatarImage src={user.avatar || undefined} alt={user.name} />
             <AvatarFallback className="rounded-lg">{getInitials(user.name)}</AvatarFallback>
           </Avatar>
-          <FiscalAlertDot className="absolute -right-1.5 -top-1.5" />
+          <FiscalAlertDot className="-right-1.5 -top-1.5 absolute" />
         </button>
       }
     />

@@ -33,14 +33,14 @@ function MetricCard({
   return (
     <Card className={variantStyles[variant]}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        <CardTitle className="font-medium text-muted-foreground text-sm">{title}</CardTitle>
         <Icon className={`size-5 ${iconStyles[variant]}`} />
       </CardHeader>
       <CardContent>
         {loading ? (
           <div className="h-8 w-16 animate-pulse rounded bg-muted" />
         ) : (
-          <div className="text-3xl font-bold tabular-nums">{value}</div>
+          <div className="font-bold text-3xl tabular-nums">{value}</div>
         )}
       </CardContent>
     </Card>
@@ -55,7 +55,7 @@ export function SectionCards() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+    <div className="grid @5xl/main:grid-cols-4 @xl/main:grid-cols-2 grid-cols-2 gap-3">
       <MetricCard title="Edificios activos" value={metrics.edificios} icon={Building2} loading={loading} />
       <MetricCard
         title="Tickets pendientes"
