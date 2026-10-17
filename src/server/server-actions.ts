@@ -7,11 +7,6 @@ import { AUTH_COOKIE_NAME } from "@/config/auth";
 import { getAuthContext } from "@/lib/auth/get-auth-context";
 import { getAuthDestination } from "@/lib/auth/get-auth-destination";
 
-export async function getValueFromCookie(key: string): Promise<string | undefined> {
-  const cookieStore = await cookies();
-  return cookieStore.get(key)?.value;
-}
-
 export async function setValueToCookie(
   key: string,
   value: string,
@@ -80,28 +75,4 @@ export async function logoutAction(): Promise<void> {
   });
 
   redirect("/login");
-}
-
-export async function getLoggedAdmin(): Promise<{
-  id: string;
-  email: string;
-  name: string;
-} | null> {
-  const { createClient } = await import("@/lib/supabase/server");
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    return null;
-  }
-
-  return {
-    id: user.id,
-    email: user.email ?? "",
-    name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email ?? "Usuario",
-  };
 }

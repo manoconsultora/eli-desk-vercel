@@ -4,7 +4,7 @@
 
 export const MAX_IMPORT_ROWS = 500;
 
-export type ParsedUnitRow = {
+type ParsedUnitRow = {
   line: number;
   number: string;
   floor: string | null;

@@ -1,7 +1,7 @@
-export const BOT_IDENTITY_CHANNELS = ["telegram"] as const;
-export type BotIdentityChannel = (typeof BOT_IDENTITY_CHANNELS)[number];
+const BOT_IDENTITY_CHANNELS = ["telegram"] as const;
+type BotIdentityChannel = (typeof BOT_IDENTITY_CHANNELS)[number];
 
-export const BOT_IDENTITY_OUTCOMES = [
+const BOT_IDENTITY_OUTCOMES = [
   "resolved",
   "unresolved",
   "blocked",
@@ -10,7 +10,7 @@ export const BOT_IDENTITY_OUTCOMES = [
   "ambiguous_organization",
   "cross_tenant",
 ] as const;
-export type BotIdentityOutcome = (typeof BOT_IDENTITY_OUTCOMES)[number];
+type BotIdentityOutcome = (typeof BOT_IDENTITY_OUTCOMES)[number];
 
 export type BotIdentityInput = {
   channel: string;

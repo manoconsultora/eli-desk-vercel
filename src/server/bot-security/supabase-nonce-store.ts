@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 
 import type { NonceReplayStore, NonceReservation, NonceReservationResult } from "../../lib/bot-security/security-types";
 
-export class SupabaseNonceReplayStore implements NonceReplayStore {
+class SupabaseNonceReplayStore implements NonceReplayStore {
   async reserve(input: NonceReservation): Promise<NonceReservationResult> {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const secretKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

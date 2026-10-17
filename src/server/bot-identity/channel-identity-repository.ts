@@ -45,7 +45,7 @@ async function read<T>(query: PromiseLike<{ data: unknown; error: { message?: st
   return (Array.isArray(result.data) ? result.data : []) as T[];
 }
 
-export class SupabaseBotIdentityRepository implements BotIdentityRepository {
+class SupabaseBotIdentityRepository implements BotIdentityRepository {
   constructor(private readonly client: SupabaseClient) {}
 
   async findTelegramCandidates(externalSenderId: string): Promise<BotIdentityCandidate[]> {

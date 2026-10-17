@@ -5,7 +5,7 @@ export function digestForLog(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex").slice(0, 16);
 }
 
-export function createRedactedSecurityEvent(event: BotSecurityEvent): BotSecurityEvent {
+function createRedactedSecurityEvent(event: BotSecurityEvent): BotSecurityEvent {
   return {
     event: event.event,
     code: event.code,

@@ -4,9 +4,9 @@ import type { AuthenticatedTechnicalPrincipal } from "../../lib/bot-security/sec
 export const BOT_API_VERSION = "v1" as const;
 export const BOT_API_CAPABILITY = "tickets.create" as const;
 
-export type BotApiCapability = typeof BOT_API_CAPABILITY;
+type BotApiCapability = typeof BOT_API_CAPABILITY;
 
-export type TicketsCreateApiInput = {
+type TicketsCreateApiInput = {
   ticketType: "reclamo" | "urgencia" | "consulta" | "pago";
   priority?: "alta" | "media" | "baja" | "normal";
   category?: string;

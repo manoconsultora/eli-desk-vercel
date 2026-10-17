@@ -4,7 +4,7 @@ import type { DeskTicketScope } from "@/server/access/resolve-desk-ticket-scope"
 
 import { randomInt } from "node:crypto";
 
-export const TICKET_STATUSES = ["abierto", "en_proceso", "cerrado"] as const;
+const TICKET_STATUSES = ["abierto", "en_proceso", "cerrado"] as const;
 export const TICKET_TYPES = ["reclamo", "urgencia", "consulta", "pago"] as const;
 export const TICKET_PRIORITIES = ["alta", "media", "baja", "normal"] as const;
 

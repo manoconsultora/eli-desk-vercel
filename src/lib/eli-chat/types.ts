@@ -26,16 +26,6 @@ export type FiscalSave = {
 export type FiscalResult =
   | { data: FiscalSnapshot; error?: never }
   | { data?: never; error: string; conflict?: boolean };
-export function isCaba(value = "") {
-  return ["caba", "ciudad autonoma de buenos aires", "capital federal", "capital"].includes(
-    value
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .trim()
-      .replace(/\s+/g, " ")
-      .toLowerCase(),
-  );
-}
 export const jurisdictions = [
   "Ciudad Autónoma de Buenos Aires",
   "Buenos Aires",

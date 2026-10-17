@@ -1,16 +1,8 @@
-export const BOT_SECURITY_ENVIRONMENTS = ["dev", "prod"] as const;
+const BOT_SECURITY_ENVIRONMENTS = ["dev", "prod"] as const;
 export type BotSecurityEnvironment = (typeof BOT_SECURITY_ENVIRONMENTS)[number];
 
-export const BOT_KEY_STATES = ["active", "retiring", "revoked"] as const;
-export type BotKeyState = (typeof BOT_KEY_STATES)[number];
-
-export type SignedHeaderName =
-  | "X-ELI-Key-Id"
-  | "X-ELI-Timestamp"
-  | "X-ELI-Nonce"
-  | "X-ELI-Request-Id"
-  | "X-ELI-Body-SHA256"
-  | "X-ELI-Signature";
+const BOT_KEY_STATES = ["active", "retiring", "revoked"] as const;
+type BotKeyState = (typeof BOT_KEY_STATES)[number];
 
 export type SignedHeaders = {
   keyId: string;

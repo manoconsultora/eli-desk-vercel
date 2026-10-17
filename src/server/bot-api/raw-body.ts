@@ -1,5 +1,5 @@
 export const MAX_BOT_API_BODY_BYTES = 64 * 1024;
-export const BOT_API_BODY_READ_TIMEOUT_MS = 5_000;
+const BOT_API_BODY_READ_TIMEOUT_MS = 5_000;
 
 export type RawBodyErrorCode =
   | "unsupported_method"

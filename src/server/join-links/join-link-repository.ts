@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // ELI Join resolves the token from this URL; the QR encodes the same URL.
-export const JOIN_BASE_URL = "https://join.eli.ma-no.work";
+const JOIN_BASE_URL = "https://join.eli.ma-no.work";
 
 export type JoinLinkSummary = {
   id: string;
