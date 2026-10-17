@@ -60,12 +60,12 @@ export function SearchDialog() {
   const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => {
-    const down = (event: KeyboardEvent) => {
+    function down(event: KeyboardEvent) {
       if (event.key === "j" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         setOpen((previous) => !previous);
       }
-    };
+    }
 
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);

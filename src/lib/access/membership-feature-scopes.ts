@@ -75,11 +75,11 @@ export async function readMembershipFeatureScopes(membershipId: string): Promise
   }
 
   const idsByScope = new Map<string, string[]>();
-  for (const row of (edificioRows as MembershipFeatureScopeEdificioRow[] | null) ?? []) {
+  ((edificioRows as MembershipFeatureScopeEdificioRow[] | null) ?? []).forEach((row) => {
     const ids = idsByScope.get(row.scope_id) ?? [];
     ids.push(row.edificio_id);
     idsByScope.set(row.scope_id, ids);
-  }
+  });
 
   return ((scopeRows as MembershipFeatureScopeRow[] | null) ?? []).map((row) =>
     toMembershipFeatureScope(row, idsByScope.get(row.id) ?? []),

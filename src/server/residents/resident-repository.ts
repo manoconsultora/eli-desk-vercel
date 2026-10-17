@@ -77,11 +77,11 @@ export async function listResidents(
   const communityById = new Map(throwOnError<CommunityRow[]>(communities).map((row) => [row.id, row]));
 
   const unitsByResident = new Map<string, ResidentUnit[]>();
-  for (const link of throwOnError<LinkRow[]>(links)) {
+  throwOnError<LinkRow[]>(links).forEach((link) => {
     const unit = unitById.get(link.unidad_id);
     const community = unit ? communityById.get(unit.edificio_id) : undefined;
     // Units outside the scope were not fetched, so their links drop here.
-    if (!unit || !community) continue;
+    if (!unit || !community) return;
     const residentUnits = unitsByResident.get(link.residente_id) ?? [];
     residentUnits.push({
       linkId: link.id,
@@ -93,7 +93,7 @@ export async function listResidents(
       isPrimary: link.is_primary === true,
     });
     unitsByResident.set(link.residente_id, residentUnits);
-  }
+  });
 
   return throwOnError<ResidentRow[]>(residents)
     .map((row) => ({

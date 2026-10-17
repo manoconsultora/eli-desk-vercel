@@ -151,12 +151,14 @@ export const resolveDeskFeatureAccess = cache(async (): Promise<DeskFeatureAcces
     { featureId: TenantFeatureId; scopeMode: "all_consorcios" | "explicit_list"; consorcioIds: string[] }
   >();
 
+  // biome-ignore lint/plugin: corta en la primera fila inválida o repetida y devuelve todo como error
   for (const row of overrideRows) {
     const parsed = parseOverride(row);
     if (parsed === null || overrides.has(parsed.featureId)) return errorViews();
     overrides.set(parsed.featureId, parsed.effect);
   }
 
+  // biome-ignore lint/plugin: corta en la primera fila inválida o repetida y devuelve todo como error
   for (const row of scopeRows) {
     const parsed = parseScope(row);
     if (parsed === null || scopes.has(parsed.featureId)) return errorViews();

@@ -30,9 +30,9 @@ export function subscribeToSystemTheme(onChange: (mode: ResolvedThemeMode) => vo
   const media = window.matchMedia?.("(prefers-color-scheme: dark)");
   if (!media) return () => undefined;
 
-  const listener = (event: MediaQueryListEvent) => {
+  function listener(event: MediaQueryListEvent) {
     onChange(event.matches ? "dark" : "light");
-  };
+  }
 
   media.addEventListener("change", listener);
 

@@ -22,7 +22,7 @@ type DeskModuleAvailability = "available" | "unavailable" | "coming_soon";
 type DeskModulePlacement = "mobile_primary" | "mobile_more" | "desktop";
 type DeskDesktopSection = "primary" | "future";
 
-export interface DeskNavigationItem {
+export type DeskNavigationItem = {
   id: string;
   featureId?: FeatureId;
   label: string;
@@ -31,7 +31,7 @@ export interface DeskNavigationItem {
   href?: string;
   placements: readonly DeskModulePlacement[];
   desktopSection: DeskDesktopSection;
-}
+};
 
 export const DESK_MOBILE_MORE_LABEL = "Más";
 

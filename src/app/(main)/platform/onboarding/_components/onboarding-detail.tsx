@@ -79,7 +79,7 @@ export function OnboardingDetail({
         : fiscal.data?.has_fiscal_data
           ? "Disponible"
           : "No informado";
-  const fields: Array<[string, string | null | undefined]> = [
+  const fields: [string, string | null | undefined][] = [
     ["Nombre / razón social", fiscal.data?.legal_name],
     ["Tipo de titular", fiscal.data?.legal_form],
     [fiscal.data?.tax_id_type ?? "CUIT / DNI", fiscal.data?.tax_id],

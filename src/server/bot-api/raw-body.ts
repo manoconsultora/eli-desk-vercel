@@ -75,10 +75,9 @@ export async function readBoundedRawBody(request: Request, options: { timeoutMs?
   }
 
   const body = new Uint8Array(total);
-  let offset = 0;
-  for (const chunk of chunks) {
+  chunks.reduce((offset, chunk) => {
     body.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
+    return offset + chunk.byteLength;
+  }, 0);
   return body;
 }

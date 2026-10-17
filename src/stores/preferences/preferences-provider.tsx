@@ -43,7 +43,7 @@ function readDomState(): Partial<PreferencesState> {
   };
 }
 
-export const PreferencesStoreProvider = ({
+export function PreferencesStoreProvider({
   children,
   themeMode,
   themePreset,
@@ -57,7 +57,7 @@ export const PreferencesStoreProvider = ({
   font: PreferencesState["font"];
   contentLayout: PreferencesState["contentLayout"];
   navbarStyle: PreferencesState["navbarStyle"];
-}) => {
+}) {
   const [store] = useState<StoreApi<PreferencesState>>(() =>
     createPreferencesStore({
       themeMode,
@@ -84,7 +84,7 @@ export const PreferencesStoreProvider = ({
   useEffect(() => {
     let unsubscribeMedia: (() => void) | undefined;
 
-    const applyFromMode = (mode: PreferencesState["themeMode"]) => {
+    function applyFromMode(mode: PreferencesState["themeMode"]) {
       unsubscribeMedia?.();
       const resolved = applyThemeMode(mode);
       store.setState((prev) => ({ ...prev, resolvedThemeMode: resolved }));
@@ -95,7 +95,7 @@ export const PreferencesStoreProvider = ({
           store.setState((prev) => ({ ...prev, resolvedThemeMode: next }));
         });
       }
-    };
+    }
 
     const startMode = domSnapshotRef.current?.themeMode ?? store.getState().themeMode;
     applyFromMode(startMode);
@@ -111,10 +111,10 @@ export const PreferencesStoreProvider = ({
   }, [store]);
 
   return <PreferencesStoreContext.Provider value={store}>{children}</PreferencesStoreContext.Provider>;
-};
+}
 
-export const usePreferencesStore = <T,>(selector: (state: PreferencesState) => T): T => {
+export function usePreferencesStore<T>(selector: (state: PreferencesState) => T): T {
   const store = useContext(PreferencesStoreContext);
   if (!store) throw new Error("Missing PreferencesStoreProvider");
   return useStore(store, selector);
-};
+}

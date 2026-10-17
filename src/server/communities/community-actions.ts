@@ -28,7 +28,7 @@ export async function createUnitAction(
     }
 
     const supabase = await createClient();
-    const result = await createUnit(supabase, context.organizationId, communityId, {
+    const result = await createUnit({ organizationId: context.organizationId, supabase }, communityId, {
       number,
       floor: unit.floor.trim() || null,
     });
@@ -72,7 +72,7 @@ export async function importUnitsAction(
     }
 
     const supabase = await createClient();
-    const result = await importUnits(supabase, context.organizationId, communityId, cleaned);
+    const result = await importUnits({ organizationId: context.organizationId, supabase }, communityId, cleaned);
     if (result.ok) return { success: true, created: result.created };
     return { success: false, error: "No tenés permiso para cargar unidades en este consorcio." };
   } catch {
@@ -97,7 +97,7 @@ export async function updateUnitAction(unitId: string, unit: { number: string; f
     }
 
     const supabase = await createClient();
-    const result = await updateUnit(supabase, context.organizationId, unitId, {
+    const result = await updateUnit({ organizationId: context.organizationId, supabase }, unitId, {
       number,
       floor: unit.floor.trim() || null,
     });

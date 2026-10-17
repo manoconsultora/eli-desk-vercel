@@ -36,6 +36,7 @@ function splitLine(line: string, delimiter: string) {
   const cells: string[] = [];
   let cell = "";
   let quoted = false;
+  // biome-ignore lint/plugin: parser carácter por carácter: mira el siguiente carácter y lo saltea
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
     if (quoted) {

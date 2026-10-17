@@ -39,54 +39,54 @@ export function LayoutControls() {
   const font = usePreferencesStore((s) => s.font);
   const setFont = usePreferencesStore((s) => s.setFont);
 
-  const onThemePresetChange = async (preset: ThemePreset) => {
+  async function onThemePresetChange(preset: ThemePreset) {
     applyThemePreset(preset);
     setThemePreset(preset);
     persistPreference("theme_preset", preset);
-  };
+  }
 
-  const onThemeModeChange = async (mode: ThemeMode | "") => {
+  async function onThemeModeChange(mode: ThemeMode | "") {
     if (!mode) return;
     setThemeMode(mode);
     persistPreference("theme_mode", mode);
-  };
+  }
 
-  const onContentLayoutChange = async (layout: ContentLayout | "") => {
+  async function onContentLayoutChange(layout: ContentLayout | "") {
     if (!layout) return;
     applyContentLayout(layout);
     setContentLayout(layout);
     persistPreference("content_layout", layout);
-  };
+  }
 
-  const onNavbarStyleChange = async (style: NavbarStyle | "") => {
+  async function onNavbarStyleChange(style: NavbarStyle | "") {
     if (!style) return;
     applyNavbarStyle(style);
     setNavbarStyle(style);
     persistPreference("navbar_style", style);
-  };
+  }
 
-  const onSidebarStyleChange = async (value: SidebarVariant | "") => {
+  async function onSidebarStyleChange(value: SidebarVariant | "") {
     if (!value) return;
     setSidebarVariant(value);
     applySidebarVariant(value);
     persistPreference("sidebar_variant", value);
-  };
+  }
 
-  const onSidebarCollapseModeChange = async (value: SidebarCollapsible | "") => {
+  async function onSidebarCollapseModeChange(value: SidebarCollapsible | "") {
     if (!value) return;
     setSidebarCollapsible(value);
     applySidebarCollapsible(value);
     persistPreference("sidebar_collapsible", value);
-  };
+  }
 
-  const onFontChange = async (value: FontKey | "") => {
+  async function onFontChange(value: FontKey | "") {
     if (!value) return;
     applyFont(value);
     setFont(value);
     persistPreference("font", value);
-  };
+  }
 
-  const handleRestore = () => {
+  function handleRestore() {
     onThemePresetChange(PREFERENCE_DEFAULTS.theme_preset);
     onThemeModeChange(PREFERENCE_DEFAULTS.theme_mode);
     onContentLayoutChange(PREFERENCE_DEFAULTS.content_layout);
@@ -94,7 +94,7 @@ export function LayoutControls() {
     onSidebarStyleChange(PREFERENCE_DEFAULTS.sidebar_variant);
     onSidebarCollapseModeChange(PREFERENCE_DEFAULTS.sidebar_collapsible);
     onFontChange(PREFERENCE_DEFAULTS.font);
-  };
+  }
 
   return (
     <Popover>

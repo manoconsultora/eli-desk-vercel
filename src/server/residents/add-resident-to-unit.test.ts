@@ -20,7 +20,9 @@ function fakeRpc(result: { data?: unknown; error?: { message: string } | null })
 test("dar de alta llama a la RPC y devuelve si creó al residente", async () => {
   const { client, calls } = fakeRpc({ data: { resident_id: "r1", created: false } });
 
-  assert.deepEqual(await addResidentToUnit(client, "u1", "inquilino", DETAILS), { created: false });
+  assert.deepEqual(await addResidentToUnit(client, { unitId: "u1", relationship: "inquilino" }, DETAILS), {
+    created: false,
+  });
   assert.deepEqual(calls, [
     {
       fn: "add_resident_to_unit",
@@ -44,21 +46,27 @@ test("traduce los errores conocidos de la base", async () => {
     ["already_in_unit", "Ya es residente de esa unidad."],
   ]) {
     const { client } = fakeRpc({ error: { message: code } });
-    await assert.rejects(addResidentToUnit(client, "u1", "inquilino", DETAILS), (error: unknown) => {
-      assert.ok(error instanceof AddResidentToUnitError);
-      assert.equal(error.message, message);
-      return true;
-    });
+    await assert.rejects(
+      addResidentToUnit(client, { unitId: "u1", relationship: "inquilino" }, DETAILS),
+      (error: unknown) => {
+        assert.ok(error instanceof AddResidentToUnitError);
+        assert.equal(error.message, message);
+        return true;
+      },
+    );
   }
 });
 
 test("un error desconocido no se muestra como uno conocido", async () => {
   const { client } = fakeRpc({ error: { message: "boom" } });
 
-  await assert.rejects(addResidentToUnit(client, "u1", "inquilino", DETAILS), (error: unknown) => {
-    assert.ok(!(error instanceof AddResidentToUnitError));
-    return true;
-  });
+  await assert.rejects(
+    addResidentToUnit(client, { unitId: "u1", relationship: "inquilino" }, DETAILS),
+    (error: unknown) => {
+      assert.ok(!(error instanceof AddResidentToUnitError));
+      return true;
+    },
+  );
 });
 
 function fakeTables(rows: Record<string, Record<string, unknown>[]>) {

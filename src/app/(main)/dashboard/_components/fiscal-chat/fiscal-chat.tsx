@@ -185,7 +185,7 @@ function TypewriterText({ text, onComplete, speed = 24 }: { text: string; onComp
     }
     let index = 0;
     let timer = 0;
-    const typeNextCharacter = () => {
+    function typeNextCharacter() {
       index += 1;
       setVisibleText(text.slice(0, index));
       if (index < text.length) {
@@ -194,7 +194,7 @@ function TypewriterText({ text, onComplete, speed = 24 }: { text: string; onComp
         setTyping(false);
         onCompleteRef.current?.();
       }
-    };
+    }
     timer = window.setTimeout(typeNextCharacter, speed);
     return () => window.clearTimeout(timer);
   }, [speed, text]);
@@ -343,8 +343,7 @@ export function FiscalChat({
   function persist(
     answers: Record<string, string>,
     step: number,
-    review: Backup["reviewMode"] = null,
-    complete = false,
+    { review = null, complete = false }: { review?: Backup["reviewMode"]; complete?: boolean } = {},
   ) {
     if (!snapshot) return;
     void runSave({
@@ -427,14 +426,15 @@ export function FiscalChat({
 
   useEffect(() => {
     if (!messageList) return;
+    const list = messageList;
 
     let frame = 0;
-    const scrollToLatest = () => {
+    function scrollToLatest() {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
-        messageList.scrollTo({ top: messageList.scrollHeight, behavior: "instant" });
+        list.scrollTo({ top: list.scrollHeight, behavior: "instant" });
       });
-    };
+    }
     scrollToLatest();
 
     const observer = new MutationObserver(scrollToLatest);
@@ -613,24 +613,22 @@ export function FiscalChat({
     setThinking(true);
     setMessages((current) => [...current, { id: nextChatMessageId(), role: "user", text: answer }]);
     const next = wasEditingField ? questions.length - 1 : nextRegistrationStep(currentStep, updated);
-    persist(
-      updated,
-      next,
-      wasEditingField || (question.key === "revision" && answer === "Sí, revisar") ? "confirm" : null,
-      question.key === "revision" && answer === "Guardar y completar",
-    );
+    persist(updated, next, {
+      review: wasEditingField || (question.key === "revision" && answer === "Sí, revisar") ? "confirm" : null,
+      complete: question.key === "revision" && answer === "Guardar y completar",
+    });
   }
 
   function handleReviewOption(value: string) {
     if (saving || conflict || pendingRef.current) return;
     if (reviewMode === "confirm" && value === "Guardar y completar") {
       setLoading(true);
-      persist(registrationAnswers, questions.length, null, true);
+      persist(registrationAnswers, questions.length, { review: null, complete: true });
       return;
     }
     if (reviewMode === "confirm" && value === "Corregir datos") {
       setLoading(true);
-      persist(registrationAnswers, questions.length, "chooseField");
+      persist(registrationAnswers, questions.length, { review: "chooseField" });
       return;
     }
     if (reviewMode === "chooseField") {

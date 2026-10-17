@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 export function GoogleLoginButton() {
   const [isPending, setIsPending] = useState(false);
 
-  const handleClick = async () => {
+  async function handleClick() {
     setIsPending(true);
 
     try {
@@ -33,7 +33,7 @@ export function GoogleLoginButton() {
       setIsPending(false);
       window.location.assign("/login?error=oauth_callback_failed");
     }
-  };
+  }
 
   return (
     <Button type="button" variant="outline" className="w-full" disabled={isPending} onClick={handleClick}>

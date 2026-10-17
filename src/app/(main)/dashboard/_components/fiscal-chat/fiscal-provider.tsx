@@ -54,7 +54,7 @@ export function FiscalProvider({ initial, children }: { initial: DeskFiscalIniti
   }, [initial]);
 
   useEffect(() => {
-    const refresh = async () => {
+    async function refresh() {
       const result = await getDeskFiscalInitial();
       if (result.snapshot) acceptSnapshot(result.snapshot);
       else if (result.error) setError(result.error);
@@ -62,7 +62,7 @@ export function FiscalProvider({ initial, children }: { initial: DeskFiscalIniti
         setSnapshot(null);
         setOpen(false);
       }
-    };
+    }
     // Focus refreshes truth without being treated as a new dashboard entry.
     window.addEventListener("focus", refresh);
     return () => window.removeEventListener("focus", refresh);
@@ -72,7 +72,7 @@ export function FiscalProvider({ initial, children }: { initial: DeskFiscalIniti
     setOpen(false);
     void postponeFiscalChat().catch(() => undefined); // A failed postpone never prevents using Desk.
   }, []);
-  const openForm = () => {
+  function openForm() {
     if (snapshot) setOpen(true);
     else
       void getDeskFiscalInitial().then((result) => {
@@ -82,7 +82,7 @@ export function FiscalProvider({ initial, children }: { initial: DeskFiscalIniti
           setOpen(true);
         }
       });
-  };
+  }
   return (
     <FiscalContext.Provider
       value={{ available: Boolean(snapshot || error), pending, error, open: openForm, postpone: dismiss }}

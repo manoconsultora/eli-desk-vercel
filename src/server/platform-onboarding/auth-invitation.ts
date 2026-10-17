@@ -9,9 +9,9 @@ export type InvitationPreparation = {
   message: "No se envió ningún correo; la entrega real requiere autorización humana.";
 };
 
-export interface AuthInvitationAdapter {
+export type AuthInvitationAdapter = {
   prepare(request: InvitationRequest): Promise<InvitationPreparation>;
-}
+};
 
 /** Safe default: records no Auth user and sends no email or invitation. */
 export const noSendAuthInvitationAdapter: AuthInvitationAdapter = {

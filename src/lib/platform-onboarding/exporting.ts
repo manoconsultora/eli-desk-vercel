@@ -48,7 +48,7 @@ function csvCell(value: unknown): string {
 }
 
 export function createOnboardingCsv(rows: OnboardingExportRow[]): string {
-  const columns: Array<[string, (row: OnboardingExportRow) => unknown]> = [
+  const columns: [string, (row: OnboardingExportRow) => unknown][] = [
     ["Administración", (row) => row.organization_name],
     ["Contacto", (row) => row.contact_name],
     ["Email", (row) => row.contact_email],

@@ -37,9 +37,8 @@ export function renderTeamInvitationEmail({ organizationName, role, url }: TeamI
 // can copy the link instead. Nothing is sent unless Resend is enabled.
 export async function sendTeamInvitationEmail(
   config: ResendConfig | null,
-  to: string,
-  email: TeamInvitationEmail,
-  send: typeof fetch = fetch,
+  { to, ...email }: TeamInvitationEmail & { to: string },
+  { send = fetch }: { send?: typeof fetch } = {},
 ): Promise<boolean> {
   if (!config) return false;
   const { subject, html, text } = renderTeamInvitationEmail(email);

@@ -56,7 +56,7 @@ export async function getTicketById(id: string): Promise<ActionResult<TicketReco
       return null;
     }
 
-    return getTicketByIdRepository(supabase, organizationId, scope, id);
+    return getTicketByIdRepository({ organizationId, scope, supabase }, id);
   });
 }
 
@@ -98,7 +98,11 @@ export async function createTicket(input: Record<string, unknown>): Promise<Acti
   try {
     const validated = validateTicketInput(input);
     return withTenant("No se pudo crear el ticket.", async (supabase, organizationId, userId) =>
-      createTicketRepository(supabase, organizationId, await requireWritableTicketScope(), userId, validated),
+      createTicketRepository(
+        { organizationId, scope: await requireWritableTicketScope(), supabase },
+        userId,
+        validated,
+      ),
     );
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Los datos del ticket no son válidos." };
@@ -110,7 +114,7 @@ export async function updateTicket(id: string, input: Record<string, unknown>): 
   try {
     const validated = toUpdateInput(input);
     return withTenant("No se pudo actualizar el ticket.", async (supabase, organizationId) =>
-      updateTicketRepository(supabase, organizationId, await requireWritableTicketScope(), id, validated),
+      updateTicketRepository({ organizationId, scope: await requireWritableTicketScope(), supabase }, id, validated),
     );
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Los datos del ticket no son válidos." };
@@ -122,7 +126,7 @@ export async function changeTicketStatus(id: string, value: unknown): Promise<Ac
   try {
     const status = validateStatus(value);
     return withTenant("No se pudo cambiar el estado.", async (supabase, organizationId) =>
-      updateTicketStatusRepository(supabase, organizationId, await requireWritableTicketScope(), id, status),
+      updateTicketStatusRepository({ organizationId, scope: await requireWritableTicketScope(), supabase }, id, status),
     );
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "El estado no es válido." };
@@ -134,7 +138,7 @@ export async function closeTicket(id: string, reason: unknown): Promise<ActionRe
   try {
     const closedReason = validateCloseReason(reason);
     return withTenant("No se pudo cerrar el ticket.", async (supabase, organizationId) =>
-      closeTicketRepository(supabase, organizationId, await requireWritableTicketScope(), id, closedReason),
+      closeTicketRepository({ organizationId, scope: await requireWritableTicketScope(), supabase }, id, closedReason),
     );
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "El motivo de cierre no es válido." };

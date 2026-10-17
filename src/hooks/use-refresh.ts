@@ -31,7 +31,9 @@ export function useRefresh() {
     if (refreshing) return;
     const callbacks = pending.current;
     pending.current = [];
-    for (const then of callbacks) then();
+    callbacks.forEach((then) => {
+      then();
+    });
   }, [refreshing]);
 
   const refresh = React.useCallback(

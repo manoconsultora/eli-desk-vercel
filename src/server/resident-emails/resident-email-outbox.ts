@@ -32,6 +32,7 @@ export const MAX_ATTEMPTS = 5;
 // A row left in "sending" this long belongs to a drain that died mid-send, so it is retried.
 // Resend's Idempotency-Key keeps the retry from sending it twice.
 const STUCK_SENDING_MS = 10 * 60_000;
+const DRAIN_BATCH_SIZE = 20;
 
 // Sends the queued emails with Resend. Rows are claimed one by one (→ sending) only if they
 // have not changed since they were read, so two drains running at the same time never send
@@ -39,8 +40,7 @@ const STUCK_SENDING_MS = 10 * 60_000;
 export async function drainResidentEmailOutbox(
   admin: SupabaseClient,
   config: ResendConfig | null,
-  send: typeof fetch = fetch,
-  limit = 20,
+  { send = fetch }: { send?: typeof fetch } = {},
 ) {
   if (!config) return { gate: "resend_configuration_required" as const, sent: 0 };
 
@@ -53,7 +53,7 @@ export async function drainResidentEmailOutbox(
     .lte("next_attempt_at", new Date().toISOString())
     .lt("attempts", MAX_ATTEMPTS)
     .order("created_at", { ascending: true })
-    .limit(limit);
+    .limit(DRAIN_BATCH_SIZE);
   if (error) throw new Error(error.message);
 
   let sent = 0;

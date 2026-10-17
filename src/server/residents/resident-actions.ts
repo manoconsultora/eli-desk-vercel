@@ -64,7 +64,7 @@ export async function addResidentToUnitAction(
     if (!context.authenticated || context.userType !== "tenant" || context.role === "VIEWER") {
       return { success: false, error: "No tenés permiso para dar de alta residentes." };
     }
-    ({ created } = await addResidentToUnit(await createClient(), unitId, relationship, details));
+    ({ created } = await addResidentToUnit(await createClient(), { unitId, relationship }, details));
   } catch (error) {
     return {
       success: false,

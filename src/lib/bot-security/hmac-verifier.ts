@@ -49,13 +49,18 @@ function validateTimestamp(timestamp: number, nowSeconds: number): void {
 function recordRejection(
   observer: SecurityObserver,
   error: BotSecurityError,
-  environment: BotSecurityEnvironment,
-  metadata: { keyId?: string; requestId?: string; nonce?: string; bodyDigest?: string },
+  metadata: {
+    environment: BotSecurityEnvironment;
+    keyId?: string;
+    requestId?: string;
+    nonce?: string;
+    bodyDigest?: string;
+  },
 ): void {
   void observer.record({
     event: "authentication_rejected",
     code: error.code,
-    environment,
+    environment: metadata.environment,
     keyId: metadata.keyId,
     requestId: metadata.requestId,
     nonceDigest: metadata.nonce ? digestForLog(metadata.nonce) : undefined,
@@ -163,7 +168,8 @@ export async function verifySignedRequest(input: VerifySignedRequestInput): Prom
     return principal;
   } catch (error) {
     const securityError = error instanceof BotSecurityError ? error : new BotSecurityError("nonce_store_unavailable");
-    recordRejection(observer, securityError, input.environment, {
+    recordRejection(observer, securityError, {
+      environment: input.environment,
       keyId,
       requestId,
       nonce,

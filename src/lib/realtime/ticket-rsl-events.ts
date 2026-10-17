@@ -25,13 +25,13 @@ export function subscribeTicketRslEvent(listener: TicketRslListener) {
     return () => undefined;
   }
 
-  const handler = (event: Event) => {
+  function handler(event: Event) {
     const customEvent = event as CustomEvent<TicketRslEvent>;
 
     if (!customEvent.detail) return;
 
     listener(customEvent.detail);
-  };
+  }
 
   window.addEventListener(BROWSER_EVENT, handler);
 

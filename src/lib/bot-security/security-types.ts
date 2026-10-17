@@ -73,19 +73,19 @@ export type BotSecurityEvent = {
   bodyDigest?: string;
 };
 
-export interface HeaderSource {
+export type HeaderSource = {
   get(name: string): string | null;
   getAll?(name: string): readonly string[];
-}
+};
 
-export interface BotKeyRegistry {
+export type BotKeyRegistry = {
   resolve(keyId: string, environment: BotSecurityEnvironment): Promise<BotHmacKey | null>;
-}
+};
 
-export interface NonceReplayStore {
+export type NonceReplayStore = {
   reserve(nonce: NonceReservation): Promise<NonceReservationResult>;
-}
+};
 
-export interface SecurityObserver {
+export type SecurityObserver = {
   record(event: BotSecurityEvent): void | Promise<void>;
-}
+};
