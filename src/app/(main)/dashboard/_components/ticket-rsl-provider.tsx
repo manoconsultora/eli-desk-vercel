@@ -77,7 +77,7 @@ export function TicketRslProvider({ organizationId, consorcioIds, children }: Ti
           },
         });
 
-        for (const eventType of TICKET_EVENTS) {
+        TICKET_EVENTS.forEach((eventType) => {
           channel = channel.on("broadcast", { event: eventType }, (message) => {
             const ticketId = typeof message.payload?.ticketId === "string" ? message.payload.ticketId : null;
 
@@ -104,7 +104,7 @@ export function TicketRslProvider({ organizationId, consorcioIds, children }: Ti
               edificioId,
             });
           });
-        }
+        });
 
         channel.subscribe((status, error) => {
           const context = {

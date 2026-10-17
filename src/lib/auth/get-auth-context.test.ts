@@ -19,7 +19,7 @@ function createFakeClient({
   paidOrganizationIds?: string[];
 }) {
   const events: string[] = [];
-  const delayed = (name: string, result: Result) => {
+  function delayed(name: string, result: Result) {
     events.push(`start:${name}`);
     return new Promise<Result>((resolve) =>
       setTimeout(() => {
@@ -27,7 +27,7 @@ function createFakeClient({
         resolve(result);
       }, 5),
     );
-  };
+  }
   const client = {
     from: () => ({
       select: () => ({ eq: () => ({ limit: () => delayed("platform_users", platformUsers) }) }),

@@ -55,10 +55,10 @@ type CommunityRow = { id: string; nombre: string; direccion: string; estado: str
 
 function countBy(rows: { edificio_id: unknown }[]) {
   const counts = new Map<string, number>();
-  for (const row of rows) {
+  rows.forEach((row) => {
     const id = String(row.edificio_id);
     counts.set(id, (counts.get(id) ?? 0) + 1);
-  }
+  });
   return counts;
 }
 
@@ -216,9 +216,9 @@ async function listResidentsByUnit(supabase: SupabaseClient, organizationId: str
   if (residents.error) throw new Error(residents.error.message);
 
   const residentById = new Map(((residents.data ?? []) as ResidentRow[]).map((row) => [row.id, row]));
-  for (const link of linkRows) {
+  linkRows.forEach((link) => {
     const resident = residentById.get(link.residente_id);
-    if (!resident) continue;
+    if (!resident) return;
     const unitResidents = residentsByUnit.get(link.unidad_id) ?? [];
     unitResidents.push({
       id: resident.id,
@@ -229,10 +229,10 @@ async function listResidentsByUnit(supabase: SupabaseClient, organizationId: str
       email: resident.email,
     });
     residentsByUnit.set(link.unidad_id, unitResidents);
-  }
-  for (const unitResidents of residentsByUnit.values()) {
+  });
+  residentsByUnit.forEach((unitResidents) => {
     unitResidents.sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary));
-  }
+  });
   return residentsByUnit;
 }
 

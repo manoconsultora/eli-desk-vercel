@@ -60,13 +60,11 @@ test("el rechazo no lleva al bot", () => {
 });
 
 test("cada mail tiene versión en texto plano, sin HTML", () => {
-  for (const key of [
-    "resident_request_approved",
-    "resident_request_rejected",
-    "resident_email_verification",
-  ] as const) {
-    const email = renderResidentEmail(key, { first_name: "Pedro", edificio_nombre: "Ugarte 2200", code: "042317" });
-    assert.ok(email.text.length > 0, key);
-    assert.doesNotMatch(email.text, /<[a-z]/, key);
-  }
+  (["resident_request_approved", "resident_request_rejected", "resident_email_verification"] as const).forEach(
+    (key) => {
+      const email = renderResidentEmail(key, { first_name: "Pedro", edificio_nombre: "Ugarte 2200", code: "042317" });
+      assert.ok(email.text.length > 0, key);
+      assert.doesNotMatch(email.text, /<[a-z]/, key);
+    },
+  );
 });

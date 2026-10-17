@@ -40,9 +40,9 @@ function createRecordingClient() {
       return builder;
     };
 
-  for (const method of ["select", "update", "insert", "eq", "in", "is", "order", "lt"]) {
+  ["select", "update", "insert", "eq", "in", "is", "order", "lt"].forEach((method) => {
     builder[method] = record(method);
-  }
+  });
   builder.single = () => Promise.resolve({ data: TICKET_ROW, error: null });
   builder.maybeSingle = () => Promise.resolve({ data: { id: IN_SCOPE }, error: null });
 

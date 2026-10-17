@@ -88,15 +88,15 @@ export async function listResidentRequests(
   const unitRows = throwOnError<UnitRow[]>(units);
   const unitById = new Map(unitRows.map((unit) => [unit.id, unit]));
   const unitCountByCommunity = new Map<string, number>();
-  for (const unit of unitRows) {
+  unitRows.forEach((unit) => {
     unitCountByCommunity.set(unit.edificio_id, (unitCountByCommunity.get(unit.edificio_id) ?? 0) + 1);
-  }
+  });
   const communityById = new Map(throwOnError<CommunityRow[]>(communities).map((row) => [row.id, row]));
   // Newest first, so the first email seen for a request is its latest.
   const emailByRequest = new Map<string, OutboxDeliveryRow>();
-  for (const email of throwOnError<OutboxDeliveryRow[]>(emails)) {
+  throwOnError<OutboxDeliveryRow[]>(emails).forEach((email) => {
     if (!emailByRequest.has(email.request_id)) emailByRequest.set(email.request_id, email);
-  }
+  });
 
   return throwOnError<RequestRow[]>(requests).map((row) => {
     const email = emailByRequest.get(row.id);

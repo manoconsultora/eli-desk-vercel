@@ -10,15 +10,15 @@ import {
 } from "@/server/tickets/ticket-actions";
 
 // ─── Types ───────────────────────────────────────────────────────────
-export interface DashboardMetrics {
+export type DashboardMetrics = {
   edificios: number;
   ticketsPendientes: number;
   ticketsUrgentes: number;
   staleTickets48h: number;
   tiempoPromedioResolucion: string;
-}
+};
 
-export interface TicketRow {
+export type TicketRow = {
   id: string;
   ticket_code: string;
   ticket_type: string;
@@ -32,15 +32,15 @@ export interface TicketRow {
   edificio_id: string | null;
   chat_id: string | null;
   data: Record<string, unknown> | null;
-}
+};
 
-export interface ChartDataPoint {
+export type ChartDataPoint = {
   date: string;
   abiertos: number;
   enProceso: number;
   cerrados: number;
   total: number;
-}
+};
 
 // ─── Hook: Metrics for Section Cards ─────────────────────────────────
 export function useDashboardMetrics() {

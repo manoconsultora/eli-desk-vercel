@@ -1,0 +1,6 @@
+language js
+
+`const $name = $fn` where {
+  $fn <: JsArrowFunctionExpression(body=JsFunctionBody()),
+  register_diagnostic(span=$fn, message="Una función con bloque va como `function`, no como arrow.", severity="error")
+}

@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const getInitials = (str: string): string => {
+export function getInitials(str: string): string {
   if (typeof str !== "string" || !str.trim()) return "?";
 
   return (
@@ -17,7 +17,7 @@ export const getInitials = (str: string): string => {
       .join("")
       .toUpperCase() || "?"
   );
-};
+}
 
 export function formatCurrency(
   amount: number,

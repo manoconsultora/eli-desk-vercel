@@ -35,12 +35,12 @@ function createFakeAdmin(taken: string[] = []) {
       const calls: Call[] = [];
       queries.push(calls);
       const builder: Record<string, unknown> = {};
-      for (const method of ["select", "update", "eq", "in", "or", "lt", "lte", "order", "limit"]) {
+      ["select", "update", "eq", "in", "or", "lt", "lte", "order", "limit"].forEach((method) => {
         builder[method] = (...args: unknown[]) => {
           calls.push({ method, args });
           return builder;
         };
-      }
+      });
       // biome-ignore lint/suspicious/noThenProperty: fake thenable query builder
       builder.then = (resolve: (value: unknown) => void) => {
         const update = calls.find((call) => call.method === "update");

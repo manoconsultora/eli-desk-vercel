@@ -21,6 +21,10 @@ export function filterResidents(residents: ResidentSummary[], filters: ResidentF
 
 export function communityOptions(residents: ResidentSummary[]) {
   const names = new Map<string, string>();
-  for (const unit of residents.flatMap((resident) => resident.units)) names.set(unit.communityId, unit.communityName);
+  residents
+    .flatMap((resident) => resident.units)
+    .forEach((unit) => {
+      names.set(unit.communityId, unit.communityName);
+    });
   return [...names].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
 }

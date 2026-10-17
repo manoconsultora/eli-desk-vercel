@@ -40,12 +40,12 @@ test("rechaza un cuerpo cambiado, otro secreto, un aviso viejo o headers faltant
 function fakeAdmin() {
   const calls: { method: string; args: unknown[] }[] = [];
   const builder: Record<string, unknown> = {};
-  for (const method of ["from", "update", "eq", "or"]) {
+  ["from", "update", "eq", "or"].forEach((method) => {
     builder[method] = (...args: unknown[]) => {
       calls.push({ method, args });
       return builder;
     };
-  }
+  });
   // biome-ignore lint/suspicious/noThenProperty: fake thenable query builder
   builder.then = (resolve: (value: unknown) => void) => resolve({ error: null });
   return { admin: builder as unknown as SupabaseClient, calls };

@@ -185,7 +185,7 @@ function TypewriterText({ text, onComplete, speed = 24 }: { text: string; onComp
     }
     let index = 0;
     let timer = 0;
-    const typeNextCharacter = () => {
+    function typeNextCharacter() {
       index += 1;
       setVisibleText(text.slice(0, index));
       if (index < text.length) {
@@ -194,7 +194,7 @@ function TypewriterText({ text, onComplete, speed = 24 }: { text: string; onComp
         setTyping(false);
         onCompleteRef.current?.();
       }
-    };
+    }
     timer = window.setTimeout(typeNextCharacter, speed);
     return () => window.clearTimeout(timer);
   }, [speed, text]);
@@ -427,14 +427,16 @@ export function FiscalChat({
 
   useEffect(() => {
     if (!messageList) return;
+    // A function declaration is hoisted, so TypeScript drops the null check inside it.
+    const list = messageList;
 
     let frame = 0;
-    const scrollToLatest = () => {
+    function scrollToLatest() {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
-        messageList.scrollTo({ top: messageList.scrollHeight, behavior: "instant" });
+        list.scrollTo({ top: list.scrollHeight, behavior: "instant" });
       });
-    };
+    }
     scrollToLatest();
 
     const observer = new MutationObserver(scrollToLatest);

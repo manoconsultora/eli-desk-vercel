@@ -67,13 +67,32 @@
         "useSelfClosingElements": "error",
         "noParameterAssign": "error",
         "noInferrableTypes": "error",
-        "noUselessElse": "error"
+        "noUselessElse": "error",
+        "useConsistentTypeDefinitions": {
+          "level": "error",
+          "options": {
+            "style": "type"
+          }
+        },
+        "useConsistentArrayType": {
+          "level": "error",
+          "options": {
+            "syntax": "shorthand"
+          }
+        },
+        "useFilenamingConvention": {
+          "level": "error",
+          "options": {
+            "filenameCases": ["kebab-case"]
+          }
+        }
       },
       "suspicious": {
         "noArrayIndexKey": "warn",
         "noConstantBinaryExpressions": "error",
         "noEmptyBlockStatements": "error",
-        "noUnknownAtRules": "off"
+        "noUnknownAtRules": "off",
+        "noExplicitAny": "error"
       },
       "complexity": {
         "noImportantStyles": "off"
@@ -107,5 +126,6 @@
       "indentScriptAndStyle": false,
       "selfCloseVoidElements": "always"
     }
-  }
+  },
+  "plugins": ["./biome-plugins/no-loops.grit", "./biome-plugins/function-for-blocks.grit"]
 }

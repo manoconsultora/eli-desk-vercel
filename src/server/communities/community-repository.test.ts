@@ -26,12 +26,12 @@ function createFakeClient(rows: Record<string, unknown>) {
       const builder = Object.assign(Promise.resolve({ data: rows[table] ?? [], error: null }), {
         maybeSingle: () => Promise.resolve({ data: rows[table] ?? null, error: null }),
       }) as unknown as Record<string, unknown>;
-      for (const method of ["select", "eq", "in", "is", "order"]) {
+      ["select", "eq", "in", "is", "order"].forEach((method) => {
         builder[method] = (...args: unknown[]) => {
           calls.push({ table, method, args });
           return builder;
         };
-      }
+      });
       return builder;
     },
   };
@@ -89,12 +89,12 @@ test("getCommunityDetail filtra todas las tablas por organization_id", async () 
 
   await getCommunityDetail(client, ORGANIZATION_ID, { kind: "all_consorcios" }, COMMUNITY_ID);
 
-  for (const table of ["edificios", "unidades", "tickets", "resident_unit_links", "residentes"]) {
+  ["edificios", "unidades", "tickets", "resident_unit_links", "residentes"].forEach((table) => {
     const orgFilter = calls.find(
       (call) => call.table === table && call.method === "eq" && call.args[0] === "organization_id",
     );
     assert.deepEqual(orgFilter?.args, ["organization_id", ORGANIZATION_ID], table);
-  }
+  });
 });
 
 test("getCommunityDetail arma unidades con residentes, principal primero", async () => {
@@ -211,12 +211,12 @@ test("createUnit lanza ante otros errores de la base", async () => {
 function createUpdateClient(result: { data: unknown[] | null; error: { code: string; message: string } | null }) {
   const calls: { method: string; args: unknown[] }[] = [];
   const builder: Record<string, unknown> = {};
-  for (const method of ["update", "delete", "upsert", "eq"]) {
+  ["update", "delete", "upsert", "eq"].forEach((method) => {
     builder[method] = (...args: unknown[]) => {
       calls.push({ method, args });
       return builder;
     };
-  }
+  });
   builder.select = (...args: unknown[]) => {
     calls.push({ method: "select", args });
     return Promise.resolve(result);

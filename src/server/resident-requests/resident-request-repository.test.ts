@@ -17,12 +17,12 @@ function createFakeClient(rows: Record<string, Record<string, unknown>[]>) {
       calls.push({ table, method: "from", args: [] });
       let data = rows[table] ?? [];
       const builder = {} as Record<string, unknown>;
-      for (const method of ["select", "eq", "not", "order"]) {
+      ["select", "eq", "not", "order"].forEach((method) => {
         builder[method] = (...args: unknown[]) => {
           calls.push({ table, method, args });
           return builder;
         };
-      }
+      });
       builder.in = (column: string, values: unknown[]) => {
         calls.push({ table, method: "in", args: [column, values] });
         data = data.filter((row) => values.includes(row[column]));
@@ -171,10 +171,10 @@ test("filtra todas las tablas por organization_id", async () => {
 
   await listResidentRequests(client, ORGANIZATION_ID, { kind: "all_consorcios" });
 
-  for (const table of ["resident_onboarding_requests", "unidades", "edificios", "resident_email_outbox"]) {
+  ["resident_onboarding_requests", "unidades", "edificios", "resident_email_outbox"].forEach((table) => {
     const orgFilter = calls.find(
       (call) => call.table === table && call.method === "eq" && call.args[0] === "organization_id",
     );
     assert.deepEqual(orgFilter?.args, ["organization_id", ORGANIZATION_ID], table);
-  }
+  });
 });

@@ -48,6 +48,6 @@ export type BotIdentityCandidate = {
   }>;
 };
 
-export interface BotIdentityRepository {
+export type BotIdentityRepository = {
   findTelegramCandidates(externalSenderId: string): Promise<BotIdentityCandidate[]>;
-}
+};

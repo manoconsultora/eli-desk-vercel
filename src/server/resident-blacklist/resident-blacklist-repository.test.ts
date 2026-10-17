@@ -16,12 +16,12 @@ type Call = { method: string; args: unknown[] };
 function fakeClient(rows: unknown[], rpcError: { message: string } | null = null) {
   const calls: Call[] = [];
   const builder: Record<string, unknown> = {};
-  for (const method of ["select", "eq", "is", "order"]) {
+  ["select", "eq", "is", "order"].forEach((method) => {
     builder[method] = (...args: unknown[]) => {
       calls.push({ method, args });
       return builder;
     };
-  }
+  });
   // biome-ignore lint/suspicious/noThenProperty: fake thenable query builder
   builder.then = (resolve: (value: unknown) => void) => resolve({ data: rows, error: null });
   const client = {

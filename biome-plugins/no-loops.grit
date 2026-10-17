@@ -1,0 +1,12 @@
+language js
+
+or {
+  JsForStatement(),
+  JsForInStatement(),
+  JsForOfStatement(),
+  JsWhileStatement(),
+  JsDoWhileStatement()
+} as $loop where {
+  not $loop <: contains `await $_`,
+  register_diagnostic(span=$loop, message="Usá filter/map/reduce en lugar de un loop. Un loop solo va si espera (await) en cada vuelta.", severity="error")
+}
