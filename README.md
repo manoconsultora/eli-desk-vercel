@@ -1,154 +1,36 @@
-# Next.js Admin Template with TypeScript & Shadcn UI
+# ELI Desk
 
-**Studio Admin** - Includes multiple dashboards, authentication layouts, customizable theme presets, and more.
+El panel de las administraciones de consorcios de ELI: tickets, consorcios y unidades, residentes, solicitudes de alta y equipo.
 
-<img src="https://github.com/arhamkhnz/next-shadcn-admin-dashboard/blob/main/media/dashboard.png?version=5" alt="Dashboard Screenshot">
+Next 16 (App Router), React 19, TypeScript, Tailwind 4, shadcn/ui y Supabase. El esquema de la base vive en [`eli-database-platform`](https://github.com/manoconsultora/eli-database-platform).
 
-Most admin templates I found, free or paid, felt cluttered, outdated, or too rigid. I built this as a cleaner alternative with features often missing in others, such as theme toggling and layout controls, while keeping the design modern, minimal, and flexible.
+Las convenciones, los checks y el contexto para trabajar en el repo están en [`AGENTS.md`](AGENTS.md).
 
-I’ve taken design inspiration from various sources. If you’d like credit for something specific, feel free to open an issue or reach out.
+## Correr en local
 
-> **View demo:** [studio admin](https://next-shadcn-admin-dashboard.vercel.app)
+Requiere Node 24 (`.nvmrc`) y pnpm 11 (`packageManager` en `package.json`).
 
-> [!TIP]
-> I’m also working on Nuxt.js, Svelte, and React (Vite + TanStack Router) versions of this dashboard. They’ll be live soon.
+```bash
+pnpm install   # también activa los hooks de git
+pnpm dev
+```
 
-## Features
+Las variables de entorno van en `.env.local`, que no se versiona.
 
-- Built with Next.js 16, TypeScript, Tailwind CSS v4, and Shadcn UI  
-- Responsive and mobile-friendly  
-- Customizable theme presets (light/dark modes with color schemes like Tangerine, Brutalist, and more)  
-- Flexible layouts (collapsible sidebar, variable content widths)  
-- Authentication flows and screens  
-- Prebuilt dashboards (Default, CRM, Finance) with more coming soon  
-- Role-Based Access Control (RBAC) with config-driven UI and multi-tenant support *(planned)*  
+## Comandos
 
-> [!NOTE]
-> The default dashboard uses the **shadcn neutral** theme.  
-> It also includes additional color presets inspired by [Tweakcn](https://tweakcn.com):  
->
-> - Tangerine  
-> - Neo Brutalism  
-> - Soft Pop  
->
-> You can create more presets by following the same structure as the existing ones.
-
-> Looking for the **Next.js 15** version?  
-> Check out the [`archive/next15`](https://github.com/arhamkhnz/next-shadcn-admin-dashboard/tree/archive/next15) branch.  
-> This branch contains the setup prior to upgrading to Next 16 and the React Compiler.
-
-> Looking for the **Next.js 14 + Tailwind CSS v3** version?  
-> Check out the [`archive/next14-tailwindv3`](https://github.com/arhamkhnz/next-shadcn-admin-dashboard/tree/archive/next14-tailwindv3) branch.  
-> It has a different color theme and is not actively maintained, but I try to keep it updated with major changes.  
-
-## Tech Stack
-
-- **Framework**: Next.js 16 (App Router), TypeScript, Tailwind CSS v4  
-- **UI Components**: Shadcn UI  
-- **Validation**: Zod  
-- **Forms & State Management**: React Hook Form, Zustand  
-- **Tables & Data Handling**: TanStack Table  
-- **Tooling & DX**: Biome, Husky  
-
-## Screens
-
-### Available
-- Default Dashboard  
-- CRM Dashboard  
-- Finance Dashboard  
-- Authentication (4 screens)
-
-### Coming Soon
-- Analytics Dashboard  
-- eCommerce Dashboard  
-- Academy Dashboard  
-- Logistics Dashboard  
-- Email Page  
-- Chat Page  
-- Calendar Page  
-- Kanban Board  
-- Invoice Page  
-- Users Management  
-- Roles Management  
-
-## Colocation File System Architecture
-
-This project follows a **colocation-based architecture** each feature keeps its own pages, components, and logic inside its route folder.  
-Shared UI, hooks, and configuration live at the top level, making the codebase modular, scalable, and easier to maintain as the app grows.
-
-For a full breakdown of the structure with examples, see the [Next Colocation Template](https://github.com/arhamkhnz/next-colocation-template).
-
-## Getting Started
-
-You can run this project locally, or deploy it instantly with Vercel.
-
-### Deploy with Vercel
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Farhamkhnz%2Fnext-shadcn-admin-dashboard)
-
-_Deploy your own copy with one click._
-
-### Run locally
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/arhamkhnz/next-shadcn-admin-dashboard.git
-   ```
-   
-2. **Navigate into the project**
-   ```bash
-    cd next-shadcn-admin-dashboard
-   ```
-   
-3. **Install dependencies**
-   ```bash
-    pnpm install
-   ```
-
-4. **Start the development server**
-   ```bash
-   pnpm dev
-   ```
-
-Your app will be running at [http://localhost:3000](http://localhost:3000)
+| Comando | Qué hace |
+| --- | --- |
+| `pnpm dev` | Servidor de desarrollo |
+| `pnpm test` | Tests (`node:test` con `tsx`) |
+| `pnpm typecheck` | `next typegen` + `tsc` |
+| `pnpm deps:check` | Código y dependencias sin uso (knip) |
+| `pnpm check:fix` | Formato, lint e imports con Biome |
 
 ## Supabase keepalive
 
-If your Supabase project is on a plan that pauses inactive projects, this repo includes `GET /api/keepalive/supabase`.
+`GET /api/keepalive/supabase` evita que se pause un proyecto de Supabase en un plan que pausa los proyectos inactivos. Ver [docs/supabase-keepalive.md](docs/supabase-keepalive.md).
 
-Set:
+## Licencia
 
-```bash
-SUPABASE_KEEPALIVE_SECRET=your-secret
-SUPABASE_KEEPALIVE_TABLE=admin_users
-```
-
-Then call it from your scheduler with:
-
-```bash
-curl -X GET \
-  "$APP_URL/api/keepalive/supabase" \
-  -H "Authorization: Bearer $SUPABASE_KEEPALIVE_SECRET"
-```
-
-See [docs/supabase-keepalive.md](docs/supabase-keepalive.md) for the full setup.
-
-### Formatting and Linting
-
-Format, lint, and organize imports
-```bash
-pnpm check:fix
-```
-> For more information on available rules, fixes, and CLI options, refer to the [Biome documentation](https://biomejs.dev/).
-
----
-
-> [!IMPORTANT]  
-> This project is updated frequently. If you’re working from a fork or an older clone, pull the latest changes before syncing. Some updates may include breaking changes.
-
----
-
-Contributions are welcome. Feel free to open issues, feature requests, or start a discussion.
-
-
-**Happy Vibe Coding!**
+El proyecto nació de la plantilla [next-shadcn-admin-dashboard](https://github.com/arhamkhnz/next-shadcn-admin-dashboard), con licencia MIT (ver [`LICENSE`](LICENSE)).
