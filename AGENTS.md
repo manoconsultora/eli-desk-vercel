@@ -7,9 +7,9 @@ Estas reglas valen para cualquier persona o agente que trabaje en el repo.
 ## Contexto que no está en el código
 
 - **La base no es de este repo.** El esquema y las migraciones viven en `eli-database-platform`. Desk no crea migraciones. Si un cambio de Desk necesita una migración nueva, se mergea primero la base; si la base borra algo que Desk usa, primero Desk.
-- **Aislamiento por organización.** Toda consulta filtra por `organization_id` y, con scope `explicit`, por los consorcios asignados. La RLS es la última barrera, no la única.
+- **Aislamiento por organización.** Toda consulta tiene que filtrar por `organization_id` y, con scope `explicit`, por los consorcios asignados. La RLS es la última barrera, no la única.
 - **Secretos.** No se leen ni se imprimen archivos `.env*`, claves ni tokens. La service role saltea la RLS: solo se usa del lado del servidor.
-- **Diseño.** Los componentes de `src/components/ui/` (shadcn) se usan como vienen. Nada de valores arbitrarios de Tailwind (`text-[13px]`): la escala por defecto y los componentes compartidos.
+- **Diseño.** Los componentes de `src/components/ui/` (shadcn) se usan como vienen. En código nuevo, nada de valores arbitrarios de Tailwind (`text-[13px]`): la escala por defecto y los componentes compartidos. Ningún check lo hace cumplir y todavía quedan casos viejos.
 
 ## Convenciones
 
@@ -21,7 +21,7 @@ Las hacen cumplir Biome (`biome.json` y los plugins de `biome-plugins/`), knip, 
 | `T[]` en lugar de `Array<T>` | `style/useConsistentArrayType` |
 | `unknown` en lugar de `any` | `suspicious/noExplicitAny` |
 | Una función con bloque va como `function`, no como arrow asignada a una constante | plugin `function-for-blocks.grit` |
-| `filter`/`map`/`reduce`/`forEach` en lugar de loops. Un loop que espera (`await`) en cada vuelta sí va: pasarlo a `Promise.all` cambia el orden y la carga | plugin `no-loops.grit` |
+| `filter`/`map`/`reduce`/`forEach` en lugar de loops. Un loop que espera (`await`) en su cuerpo en cada vuelta sí va, igual que `for await`: pasarlo a `Promise.all` cambia el orden y la carga | plugin `no-loops.grit` |
 | Desde 4 parámetros, un objeto | `nursery/useMaxParams` (máximo 3) |
 | Nombres de archivo en `kebab-case` | `style/useFilenamingConvention` |
 | No exportar lo que no se usa afuera, ni dejar código o dependencias sin uso | `knip` |

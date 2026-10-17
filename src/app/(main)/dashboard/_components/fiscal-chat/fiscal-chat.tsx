@@ -426,7 +426,6 @@ export function FiscalChat({
 
   useEffect(() => {
     if (!messageList) return;
-    // A function declaration is hoisted, so TypeScript drops the null check inside it.
     const list = messageList;
 
     let frame = 0;
