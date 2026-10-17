@@ -31,7 +31,3 @@ export class BotSecurityError extends Error {
     this.safeMessage = SAFE_MESSAGES[code];
   }
 }
-
-export function isBotSecurityError(error: unknown): error is BotSecurityError {
-  return error instanceof BotSecurityError;
-}

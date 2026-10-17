@@ -18,34 +18,9 @@ import {
 
 import type { FeatureId } from "@/features/catalog/feature-catalog";
 
-export interface NavSubItem {
-  title: string;
-  url: string;
-  icon?: LucideIcon;
-  comingSoon?: boolean;
-  newTab?: boolean;
-  isNew?: boolean;
-}
-
-export interface NavMainItem {
-  title: string;
-  url: string;
-  icon?: LucideIcon;
-  subItems?: NavSubItem[];
-  comingSoon?: boolean;
-  newTab?: boolean;
-  isNew?: boolean;
-}
-
-export interface NavGroup {
-  id: number;
-  label?: string;
-  items: NavMainItem[];
-}
-
-export type DeskModuleAvailability = "available" | "unavailable" | "coming_soon";
-export type DeskModulePlacement = "mobile_primary" | "mobile_more" | "desktop";
-export type DeskDesktopSection = "primary" | "future";
+type DeskModuleAvailability = "available" | "unavailable" | "coming_soon";
+type DeskModulePlacement = "mobile_primary" | "mobile_more" | "desktop";
+type DeskDesktopSection = "primary" | "future";
 
 export interface DeskNavigationItem {
   id: string;
@@ -205,6 +180,3 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
 export const deskMobilePrimaryItems = deskNavigationItems.filter((item) => item.placements.includes("mobile_primary"));
 export const deskMobileMoreItems = deskNavigationItems.filter((item) => item.placements.includes("mobile_more"));
 export const deskDesktopNavigationItems = deskNavigationItems.filter((item) => item.placements.includes("desktop"));
-
-// Kept for the backup navigation component that still imports the legacy types.
-export const sidebarItems: NavGroup[] = [];

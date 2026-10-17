@@ -13,7 +13,7 @@ import type {
 } from "./security-types";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-export const AUTHENTICATION_WINDOW_SECONDS = 5 * 60;
+const AUTHENTICATION_WINDOW_SECONDS = 5 * 60;
 
 export type VerifySignedRequestInput = {
   method: string;

@@ -2,9 +2,9 @@ import { Building2, Headset, LayoutDashboard, type LucideIcon, Rocket, Settings,
 
 import type { FeatureId } from "@/features/catalog/feature-catalog";
 
-export type PlatformItemAvailability = "available" | "unavailable";
-export type PlatformItemPlacement = "mobile_primary" | "mobile_more" | "desktop";
-export type PlatformDesktopSection = "primary" | "administration";
+type PlatformItemAvailability = "available" | "unavailable";
+type PlatformItemPlacement = "mobile_primary" | "mobile_more" | "desktop";
+type PlatformDesktopSection = "primary" | "administration";
 
 export type PlatformNavigationItem = {
   id: string;
@@ -19,7 +19,7 @@ export type PlatformNavigationItem = {
 
 export const PLATFORM_MOBILE_MORE_LABEL = "Más";
 
-export const platformNavigationItems: readonly PlatformNavigationItem[] = [
+const platformNavigationItems: readonly PlatformNavigationItem[] = [
   {
     id: "dashboard",
     label: "Dashboard",

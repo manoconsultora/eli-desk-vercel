@@ -1,5 +1,4 @@
 import type { BotContext } from "../../lib/bot-identity/identity-types";
-import type { AuthenticatedTechnicalPrincipal } from "../../lib/bot-security/security-types";
 import { BOT_API_CAPABILITY, type CapabilityAuthorizationInput, type CapabilityAuthorizationResult } from "./api-types";
 
 export function authorizeBotCapability(input: CapabilityAuthorizationInput): CapabilityAuthorizationResult {
@@ -35,5 +34,3 @@ export function dispatchRegisteredCapability(_input?: unknown) {
     retryable: false as const,
   };
 }
-
-export type { AuthenticatedTechnicalPrincipal };

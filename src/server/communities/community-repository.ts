@@ -12,7 +12,7 @@ export type CommunitySummary = {
   activeTicketCount: number;
 };
 
-export type CommunityResident = {
+type CommunityResident = {
   id: string;
   name: string;
   relationship: string | null;

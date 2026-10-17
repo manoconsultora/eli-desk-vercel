@@ -4,14 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 
 import { subscribeTicketRslEvent } from "@/lib/realtime/ticket-rsl-events";
 import {
-  changeTicketStatus,
-  closeTicket,
-  createTicket as createTicketAction,
   getDashboardTicketSummary,
   getDashboardTicketTrend,
-  listTicketEdificios,
   listTickets as listTicketsAction,
-  updateTicket as updateTicketAction,
 } from "@/server/tickets/ticket-actions";
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -46,31 +41,6 @@ export interface ChartDataPoint {
   cerrados: number;
   total: number;
 }
-
-export interface Edificio {
-  id: string;
-  nombre: string;
-  direccion: string | null;
-  codigo: string | null;
-}
-
-// ─── Tag suggestions by ticket type ──────────────────────────────────
-export const tagSuggestions: Record<string, string[]> = {
-  reclamo: [
-    "plomería",
-    "electricidad",
-    "ascensor",
-    "limpieza",
-    "ruidos",
-    "humedad",
-    "filtraciones",
-    "pintura",
-    "portería",
-  ],
-  urgencia: ["incendio", "inundación", "gas", "rotura caño", "ascensor trabado", "corte luz", "seguridad"],
-  consulta: ["expensas", "reglamento", "mudanza", "mascotas", "estacionamiento", "horarios", "documentación"],
-  pago: ["expensas", "extraordinarias", "mora", "recibo", "factura"],
-};
 
 // ─── Hook: Metrics for Section Cards ─────────────────────────────────
 export function useDashboardMetrics() {
@@ -110,25 +80,6 @@ export function useDashboardMetrics() {
   useEffect(() => subscribeTicketRslEvent(() => void fetchMetrics()), [fetchMetrics]);
 
   return { metrics, loading, error, refetch: fetchMetrics };
-}
-
-// ─── Hook: Edificios list (for filter) ───────────────────────────────
-export function useEdificios() {
-  const [edificios, setEdificios] = useState<Edificio[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchEdificios() {
-      const result = await listTicketEdificios();
-      setEdificios(
-        result.success ? result.data.map((edificio) => ({ ...edificio, direccion: null, codigo: null })) : [],
-      );
-      setLoading(false);
-    }
-    void fetchEdificios();
-  }, []);
-
-  return { edificios, loading };
 }
 
 // ─── Hook: Tickets List for DataTable ────────────────────────────────
@@ -176,65 +127,6 @@ export function useTickets() {
   useEffect(() => subscribeTicketRslEvent(() => void fetchTickets()), [fetchTickets]);
 
   return { tickets, loading, error, refetch: fetchTickets };
-}
-
-// ─── Mutation: Update Ticket ─────────────────────────────────────────
-export async function updateTicket(
-  id: string,
-  fields: Partial<{
-    status: string;
-    priority: string;
-    ticket_type: string;
-    category: string | null;
-    description: string;
-    edificio_id: string;
-    data: Record<string, unknown>;
-    closed_reason: string;
-    closed_by: string;
-    closed_at: string;
-  }>,
-): Promise<{ success: boolean; error?: string }> {
-  if (fields.status === "cerrado") {
-    const result = await closeTicket(id, fields.closed_reason ?? "");
-    return result.success ? { success: true } : { success: false, error: result.error };
-  }
-  if (fields.status) {
-    const result = await changeTicketStatus(id, fields.status);
-    return result.success ? { success: true } : { success: false, error: result.error };
-  }
-  const result = await updateTicketAction(id, fields);
-  return result.success ? { success: true } : { success: false, error: result.error };
-}
-
-// ─── Mutation: Soft Delete Ticket ────────────────────────────────────
-export async function softDeleteTicket(
-  id: string,
-  reason: string,
-  deletedBy = "dashboard-admin",
-): Promise<{ success: boolean; error?: string }> {
-  void id;
-  void reason;
-  void deletedBy;
-  return { success: false, error: "La eliminación no forma parte del MVP de Tickets." };
-}
-
-// ─── Mutation: Updated Create Ticket ─────────────────────────────────────────
-export async function createTicket(input: {
-  edificio_id: string;
-  ticket_type: string;
-  priority: string;
-  description: string;
-  tags?: string[];
-  created_by?: string;
-}): Promise<{ success: boolean; error?: string }> {
-  const result = await createTicketAction({
-    edificio_id: input.edificio_id,
-    ticket_type: input.ticket_type,
-    priority: input.priority,
-    category: input.tags?.[0] ?? null,
-    description: input.description,
-  });
-  return result.success ? { success: true } : { success: false, error: result.error };
 }
 
 // ─── Hook: Chart Data (tickets per day) ──────────────────────────────
