@@ -1,9 +1,9 @@
 export interface User {
-  readonly id: string
-  readonly name: string
-  readonly email: string
-  readonly avatar: string
-  readonly role: string
+  readonly id: string;
+  readonly name: string;
+  readonly email: string;
+  readonly avatar: string;
+  readonly role: string;
 }
 
 export const rootUser: User = {
@@ -12,6 +12,6 @@ export const rootUser: User = {
   email: "admin@ma-no.work",
   avatar: "",
   role: "admin",
-}
+};
 
-export const users: readonly User[] = [rootUser] as const
+export const users: readonly User[] = [rootUser] as const;

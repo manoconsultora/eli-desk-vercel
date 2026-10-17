@@ -49,7 +49,7 @@ function MobileGreetingMenu() {
             <Avatar className="size-9 rounded-lg">
               <AvatarImage src={currentUser.avatar || undefined} alt={currentUser.name} />
               <AvatarFallback className="rounded-lg">{getInitials(currentUser.name)}</AvatarFallback>
-              <FiscalAlertDot className="absolute -right-1 -top-1 size-3 ring-2 ring-background" />
+              <FiscalAlertDot className="-right-1 -top-1 absolute size-3 ring-2 ring-background" />
             </Avatar>
           </span>
           <span className="block min-w-0 truncate text-[clamp(1.5rem,6vw,2.5rem)] text-slate-900 leading-tight tracking-[-0.04em]">

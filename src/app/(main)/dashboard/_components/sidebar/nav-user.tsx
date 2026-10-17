@@ -39,7 +39,7 @@ export function NavUser({
                   <AvatarImage src={user.avatar || undefined} alt={user.name} />
                   <AvatarFallback className="rounded-lg">{getInitials(user.name)}</AvatarFallback>
                 </Avatar>
-                <FiscalAlertDot className="absolute -right-1.5 -top-1.5" />
+                <FiscalAlertDot className="-right-1.5 -top-1.5 absolute" />
               </span>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
