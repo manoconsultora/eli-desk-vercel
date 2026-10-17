@@ -1,0 +1,24 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  // Trabajo en curso que todavía no tiene pantalla: se analiza como entrada
+  // para que lo que importa cuente como usado. Sacarlo de acá cuando se conecte.
+  "entry": [
+    // Onboarding de administraciones (#49): server actions, invitación y reglas.
+    "src/server/platform-onboarding/actions.ts",
+    "src/server/platform-onboarding/auth-invitation.ts",
+    "src/lib/platform-onboarding/policy.ts",
+    "src/lib/platform-onboarding/validation.ts",
+    // CRUD de overrides y scopes de features por membresía.
+    "src/lib/access/membership-feature-overrides.ts",
+    "src/lib/access/membership-feature-scopes.ts"
+  ],
+  "ignoreIssues": {
+    // Componentes de shadcn: se copian completos y no se recortan sus exports.
+    "src/components/ui/**": ["exports", "types"],
+    // Onboarding de administraciones (#49): helpers que la pantalla todavía no usa.
+    "src/lib/platform-onboarding/contracts.ts": ["exports"],
+    "src/lib/platform-onboarding/onboarding-progress.ts": ["types"],
+    "src/lib/platform-onboarding/presentation.ts": ["exports"],
+    "src/server/platform-onboarding/repository.ts": ["exports"]
+  }
+}
