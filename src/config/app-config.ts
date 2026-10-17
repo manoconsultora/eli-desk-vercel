@@ -9,8 +9,6 @@ export const APP_CONFIG = {
   copyright: `© ${currentYear}, ELI Desk.`,
   meta: {
     title: "Eli Desk - Panel operativo en tiempo real",
-    description:
-      "Dashboard de monitoreo en tiempo real para reclamos, urgencias y gestión operativa de consorcios.",
+    description: "Dashboard de monitoreo en tiempo real para reclamos, urgencias y gestión operativa de consorcios.",
   },
 };
-

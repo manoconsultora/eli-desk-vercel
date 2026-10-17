@@ -9,10 +9,10 @@ export default function page() {
         <Lock className="mx-auto size-12 text-primary" />
         <h1 className="mt-4 font-bold text-3xl tracking-tight sm:text-4xl">404 — Acceso restringido</h1>
         <p className="mt-4 text-muted-foreground">
-        <br />
-        El contenido solicitado no está disponible en este entorno.
-        <br />
-        ELI es una plataforma interna de operación.
+          <br />
+          El contenido solicitado no está disponible en este entorno.
+          <br />
+          ELI es una plataforma interna de operación.
         </p>
         <div className="mt-6">
           <Link
