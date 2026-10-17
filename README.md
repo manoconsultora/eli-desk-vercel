@@ -102,12 +102,12 @@ _Deploy your own copy with one click._
    
 3. **Install dependencies**
    ```bash
-    npm install
+    pnpm install
    ```
 
 4. **Start the development server**
    ```bash
-   npm run dev
+   pnpm dev
    ```
 
 Your app will be running at [http://localhost:3000](http://localhost:3000)
@@ -137,7 +137,7 @@ See [docs/supabase-keepalive.md](docs/supabase-keepalive.md) for the full setup.
 
 Format, lint, and organize imports
 ```bash
-npx @biomejs/biome check --write
+pnpm check:fix
 ```
 > For more information on available rules, fixes, and CLI options, refer to the [Biome documentation](https://biomejs.dev/).
 
