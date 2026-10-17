@@ -24,8 +24,7 @@ export type RelationshipOption = { code: string; label: string };
 // Creates the resident, or reuses the one with that email without overwriting their details.
 export async function addResidentToUnit(
   supabase: SupabaseClient,
-  unitId: string,
-  relationship: string,
+  { unitId, relationship }: { unitId: string; relationship: string },
   { name, email, phone }: ResidentDetails,
 ): Promise<{ created: boolean }> {
   const { data, error } = await supabase

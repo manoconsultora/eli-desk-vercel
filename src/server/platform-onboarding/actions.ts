@@ -137,7 +137,7 @@ export async function provisionOnboardingOrganizationAction(formData: FormData) 
     try {
       await command(supabase, "platform_onboarding_provision_organization", { p_case_id: caseId });
     } catch (error) {
-      await recordSafeFailure(supabase, caseId, "provisioning", error);
+      await recordSafeFailure(supabase, { caseId, stage: "provisioning", error });
       throw error;
     }
   });
@@ -170,7 +170,7 @@ export async function addInitialPropertyAction(formData: FormData) {
         p_units: unitRows,
       });
     } catch (error) {
-      await recordSafeFailure(supabase, caseId, "initial_data", error);
+      await recordSafeFailure(supabase, { caseId, stage: "initial_data", error });
       throw error;
     }
   });
@@ -184,7 +184,7 @@ export async function activateOnboardingCaseAction(formData: FormData) {
     try {
       await command(supabase, "platform_onboarding_activate", { p_case_id: caseId });
     } catch (error) {
-      await recordSafeFailure(supabase, caseId, "activation", error);
+      await recordSafeFailure(supabase, { caseId, stage: "activation", error });
       throw error;
     }
   });
@@ -200,7 +200,10 @@ export async function revokeInternalFreeGrantAction(formData: FormData) {
   });
 }
 
-async function recordSafeFailure(client: unknown, caseId: string, stage: string, error: unknown) {
+async function recordSafeFailure(
+  client: unknown,
+  { caseId, stage, error }: { caseId: string; stage: string; error: unknown },
+) {
   try {
     await command(client, "platform_onboarding_mark_failure", {
       p_case_id: caseId,

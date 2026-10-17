@@ -66,8 +66,7 @@ test("getCommunityDetail no consulta si el consorcio no está en el scope explic
   const { client, calls } = createFakeClient(FULL_ROWS);
 
   const result = await getCommunityDetail(
-    client,
-    ORGANIZATION_ID,
+    { organizationId: ORGANIZATION_ID, supabase: client },
     { kind: "explicit", consorcioIds: ["otro"] },
     COMMUNITY_ID,
   );
@@ -79,7 +78,11 @@ test("getCommunityDetail no consulta si el consorcio no está en el scope explic
 test("getCommunityDetail devuelve null si el consorcio no existe en la organización", async () => {
   const { client } = createFakeClient({ ...FULL_ROWS, edificios: null });
 
-  const result = await getCommunityDetail(client, ORGANIZATION_ID, { kind: "all_consorcios" }, COMMUNITY_ID);
+  const result = await getCommunityDetail(
+    { organizationId: ORGANIZATION_ID, supabase: client },
+    { kind: "all_consorcios" },
+    COMMUNITY_ID,
+  );
 
   assert.equal(result, null);
 });
@@ -87,7 +90,11 @@ test("getCommunityDetail devuelve null si el consorcio no existe en la organizac
 test("getCommunityDetail filtra todas las tablas por organization_id", async () => {
   const { client, calls } = createFakeClient(FULL_ROWS);
 
-  await getCommunityDetail(client, ORGANIZATION_ID, { kind: "all_consorcios" }, COMMUNITY_ID);
+  await getCommunityDetail(
+    { organizationId: ORGANIZATION_ID, supabase: client },
+    { kind: "all_consorcios" },
+    COMMUNITY_ID,
+  );
 
   ["edificios", "unidades", "tickets", "resident_unit_links", "residentes"].forEach((table) => {
     const orgFilter = calls.find(
@@ -100,7 +107,11 @@ test("getCommunityDetail filtra todas las tablas por organization_id", async () 
 test("getCommunityDetail arma unidades con residentes, principal primero", async () => {
   const { client } = createFakeClient(FULL_ROWS);
 
-  const result = await getCommunityDetail(client, ORGANIZATION_ID, { kind: "all_consorcios" }, COMMUNITY_ID);
+  const result = await getCommunityDetail(
+    { organizationId: ORGANIZATION_ID, supabase: client },
+    { kind: "all_consorcios" },
+    COMMUNITY_ID,
+  );
 
   assert.equal(result?.name, "Torre A");
   assert.equal(result?.address, "Ugarte 2200");
@@ -119,7 +130,11 @@ test("getCommunityDetail arma unidades con residentes, principal primero", async
 test("getCommunityDetail muestra el número de unidad de cada ticket, o null si no tiene", async () => {
   const { client } = createFakeClient(FULL_ROWS);
 
-  const result = await getCommunityDetail(client, ORGANIZATION_ID, { kind: "all_consorcios" }, COMMUNITY_ID);
+  const result = await getCommunityDetail(
+    { organizationId: ORGANIZATION_ID, supabase: client },
+    { kind: "all_consorcios" },
+    COMMUNITY_ID,
+  );
 
   assert.deepEqual(
     result?.activeTickets.map((ticket) => [ticket.code, ticket.unitNumber]),
@@ -166,7 +181,10 @@ function createInsertClient(error: { code: string; message: string } | null) {
 test("createUnit inserta la unidad desocupada, con la organización y el consorcio", async () => {
   const { client, inserted } = createInsertClient(null);
 
-  const result = await createUnit(client, ORGANIZATION_ID, COMMUNITY_ID, { number: "2B", floor: null });
+  const result = await createUnit({ organizationId: ORGANIZATION_ID, supabase: client }, COMMUNITY_ID, {
+    number: "2B",
+    floor: null,
+  });
 
   assert.deepEqual(result, { ok: true });
   assert.deepEqual(inserted, [
@@ -186,7 +204,10 @@ test("createUnit inserta la unidad desocupada, con la organización y el consorc
 test("createUnit devuelve duplicate si el número ya existe en el consorcio", async () => {
   const { client } = createInsertClient({ code: "23505", message: "duplicate key" });
 
-  const result = await createUnit(client, ORGANIZATION_ID, COMMUNITY_ID, { number: "1A", floor: "1" });
+  const result = await createUnit({ organizationId: ORGANIZATION_ID, supabase: client }, COMMUNITY_ID, {
+    number: "1A",
+    floor: "1",
+  });
 
   assert.deepEqual(result, { ok: false, reason: "duplicate" });
 });
@@ -194,7 +215,10 @@ test("createUnit devuelve duplicate si el número ya existe en el consorcio", as
 test("createUnit devuelve forbidden si RLS rechaza el insert", async () => {
   const { client } = createInsertClient({ code: "42501", message: "row-level security" });
 
-  const result = await createUnit(client, ORGANIZATION_ID, COMMUNITY_ID, { number: "1A", floor: null });
+  const result = await createUnit({ organizationId: ORGANIZATION_ID, supabase: client }, COMMUNITY_ID, {
+    number: "1A",
+    floor: null,
+  });
 
   assert.deepEqual(result, { ok: false, reason: "forbidden" });
 });
@@ -202,9 +226,12 @@ test("createUnit devuelve forbidden si RLS rechaza el insert", async () => {
 test("createUnit lanza ante otros errores de la base", async () => {
   const { client } = createInsertClient({ code: "08006", message: "connection failure" });
 
-  await assert.rejects(createUnit(client, ORGANIZATION_ID, COMMUNITY_ID, { number: "1A", floor: null }), {
-    message: "connection failure",
-  });
+  await assert.rejects(
+    createUnit({ organizationId: ORGANIZATION_ID, supabase: client }, COMMUNITY_ID, { number: "1A", floor: null }),
+    {
+      message: "connection failure",
+    },
+  );
 });
 
 /** Cliente falso para el update, el delete y el upsert de unidades: devuelve las filas o el error dados y guarda los filtros. */
@@ -233,7 +260,7 @@ function createUpdateClient(result: { data: unknown[] | null; error: { code: str
 test("importUnits inserta las unidades salteando los números que ya existen", async () => {
   const { client, calls } = createUpdateClient({ data: [{ id: "u1" }], error: null });
 
-  const result = await importUnits(client, ORGANIZATION_ID, COMMUNITY_ID, [
+  const result = await importUnits({ organizationId: ORGANIZATION_ID, supabase: client }, COMMUNITY_ID, [
     { number: "1A", floor: "1" },
     { number: "PB", floor: null },
   ]);
@@ -257,16 +284,24 @@ test("importUnits inserta las unidades salteando los números que ya existen", a
 test("importUnits devuelve forbidden si RLS rechaza el insert", async () => {
   const { client } = createUpdateClient({ data: null, error: { code: "42501", message: "row-level security" } });
 
-  assert.deepEqual(await importUnits(client, ORGANIZATION_ID, COMMUNITY_ID, [{ number: "1A", floor: null }]), {
-    ok: false,
-    reason: "forbidden",
-  });
+  assert.deepEqual(
+    await importUnits({ organizationId: ORGANIZATION_ID, supabase: client }, COMMUNITY_ID, [
+      { number: "1A", floor: null },
+    ]),
+    {
+      ok: false,
+      reason: "forbidden",
+    },
+  );
 });
 
 test("updateUnit cambia número y piso de la unidad de la organización", async () => {
   const { client, calls } = createUpdateClient({ data: [{ id: "u1" }], error: null });
 
-  const result = await updateUnit(client, ORGANIZATION_ID, "u1", { number: "2B", floor: null });
+  const result = await updateUnit({ organizationId: ORGANIZATION_ID, supabase: client }, "u1", {
+    number: "2B",
+    floor: null,
+  });
 
   assert.deepEqual(result, { ok: true });
   assert.deepEqual(calls, [
@@ -281,7 +316,10 @@ test("updateUnit cambia número y piso de la unidad de la organización", async 
 test("updateUnit devuelve duplicate si el número ya existe en el consorcio", async () => {
   const { client } = createUpdateClient({ data: null, error: { code: "23505", message: "duplicate key" } });
 
-  const result = await updateUnit(client, ORGANIZATION_ID, "u1", { number: "1A", floor: "1" });
+  const result = await updateUnit({ organizationId: ORGANIZATION_ID, supabase: client }, "u1", {
+    number: "1A",
+    floor: "1",
+  });
 
   assert.deepEqual(result, { ok: false, reason: "duplicate" });
 });
@@ -289,7 +327,10 @@ test("updateUnit devuelve duplicate si el número ya existe en el consorcio", as
 test("updateUnit devuelve forbidden si RLS no deja actualizar ninguna fila", async () => {
   const { client } = createUpdateClient({ data: [], error: null });
 
-  const result = await updateUnit(client, ORGANIZATION_ID, "u1", { number: "1A", floor: null });
+  const result = await updateUnit({ organizationId: ORGANIZATION_ID, supabase: client }, "u1", {
+    number: "1A",
+    floor: null,
+  });
 
   assert.deepEqual(result, { ok: false, reason: "forbidden" });
 });
@@ -297,9 +338,12 @@ test("updateUnit devuelve forbidden si RLS no deja actualizar ninguna fila", asy
 test("updateUnit lanza ante otros errores de la base", async () => {
   const { client } = createUpdateClient({ data: null, error: { code: "08006", message: "connection failure" } });
 
-  await assert.rejects(updateUnit(client, ORGANIZATION_ID, "u1", { number: "1A", floor: null }), {
-    message: "connection failure",
-  });
+  await assert.rejects(
+    updateUnit({ organizationId: ORGANIZATION_ID, supabase: client }, "u1", { number: "1A", floor: null }),
+    {
+      message: "connection failure",
+    },
+  );
 });
 
 test("deleteUnit borra la unidad de la organización", async () => {

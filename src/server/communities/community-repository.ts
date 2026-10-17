@@ -2,6 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { ConsorcioScope } from "@/lib/access/feature-scope-types";
 
+export type CommunityAccess = { organizationId: string; supabase: SupabaseClient };
+
 // Domain uses community/unit; the DB still names them edificios/unidades.
 export type CommunitySummary = {
   id: string;
@@ -124,8 +126,7 @@ type TicketRow = {
 };
 
 export async function getCommunityDetail(
-  supabase: SupabaseClient,
-  organizationId: string,
+  { organizationId, supabase }: CommunityAccess,
   scope: ConsorcioScope,
   communityId: string,
 ): Promise<CommunityDetail | null> {
@@ -242,8 +243,7 @@ export type CreateUnitResult = { ok: true } | { ok: false; reason: "duplicate" |
 // RLS decides who can insert (TENANT_OWNER, or ADMIN and OPERATOR assigned to the consorcio).
 // A new unit has no residents yet, so it starts as desocupado (the database also enforces it).
 export async function createUnit(
-  supabase: SupabaseClient,
-  organizationId: string,
+  { organizationId, supabase }: CommunityAccess,
   communityId: string,
   unit: NewUnit,
 ): Promise<CreateUnitResult> {
@@ -266,8 +266,7 @@ export type ImportUnitsResult = { ok: true; created: number } | { ok: false; rea
 // Same permissions as createUnit. Numbers that already exist in the consorcio are skipped
 // (ON CONFLICT DO NOTHING), so a unit created meanwhile doesn't fail the whole import.
 export async function importUnits(
-  supabase: SupabaseClient,
-  organizationId: string,
+  { organizationId, supabase }: CommunityAccess,
   communityId: string,
   units: NewUnit[],
 ): Promise<ImportUnitsResult> {
@@ -295,8 +294,7 @@ export type UpdateUnitResult = { ok: true } | { ok: false; reason: "duplicate" |
 // RLS decides who can edit (TENANT_OWNER, or ADMIN and OPERATOR assigned to the consorcio).
 // An UPDATE blocked by RLS matches no rows instead of failing, so zero rows back means forbidden.
 export async function updateUnit(
-  supabase: SupabaseClient,
-  organizationId: string,
+  { organizationId, supabase }: CommunityAccess,
   unitId: string,
   unit: NewUnit,
 ): Promise<UpdateUnitResult> {

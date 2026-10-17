@@ -75,7 +75,7 @@ test("sin Resend habilitado no consulta ni envía", async () => {
   const { admin, updates } = createFakeAdmin();
   const { send, requests } = fakeResend();
 
-  const result = await drainResidentEmailOutbox(admin, null, send);
+  const result = await drainResidentEmailOutbox(admin, null, { send });
 
   assert.deepEqual(result, { gate: "resend_configuration_required", sent: 0 });
   assert.equal(requests.length, 0);
@@ -95,7 +95,7 @@ test("envía cada mail y lo marca como enviado", async () => {
   const { admin, updates } = createFakeAdmin();
   const { send, requests } = fakeResend();
 
-  const result = await drainResidentEmailOutbox(admin, CONFIG, send);
+  const result = await drainResidentEmailOutbox(admin, CONFIG, { send });
 
   assert.deepEqual(result, { gate: "open", sent: 2 });
   assert.deepEqual(
@@ -117,7 +117,7 @@ test("no envía un mail que otro proceso ya tomó", async () => {
   const { admin } = createFakeAdmin(["m1"]);
   const { send, requests } = fakeResend();
 
-  const result = await drainResidentEmailOutbox(admin, CONFIG, send);
+  const result = await drainResidentEmailOutbox(admin, CONFIG, { send });
 
   assert.equal(result.sent, 1);
   assert.deepEqual(
@@ -130,7 +130,7 @@ test("si Resend falla lo marca failed y lo reprograma", async () => {
   const { admin, updates } = createFakeAdmin();
   const { send } = fakeResend(500);
 
-  const result = await drainResidentEmailOutbox(admin, CONFIG, send);
+  const result = await drainResidentEmailOutbox(admin, CONFIG, { send });
 
   assert.equal(result.sent, 0);
   const [, failed] = updates("m2");
@@ -143,7 +143,7 @@ test("solo toma mails con intentos disponibles, incluidos los trabados en sendin
   const { admin, chain } = createFakeAdmin();
   const { send } = fakeResend();
 
-  await drainResidentEmailOutbox(admin, CONFIG, send);
+  await drainResidentEmailOutbox(admin, CONFIG, { send });
 
   const select = chain(0);
   assert.deepEqual(select.find((call) => call.method === "lt")?.args, ["attempts", MAX_ATTEMPTS]);
@@ -157,7 +157,7 @@ test("reclama un mail trabado en sending solo si nadie lo tocó desde que se ley
   const { admin, chain } = createFakeAdmin();
   const { send, requests } = fakeResend();
 
-  await drainResidentEmailOutbox(admin, CONFIG, send);
+  await drainResidentEmailOutbox(admin, CONFIG, { send });
 
   const claim = chain(3)
     .filter((call) => call.method === "eq")
@@ -176,7 +176,7 @@ test("un mail con un tipo desconocido queda failed para reintentarlo, sin mandar
   ROWS.push({ ...ROWS[0], id: "m3", template_key: "resident_something_new" as (typeof ROWS)[0]["template_key"] });
 
   try {
-    await drainResidentEmailOutbox(admin, CONFIG, send);
+    await drainResidentEmailOutbox(admin, CONFIG, { send });
   } finally {
     ROWS.pop();
   }

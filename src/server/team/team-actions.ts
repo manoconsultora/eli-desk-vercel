@@ -47,15 +47,19 @@ async function invitationLink(token: string) {
 }
 
 async function deliver(
-  supabase: SupabaseClient,
-  organizationId: string,
+  { organizationId, supabase }: { organizationId: string; supabase: SupabaseClient },
   { token, email }: InvitationToken,
   role: TeamRole,
 ): Promise<InvitationResult> {
   const link = await invitationLink(token);
   const { data } = await supabase.from("organizations").select("name").eq("id", organizationId).maybeSingle();
   const organizationName = (data?.name as string | undefined) ?? "Tu administración";
-  const emailSent = await sendTeamInvitationEmail(resendConfigFromEnv(), email, { organizationName, role, url: link });
+  const emailSent = await sendTeamInvitationEmail(resendConfigFromEnv(), {
+    to: email,
+    organizationName,
+    role,
+    url: link,
+  });
   revalidatePath("/dashboard/equipo");
   return { success: true, link, emailSent };
 }
@@ -84,7 +88,7 @@ export async function inviteTeamMemberAction(invitation: {
       role,
       communityIds: invitation.communityIds,
     });
-    return await deliver(supabase, context.organizationId, token, role);
+    return await deliver({ organizationId: context.organizationId, supabase }, token, role);
   } catch (error) {
     return failure(error, "No se pudo invitar.");
   }
@@ -97,7 +101,7 @@ export async function resendTeamInvitationAction(invitation: { id: string; role:
     if (!context?.organizationId) return { success: false, error: "Solo el dueño de la administración invita." };
     const supabase = await createClient();
     const token = await resendTeamInvitation(supabase, invitation.id);
-    return await deliver(supabase, context.organizationId, token, role);
+    return await deliver({ organizationId: context.organizationId, supabase }, token, role);
   } catch (error) {
     return failure(error, "No se pudo reenviar la invitación.");
   }

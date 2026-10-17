@@ -16,14 +16,18 @@ function unit(communityId: string, communityName: string): ResidentUnit {
   };
 }
 
-function resident(id: string, name: string, active: boolean, units: ResidentUnit[], phone: string | null = null) {
+function resident(
+  id: string,
+  name: string,
+  { active, units, phone = null }: { active: boolean; units: ResidentUnit[]; phone?: string | null },
+) {
   return { id, name, phone, email: `${id}@x.com`, active, units } satisfies ResidentSummary;
 }
 
 const RESIDENTS = [
-  resident("r1", "Ana Pérez", true, [unit("e1", "Ugarte 2200")], "1155"),
-  resident("r2", "Beto", false, [unit("e2", "Belgrano")]),
-  resident("r3", "Caro", true, []),
+  resident("r1", "Ana Pérez", { active: true, units: [unit("e1", "Ugarte 2200")], phone: "1155" }),
+  resident("r2", "Beto", { active: false, units: [unit("e2", "Belgrano")] }),
+  resident("r3", "Caro", { active: true, units: [] }),
 ];
 const NO_FILTERS = { search: "", communityId: ALL, status: ALL } as const;
 const ids = (residents: ResidentSummary[]) => residents.map((item) => item.id);
@@ -45,8 +49,11 @@ test("filtra por consorcio y por estado", () => {
 });
 
 test("las opciones de consorcio salen de las unidades, ordenadas y sin repetir", () => {
-  assert.deepEqual(communityOptions([...RESIDENTS, resident("r4", "Dani", true, [unit("e1", "Ugarte 2200")])]), [
-    { id: "e2", name: "Belgrano" },
-    { id: "e1", name: "Ugarte 2200" },
-  ]);
+  assert.deepEqual(
+    communityOptions([...RESIDENTS, resident("r4", "Dani", { active: true, units: [unit("e1", "Ugarte 2200")] })]),
+    [
+      { id: "e2", name: "Belgrano" },
+      { id: "e1", name: "Ugarte 2200" },
+    ],
+  );
 });

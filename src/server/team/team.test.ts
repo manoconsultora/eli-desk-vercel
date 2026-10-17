@@ -28,7 +28,7 @@ test("sin Resend habilitado no se manda y lo informa", async () => {
     called = true;
     return new Response(null);
   }) as typeof fetch;
-  assert.equal(await sendTeamInvitationEmail(null, "x@y.com", EMAIL, send), false);
+  assert.equal(await sendTeamInvitationEmail(null, { to: "x@y.com", ...EMAIL }, { send }), false);
   assert.equal(called, false);
 });
 
@@ -38,11 +38,17 @@ test("con Resend manda a quien se invitó y devuelve si salió", async () => {
     bodies.push(JSON.parse(String(init?.body)));
     return new Response(null, { status: 200 });
   }) as typeof fetch;
-  assert.equal(await sendTeamInvitationEmail({ apiKey: "k", from: "ELI <a@b.c>" }, "x@y.com", EMAIL, send), true);
+  assert.equal(
+    await sendTeamInvitationEmail({ apiKey: "k", from: "ELI <a@b.c>" }, { to: "x@y.com", ...EMAIL }, { send }),
+    true,
+  );
   assert.equal(bodies[0].to, "x@y.com");
 
   const failing = (async () => new Response(null, { status: 422 })) as typeof fetch;
-  assert.equal(await sendTeamInvitationEmail({ apiKey: "k", from: "ELI <a@b.c>" }, "x@y.com", EMAIL, failing), false);
+  assert.equal(
+    await sendTeamInvitationEmail({ apiKey: "k", from: "ELI <a@b.c>" }, { to: "x@y.com", ...EMAIL }, { send: failing }),
+    false,
+  );
 });
 
 function fakeRpc(result: { data?: unknown; error?: { message: string } | null }) {

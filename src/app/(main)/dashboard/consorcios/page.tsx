@@ -38,7 +38,11 @@ async function loadCommunity(communityId: string): Promise<CommunityDrawerResult
     const supabase = await createClient();
     const context = await getRequestAuthContext();
     if (!context.authenticated || context.userType !== "tenant" || !context.organizationId) return { kind: "error" };
-    const community = await getCommunityDetail(supabase, context.organizationId, access.consorcioScope, communityId);
+    const community = await getCommunityDetail(
+      { organizationId: context.organizationId, supabase },
+      access.consorcioScope,
+      communityId,
+    );
     if (!community) return { kind: "not_found" };
     // A failure here only empties the Accesos tab; the rest of the drawer still shows.
     const links = await listJoinLinks(supabase, community.id).catch(() => null);

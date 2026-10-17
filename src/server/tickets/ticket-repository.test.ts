@@ -63,7 +63,7 @@ function edificioFilter(calls: RecordedCall[]) {
 test("updateTicket filtra por edificio_id cuando el scope es explicit", async () => {
   const { client, calls } = createRecordingClient();
 
-  await updateTicket(client, ORGANIZATION_ID, EXPLICIT_SCOPE, "t1", {
+  await updateTicket({ organizationId: ORGANIZATION_ID, scope: EXPLICIT_SCOPE, supabase: client }, "t1", {
     edificio_id: IN_SCOPE,
     ...TICKET_INPUT,
   });
@@ -74,7 +74,11 @@ test("updateTicket filtra por edificio_id cuando el scope es explicit", async ()
 test("updateTicketStatus filtra por edificio_id cuando el scope es explicit", async () => {
   const { client, calls } = createRecordingClient();
 
-  await updateTicketStatus(client, ORGANIZATION_ID, EXPLICIT_SCOPE, "t1", "en_proceso");
+  await updateTicketStatus(
+    { organizationId: ORGANIZATION_ID, scope: EXPLICIT_SCOPE, supabase: client },
+    "t1",
+    "en_proceso",
+  );
 
   assert.deepEqual(edificioFilter(calls)?.args, ["edificio_id", [IN_SCOPE]]);
 });
@@ -82,7 +86,7 @@ test("updateTicketStatus filtra por edificio_id cuando el scope es explicit", as
 test("closeTicket filtra por edificio_id cuando el scope es explicit", async () => {
   const { client, calls } = createRecordingClient();
 
-  await closeTicket(client, ORGANIZATION_ID, EXPLICIT_SCOPE, "t1", "resuelto");
+  await closeTicket({ organizationId: ORGANIZATION_ID, scope: EXPLICIT_SCOPE, supabase: client }, "t1", "resuelto");
 
   assert.deepEqual(edificioFilter(calls)?.args, ["edificio_id", [IN_SCOPE]]);
 });
@@ -90,7 +94,11 @@ test("closeTicket filtra por edificio_id cuando el scope es explicit", async () 
 test("closeTicket no filtra por edificio_id cuando el scope es all_consorcios", async () => {
   const { client, calls } = createRecordingClient();
 
-  await closeTicket(client, ORGANIZATION_ID, { kind: "all_consorcios" }, "t1", "resuelto");
+  await closeTicket(
+    { organizationId: ORGANIZATION_ID, scope: { kind: "all_consorcios" }, supabase: client },
+    "t1",
+    "resuelto",
+  );
 
   assert.equal(edificioFilter(calls), undefined);
 });
@@ -100,7 +108,7 @@ test("createTicket rechaza un consorcio fuera del scope", async () => {
 
   await assert.rejects(
     () =>
-      createTicket(client, ORGANIZATION_ID, EXPLICIT_SCOPE, "user-1", {
+      createTicket({ organizationId: ORGANIZATION_ID, scope: EXPLICIT_SCOPE, supabase: client }, "user-1", {
         edificio_id: OUT_OF_SCOPE,
         ...TICKET_INPUT,
       }),
@@ -111,7 +119,7 @@ test("createTicket rechaza un consorcio fuera del scope", async () => {
 test("createTicket acepta un consorcio dentro del scope", async () => {
   const { client, calls } = createRecordingClient();
 
-  await createTicket(client, ORGANIZATION_ID, EXPLICIT_SCOPE, "user-1", {
+  await createTicket({ organizationId: ORGANIZATION_ID, scope: EXPLICIT_SCOPE, supabase: client }, "user-1", {
     edificio_id: IN_SCOPE,
     ...TICKET_INPUT,
   });
@@ -124,7 +132,7 @@ test("updateTicket rechaza mover el ticket a un consorcio fuera del scope", asyn
 
   await assert.rejects(
     () =>
-      updateTicket(client, ORGANIZATION_ID, EXPLICIT_SCOPE, "t1", {
+      updateTicket({ organizationId: ORGANIZATION_ID, scope: EXPLICIT_SCOPE, supabase: client }, "t1", {
         edificio_id: OUT_OF_SCOPE,
         ...TICKET_INPUT,
       }),
