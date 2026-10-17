@@ -9,7 +9,7 @@
  *
  * Usage:
  * - During local development, run manually after adding any new theme preset:
- *     npm run generate:presets
+ *     pnpm generate:presets
  * - Ensure that each new CSS preset includes `label:` and `value:` comments.
  * - This generation step is currently automated using a Husky pre-push hook.
  * - You may optionally integrate it directly into a build step if preferred.
@@ -108,7 +108,7 @@ const updated = fileContent.replace(
 );
 
 async function main() {
-  const formatted = execFileSync("npx", ["@biomejs/biome", "format", "--stdin-file-path", outputPath], {
+  const formatted = execFileSync("biome", ["format", "--stdin-file-path", outputPath], {
     input: updated,
     encoding: "utf8",
   });

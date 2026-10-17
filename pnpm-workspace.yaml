@@ -1,0 +1,9 @@
+allowBuilds:
+  esbuild: true # native binary for tsx, which runs the tests and the theme presets script
+  sharp: true # libvips bindings required by Next.js production image optimization
+
+blockExoticSubdeps: true
+
+minimumReleaseAge: 10080 # 7 days in minutes
+
+saveExact: true
