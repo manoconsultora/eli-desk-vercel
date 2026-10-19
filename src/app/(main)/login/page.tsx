@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 
 import { Globe } from "lucide-react";
 
@@ -70,13 +69,12 @@ export default function LoginPage() {
       <div className="absolute top-5 flex w-full justify-end px-6 sm:px-10">
         <p className="text-muted-foreground text-sm">
           ¿Problemas para entrar?{" "}
-          <Link
-            prefetch={false}
+          <a
             className="text-foreground underline underline-offset-4 hover:no-underline"
-            href="/login"
+            href="mailto:support@somoseli.app"
           >
             Contactar soporte
-          </Link>
+          </a>
         </p>
       </div>
 
