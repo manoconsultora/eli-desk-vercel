@@ -386,7 +386,7 @@ export function TicketsWorkspace({ initialEdificioFilter }: { initialEdificioFil
       <Card>
         <CardHeader className="gap-4">
           <CardTitle className="text-lg">Bandeja de tickets</CardTitle>
-          <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_repeat(3,160px)]">
+          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_repeat(3,160px)]">
             <div className="relative">
               <Search className="absolute top-2.5 left-3 size-4 text-muted-foreground" />
               <Input
@@ -467,7 +467,7 @@ export function TicketsWorkspace({ initialEdificioFilter }: { initialEdificioFil
                     key={ticket.id}
                     type="button"
                     onClick={() => setSelected(ticket)}
-                    className={`relative grid w-full gap-3 overflow-hidden rounded-lg border p-4 text-left transition-[background-color,border-color,box-shadow,transform] duration-300 hover:bg-muted/50 md:grid-cols-[minmax(0,1fr)_180px_110px_110px] md:items-center ${
+                    className={`relative grid w-full gap-3 overflow-hidden rounded-lg border p-4 text-left transition-[background-color,border-color,box-shadow,transform] duration-300 hover:bg-muted/50 lg:grid-cols-[minmax(0,1fr)_180px_110px_110px] lg:items-center ${
                       isRealtimeHighlighted
                         ? "eli-ticket-arrival border-sky-200 bg-sky-50/80 shadow-sm ring-1 ring-sky-200/60 dark:bg-sky-950/20"
                         : ""

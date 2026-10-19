@@ -163,7 +163,7 @@ export function ResidentRequestsList({
     <div className="space-y-4">
       <Tabs value={tab} onValueChange={setTab}>
         {/* One row that scrolls sideways on narrow screens; the list keeps its fixed height. */}
-        <TabsList className="w-full justify-start overflow-x-auto [scrollbar-width:none] md:w-fit">
+        <TabsList className="w-full max-w-full justify-start overflow-x-auto [scrollbar-width:none] md:w-fit">
           {TABS.map((item) => (
             <TabsTrigger key={item.status} value={item.status} className="flex-none gap-2 px-3 py-1.5">
               <span aria-hidden className={`size-2 rounded-full ${item.dot}`} />
