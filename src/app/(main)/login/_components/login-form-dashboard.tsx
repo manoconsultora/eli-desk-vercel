@@ -2,6 +2,7 @@
 
 import { Suspense, useActionState } from "react";
 
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,9 @@ import { GoogleLoginButton } from "./google-login-button";
 
 const initialState = { error: undefined as string | undefined };
 const OAUTH_CALLBACK_ERROR = "oauth_callback_failed";
-const OAUTH_CALLBACK_ERROR_MESSAGE = "No pudimos iniciar sesión con Google. Intentá nuevamente.";
+// The callback also receives expired or used password reset links, so the message covers both.
+const OAUTH_CALLBACK_ERROR_MESSAGE =
+  "No pudimos iniciar sesión. Si usaste un link del correo, venció o ya se usó: pedí uno nuevo.";
 
 function OAuthErrorMessage() {
   const searchParams = useSearchParams();
@@ -57,7 +60,15 @@ export function LoginFormDashboard() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="password">Contraseña</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Contraseña</Label>
+          <Link
+            href="/recuperar-contrasena"
+            className="text-muted-foreground text-sm underline-offset-4 hover:text-foreground hover:underline"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
         <Input
           id="password"
           name="password"
