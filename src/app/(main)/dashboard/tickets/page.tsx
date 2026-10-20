@@ -1,3 +1,4 @@
+import { getRequestAuthContext } from "@/lib/auth/get-auth-context";
 import { getDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
 
 import { TicketsWorkspace } from "./_components/tickets-workspace";
@@ -18,8 +19,13 @@ function NonOperationalState({ state }: { state: string }) {
 }
 
 export default async function TicketsPage({ searchParams }: { searchParams: Promise<{ consorcio?: string }> }) {
-  const access = await getDeskFeatureAccess("tickets");
+  const [access, context] = await Promise.all([getDeskFeatureAccess("tickets"), getRequestAuthContext()]);
   if (access?.state !== "resolved") return <NonOperationalState state={access?.state ?? "error"} />;
   const { consorcio } = await searchParams;
-  return <TicketsWorkspace initialEdificioFilter={typeof consorcio === "string" ? consorcio : undefined} />;
+  return (
+    <TicketsWorkspace
+      initialEdificioFilter={typeof consorcio === "string" ? consorcio : undefined}
+      canManage={context.role !== "VIEWER"}
+    />
+  );
 }

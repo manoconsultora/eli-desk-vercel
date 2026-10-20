@@ -72,7 +72,14 @@ function csvValue(value: string | null | undefined) {
   return `"${safeText.replaceAll('"', '""')}"`;
 }
 
-export function TicketsWorkspace({ initialEdificioFilter }: { initialEdificioFilter?: string }) {
+// `canManage` is false for VIEWER: the list stays readable, without creating, editing or changing status.
+export function TicketsWorkspace({
+  initialEdificioFilter,
+  canManage,
+}: {
+  initialEdificioFilter?: string;
+  canManage: boolean;
+}) {
   const [tickets, setTickets] = React.useState<TicketRecord[]>([]);
   const [edificios, setEdificios] = React.useState<{ id: string; nombre: string }[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -376,10 +383,12 @@ export function TicketsWorkspace({ initialEdificioFilter }: { initialEdificioFil
             <Download className="mr-2 size-4" />
             Exportar CSV
           </Button>
-          <Button onClick={openCreate}>
-            <Plus className="mr-2 size-4" />
-            Nuevo ticket
-          </Button>
+          {canManage && (
+            <Button onClick={openCreate}>
+              <Plus className="mr-2 size-4" />
+              Nuevo ticket
+            </Button>
+          )}
         </div>
       </header>
 
@@ -589,38 +598,42 @@ export function TicketsWorkspace({ initialEdificioFilter }: { initialEdificioFil
                     <p className="mt-1 text-muted-foreground text-sm">{selected.category}</p>
                   </div>
                 )}
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <Button variant="outline" onClick={() => openEdit(selected)}>
-                    Editar
-                  </Button>
-                  {selected.status !== "cerrado" && (
-                    <Button variant="outline" onClick={openClose} disabled={saving}>
-                      Cerrar ticket
-                    </Button>
-                  )}
-                </div>
-                {selected.status !== "cerrado" && (
-                  <div className="space-y-2">
-                    <p className="font-medium text-sm">Cambiar estado</p>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={selected.status === "abierto" || saving}
-                        onClick={() => void setStatus("abierto")}
-                      >
-                        Abierto
+                {canManage && (
+                  <>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <Button variant="outline" onClick={() => openEdit(selected)}>
+                        Editar
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={selected.status === "en_proceso" || saving}
-                        onClick={() => void setStatus("en_proceso")}
-                      >
-                        En proceso
-                      </Button>
+                      {selected.status !== "cerrado" && (
+                        <Button variant="outline" onClick={openClose} disabled={saving}>
+                          Cerrar ticket
+                        </Button>
+                      )}
                     </div>
-                  </div>
+                    {selected.status !== "cerrado" && (
+                      <div className="space-y-2">
+                        <p className="font-medium text-sm">Cambiar estado</p>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={selected.status === "abierto" || saving}
+                            onClick={() => void setStatus("abierto")}
+                          >
+                            Abierto
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={selected.status === "en_proceso" || saving}
+                            onClick={() => void setStatus("en_proceso")}
+                          >
+                            En proceso
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
                 {actionError && <p className="text-destructive text-sm">{actionError}</p>}
               </div>
