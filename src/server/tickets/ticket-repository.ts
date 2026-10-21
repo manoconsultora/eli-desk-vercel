@@ -6,7 +6,7 @@ import { randomInt } from "node:crypto";
 
 const TICKET_STATUSES = ["abierto", "en_proceso", "cerrado"] as const;
 export const TICKET_TYPES = ["reclamo", "urgencia", "consulta", "pago"] as const;
-export const TICKET_PRIORITIES = ["alta", "media", "baja", "normal"] as const;
+export const TICKET_PRIORITIES = ["urgente", "alta", "media", "baja", "normal"] as const;
 
 export type TicketStatus = (typeof TICKET_STATUSES)[number];
 export type TicketType = (typeof TICKET_TYPES)[number];
