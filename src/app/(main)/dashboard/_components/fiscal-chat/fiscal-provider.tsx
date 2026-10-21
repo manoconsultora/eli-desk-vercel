@@ -7,6 +7,9 @@ import dynamic from "next/dynamic";
 import { claimFiscalEntry } from "@/lib/eli-chat/entry-session";
 import type { FiscalSnapshot } from "@/lib/eli-chat/types";
 import { type DeskFiscalInitial, getDeskFiscalInitial, postponeFiscalChat } from "@/server/desk-fiscal";
+import type { UnitsSetup } from "@/server/desk-units-setup";
+
+import { UnitsSetupDialog } from "../units-setup/units-setup-dialog";
 
 const FiscalChat = dynamic(() => import("./fiscal-chat").then((module) => module.FiscalChat), { ssr: false });
 const FiscalContext = createContext<{
@@ -26,11 +29,24 @@ export function useFiscalSetup() {
   return useContext(FiscalContext);
 }
 
-export function FiscalProvider({ initial, children }: { initial: DeskFiscalInitial; children: ReactNode }) {
+export function FiscalProvider({
+  initial,
+  unitsSetup,
+  children,
+}: {
+  initial: DeskFiscalInitial;
+  unitsSetup: UnitsSetup | null;
+  children: ReactNode;
+}) {
   const [snapshot, setSnapshot] = useState(initial.snapshot);
   const [error, setError] = useState(initial.error);
   const [open, setOpen] = useState(false);
+  const [unitsOpen, setUnitsOpen] = useState(false);
   const checked = useRef(false);
+  const confirmed = useRef(Boolean(initial.snapshot?.confirmed_at));
+  // Read when the fiscal chat confirms; the dialog then follows the refreshed prop.
+  const noUnitsYet = useRef(false);
+  noUnitsYet.current = unitsSetup?.loaded === 0;
   const pending = Boolean(snapshot && !snapshot.confirmed_at);
   const acceptSnapshot = useCallback((next: FiscalSnapshot) => {
     setSnapshot((current) =>
@@ -39,7 +55,12 @@ export function FiscalProvider({ initial, children }: { initial: DeskFiscalIniti
         : current,
     );
     setError(null);
-    if (next.confirmed_at) setOpen(false);
+    if (next.confirmed_at) {
+      setOpen(false);
+      // Confirming the fiscal data leads to loading the units, the last step of the initial setup.
+      if (!confirmed.current && noUnitsYet.current) setUnitsOpen(true);
+      confirmed.current = true;
+    }
   }, []);
 
   useEffect(() => {
@@ -91,6 +112,7 @@ export function FiscalProvider({ initial, children }: { initial: DeskFiscalIniti
       {snapshot && (
         <FiscalChat key={snapshot.organization_id} open={open} onDismiss={dismiss} onSnapshot={acceptSnapshot} />
       )}
+      {unitsSetup && <UnitsSetupDialog setup={unitsSetup} open={unitsOpen} onOpenChange={setUnitsOpen} />}
     </FiscalContext.Provider>
   );
 }

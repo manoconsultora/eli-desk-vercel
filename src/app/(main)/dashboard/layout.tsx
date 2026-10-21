@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { resolveDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
 import { getDeskPlanMenuData } from "@/server/desk-account";
 import { getDeskFiscalInitial } from "@/server/desk-fiscal";
+import { getUnitsSetup } from "@/server/desk-units-setup";
 import { getPreference, logoutAction } from "@/server/server-actions";
 import { listTicketEdificios } from "@/server/tickets/ticket-actions";
 
@@ -32,7 +33,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
     lifecycle,
     state,
   }));
-  const fiscal = await getDeskFiscalInitial();
+  const [fiscal, unitsSetup] = await Promise.all([getDeskFiscalInitial(), getUnitsSetup()]);
   const email = user?.email ?? "";
   const fullName = typeof user?.user_metadata?.full_name === "string" ? user.user_metadata.full_name.trim() : "";
   const name = typeof user?.user_metadata?.name === "string" ? user.user_metadata.name.trim() : "";
@@ -55,7 +56,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
   };
 
   return (
-    <FiscalProvider key={fiscal.sessionKey ?? "fiscal-unavailable"} initial={fiscal}>
+    <FiscalProvider key={fiscal.sessionKey ?? "fiscal-unavailable"} initial={fiscal} unitsSetup={unitsSetup}>
       <DashboardShellClient
         defaultOpen={defaultOpen}
         variant={variant}
