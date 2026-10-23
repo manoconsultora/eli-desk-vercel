@@ -8,6 +8,7 @@ const SAFE_MESSAGES: Record<BotSecurityErrorCode, string> = {
   body_hash_mismatch: "Invalid authentication request.",
   unsupported_method: "Invalid authentication request.",
   invalid_path: "Invalid authentication request.",
+  invalid_domain: "Invalid authentication request.",
   unknown_key: "Authentication failed.",
   key_identity_mismatch: "Authentication failed.",
   key_environment_mismatch: "Authentication failed.",

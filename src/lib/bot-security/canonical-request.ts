@@ -2,6 +2,7 @@ import { BotSecurityError } from "../../server/bot-security/security-errors";
 import { createHash } from "node:crypto";
 
 export type CanonicalRequestInput = {
+  domain: string;
   method: string;
   path: string;
   keyId: string;
@@ -20,6 +21,9 @@ export function sha256Hex(body: Uint8Array | ArrayBuffer): string {
 }
 
 export function buildCanonicalRequest(input: CanonicalRequestInput): string {
+  if (!input.domain || input.domain.trim() !== input.domain || input.domain.includes("\n")) {
+    throw new BotSecurityError("invalid_domain");
+  }
   if (input.method !== "POST") {
     throw new BotSecurityError("unsupported_method");
   }
@@ -29,7 +33,7 @@ export function buildCanonicalRequest(input: CanonicalRequestInput): string {
   }
 
   return [
-    "ELI-N8N-BOT-API-V1",
+    input.domain,
     input.method,
     input.path,
     input.keyId,

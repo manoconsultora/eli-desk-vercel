@@ -1,4 +1,4 @@
-import type { BotContext } from "../../lib/bot-identity/identity-types";
+import type { BotContext, BotIdentityChannel } from "../../lib/bot-identity/identity-types";
 import type { AuthenticatedTechnicalPrincipal } from "../../lib/bot-security/security-types";
 
 export const BOT_API_VERSION = "v1" as const;
@@ -20,7 +20,7 @@ export type BotApiRequest = {
   idempotencyKey: string;
   capability: BotApiCapability;
   source: {
-    channel: "telegram";
+    channel: BotIdentityChannel;
     externalSenderId: string;
   };
   input: TicketsCreateApiInput;
@@ -38,6 +38,7 @@ export type BotApiOutcome =
   | "cross_tenant"
   | "capability_denied"
   | "capability_not_ready"
+  | "idempotency_conflict"
   | "internal_error";
 
 export type BotApiErrorCategory =
@@ -63,6 +64,7 @@ export type BotApiResponse = {
     code: string;
     category: BotApiErrorCategory;
   };
+  result?: { ticketId: string; ticketCode: string };
 };
 
 export type CapabilityAuthorizationInput = {
@@ -73,7 +75,7 @@ export type CapabilityAuthorizationInput = {
 
 export type CapabilityAuthorizationResult = { allowed: true } | { allowed: false; code: "capability_denied" };
 
-export type CapabilityDispatchResult = {
-  outcome: "capability_not_ready";
-  retryable: false;
-};
+export type CapabilityDispatchResult =
+  | { outcome: "success"; retryable: false; result: { ticketId: string; ticketCode: string } }
+  | { outcome: "idempotency_conflict"; retryable: false }
+  | { outcome: "internal_error"; retryable: true };

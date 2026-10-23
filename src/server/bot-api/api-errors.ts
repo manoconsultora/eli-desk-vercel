@@ -11,6 +11,7 @@ const SAFE_MESSAGES: Partial<Record<BotApiOutcome, string>> = {
   cross_tenant: "Identity context is invalid.",
   capability_denied: "Capability is not authorized.",
   capability_not_ready: "Capability is not available yet.",
+  idempotency_conflict: "The idempotency key was already used with different ticket data.",
   internal_error: "Request could not be completed.",
 };
 
@@ -24,6 +25,7 @@ export function createApiResponse(
     category?: BotApiErrorCategory;
     status?: number;
     missingInput?: string[];
+    result?: { ticketId: string; ticketCode: string };
   } = {},
 ): Response {
   const body: BotApiResponse = {
@@ -42,6 +44,7 @@ export function createApiResponse(
           },
         }
       : {}),
+    ...(options.result ? { result: options.result } : {}),
   };
 
   return Response.json(body, { status: options.status ?? statusForOutcome(outcome) });
@@ -59,6 +62,8 @@ function statusForOutcome(outcome: BotApiOutcome): number {
       return 403;
     case "capability_not_ready":
       return 501;
+    case "idempotency_conflict":
+      return 409;
     case "internal_error":
       return 500;
     case "clarification_required":

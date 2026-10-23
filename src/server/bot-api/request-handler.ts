@@ -21,6 +21,8 @@ import { type RawBodyError, readBoundedRawBody } from "./raw-body";
 
 type Verify = (input: VerifySignedRequestInput) => Promise<AuthenticatedTechnicalPrincipal>;
 
+export const BOT_HMAC_DOMAIN = "ELI-N8N-BOT-API-V1";
+
 export type BotApiHandlerDependencies = {
   environment: BotSecurityEnvironment;
   keyRegistry: BotKeyRegistry;
@@ -35,7 +37,7 @@ export type BotApiHandlerDependencies = {
     request: BotApiRequest;
     principal: AuthenticatedTechnicalPrincipal;
     context: NonNullable<BotIdentityResolution["context"]>;
-  }) => CapabilityDispatchResult;
+  }) => CapabilityDispatchResult | PromiseLike<CapabilityDispatchResult>;
   verify?: Verify;
   readBody?: (request: Request) => Promise<Uint8Array>;
 };
@@ -56,6 +58,7 @@ export async function handleBotApiRequest(
   let principal: AuthenticatedTechnicalPrincipal;
   try {
     principal = await verify({
+      domain: BOT_HMAC_DOMAIN,
       method: request.method,
       path,
       rawBody,
@@ -130,16 +133,16 @@ export async function handleBotApiRequest(
     });
   }
 
-  const dispatched = dependencies.dispatch({
+  const dispatched = await dependencies.dispatch({
     request: parsed.request,
     principal,
     context: identity.context,
   });
   return createApiResponse(dispatched.outcome, {
     correlationId: parsed.request.correlationId,
-    code: dispatched.outcome,
-    category: "dependency",
+    ...(dispatched.outcome === "success" ? {} : { code: dispatched.outcome, category: "dependency" as const }),
     retryable: dispatched.retryable,
+    ...(dispatched.outcome === "success" ? { result: dispatched.result } : {}),
   });
 }
 
@@ -214,7 +217,10 @@ function validateRequest(value: unknown): ValidationResult {
   if (hasUnexpectedKeys(value.source, ["channel", "externalSenderId"])) {
     return { ok: false, code: "invalid_source", correlationId };
   }
-  if (value.source.channel !== "telegram" || !stringField(value.source.externalSenderId)) {
+  if (
+    !isOneOf(value.source.channel, ["telegram", "whatsapp"] as const) ||
+    !stringField(value.source.externalSenderId)
+  ) {
     return { ok: false, code: "invalid_source", correlationId };
   }
   if (!isRecord(value.input)) return { ok: false, code: "invalid_input", correlationId };

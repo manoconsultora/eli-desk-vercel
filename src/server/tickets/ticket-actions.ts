@@ -4,6 +4,7 @@ import { getRequestAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
 import { getResolvedDeskTicketScope, isEmptyDeskTicketScope } from "@/server/access/resolve-desk-ticket-scope";
 
+import { executeCreateTicketCommand } from "./create-ticket-command";
 import {
   closeTicket as closeTicketRepository,
   createTicket as createTicketRepository,
@@ -97,13 +98,18 @@ async function requireWritableTicketScope() {
 export async function createTicket(input: Record<string, unknown>): Promise<ActionResult<TicketRecord>> {
   try {
     const validated = validateTicketInput(input);
-    return withTenant("No se pudo crear el ticket.", async (supabase, organizationId, userId) =>
-      createTicketRepository(
-        { organizationId, scope: await requireWritableTicketScope(), supabase },
-        userId,
-        validated,
-      ),
-    );
+    return withTenant("No se pudo crear el ticket.", async (supabase, organizationId, userId) => {
+      const scope = await requireWritableTicketScope();
+      const result = await executeCreateTicketCommand(
+        { actor: { kind: "desk", organizationId, userId }, input: validated },
+        {
+          createDeskTicket: (deskInput, deskOrganizationId, deskUserId) =>
+            createTicketRepository({ organizationId: deskOrganizationId, scope, supabase }, deskUserId, deskInput),
+        },
+      );
+      if (result.actor !== "desk") throw new Error("Unexpected ticket actor.");
+      return result.ticket;
+    });
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Los datos del ticket no son válidos." };
   }

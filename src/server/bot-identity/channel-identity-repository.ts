@@ -2,7 +2,11 @@ import "server-only";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-import type { BotIdentityCandidate, BotIdentityRepository } from "../../lib/bot-identity/identity-types";
+import type {
+  BotIdentityCandidate,
+  BotIdentityChannel,
+  BotIdentityRepository,
+} from "../../lib/bot-identity/identity-types";
 import { BotIdentityRepositoryError } from "./identity-errors";
 
 type ChannelUserRow = {
@@ -48,12 +52,12 @@ async function read<T>(query: PromiseLike<{ data: unknown; error: { message?: st
 class SupabaseBotIdentityRepository implements BotIdentityRepository {
   constructor(private readonly client: SupabaseClient) {}
 
-  async findTelegramCandidates(externalSenderId: string): Promise<BotIdentityCandidate[]> {
+  async findChannelCandidates(channel: BotIdentityChannel, externalSenderId: string): Promise<BotIdentityCandidate[]> {
     const channelUsers = await read<ChannelUserRow>(
       this.client
         .from("channel_users")
         .select("id, organization_id, residente_id, status")
-        .eq("channel", "telegram")
+        .eq("channel", channel)
         .eq("channel_user_id", externalSenderId),
     );
 

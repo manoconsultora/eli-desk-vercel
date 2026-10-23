@@ -26,7 +26,7 @@ const baseCandidate: BotIdentityCandidate = {
 function repository(
   candidates: BotIdentityCandidate[] | (() => Promise<BotIdentityCandidate[]>),
 ): BotIdentityRepository {
-  return { findTelegramCandidates: typeof candidates === "function" ? candidates : async () => candidates };
+  return { findChannelCandidates: async () => (typeof candidates === "function" ? candidates() : candidates) };
 }
 
 function resolve(
@@ -61,7 +61,7 @@ test("returns unresolved for unknown or unbound Telegram users", async () => {
 test("rejects unsupported and malformed identity input before repository access", async () => {
   let calls = 0;
   const repo: BotIdentityRepository = {
-    async findTelegramCandidates() {
+    async findChannelCandidates() {
       calls += 1;
       return [];
     },
@@ -75,6 +75,25 @@ test("rejects unsupported and malformed identity input before repository access"
     BotIdentityInputError,
   );
   assert.equal(calls, 0);
+});
+
+test("resolves WhatsApp only through a valid channel identity", async () => {
+  let requestedChannel = "";
+  let requestedSenderId = "";
+  const result = await resolveBotContext(
+    { channel: "whatsapp", externalSenderId: "5491123456789" },
+    {
+      async findChannelCandidates(channel, senderId) {
+        requestedChannel = channel;
+        requestedSenderId = senderId;
+        return [baseCandidate];
+      },
+    },
+  );
+  assert.equal(result.outcome, "resolved");
+  assert.equal(result.context?.channel, "whatsapp");
+  assert.equal(requestedChannel, "whatsapp");
+  assert.equal(requestedSenderId, "5491123456789");
 });
 
 test("returns blocked and inactive without constructing context", async () => {

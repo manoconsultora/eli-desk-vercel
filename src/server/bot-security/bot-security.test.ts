@@ -79,6 +79,7 @@ function signedRequest(
     headerBodyHash?: string;
     path?: string;
     method?: string;
+    domain?: string;
   } = {},
 ) {
   const body = overrides.body ?? BODY;
@@ -89,7 +90,9 @@ function signedRequest(
   const path = overrides.path ?? "/api/integrations/n8n/v1/tickets.create";
   const method = overrides.method ?? "POST";
   const bodySha256 = overrides.headerBodyHash ?? sha256Hex(body);
+  const domain = overrides.domain ?? "ELI-N8N-BOT-API-V1";
   const canonical = buildCanonicalRequest({
+    domain,
     method,
     path,
     keyId: key.keyId,
@@ -102,6 +105,7 @@ function signedRequest(
     overrides.signature ?? `v1=${createHmac("sha256", key.secret).update(canonical).digest("base64url")}`;
 
   return {
+    domain,
     rawBody: body,
     method,
     path,
@@ -150,6 +154,7 @@ test("builds the exact canonical request and hashes raw body bytes", () => {
   const bodyHash = sha256Hex(BODY);
   assert.equal(
     buildCanonicalRequest({
+      domain: "ELI-N8N-BOT-API-V1",
       method: "POST",
       path: "/api/integrations/n8n/v1/tickets.create",
       keyId: "dev-key-1",
@@ -360,4 +365,25 @@ test("returns safe errors without exposing secrets", async () => {
   );
   assert.equal(error.message.includes(SECRET), false);
   assert.equal(error.safeMessage.includes("secret"), false);
+});
+
+test("cryptographically separates BOT, MCV CLAIM and MCV COMPLETE domains", async () => {
+  for (const [signedDomain, trustedDomain] of [
+    ["ELI-N8N-MCV-CLAIM-V1", "ELI-N8N-MCV-COMPLETE-V1"],
+    ["ELI-N8N-MCV-COMPLETE-V1", "ELI-N8N-MCV-CLAIM-V1"],
+    ["ELI-N8N-BOT-API-V1", "ELI-N8N-MCV-CLAIM-V1"],
+  ]) {
+    const signed = signedRequest({ domain: signedDomain });
+    await expectSecurityError(
+      () =>
+        verifySignedRequest({
+          ...signed,
+          domain: trustedDomain,
+          keyRegistry: new TestKeyRegistry(createKey()),
+          nonceStore: new TestNonceStore(),
+          now: () => NOW_SECONDS * 1000,
+        }),
+      "invalid_signature",
+    );
+  }
 });

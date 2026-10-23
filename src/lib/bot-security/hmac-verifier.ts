@@ -16,6 +16,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 const AUTHENTICATION_WINDOW_SECONDS = 5 * 60;
 
 export type VerifySignedRequestInput = {
+  domain: string;
   method: string;
   path: string;
   rawBody: Uint8Array | ArrayBuffer;
@@ -111,6 +112,7 @@ export async function verifySignedRequest(input: VerifySignedRequestInput): Prom
     }
 
     const canonicalRequest = buildCanonicalRequest({
+      domain: input.domain,
       method: input.method,
       path: input.path,
       keyId: headers.keyId,

@@ -31,7 +31,7 @@ const context = {
 };
 
 const repository: BotIdentityRepository = {
-  async findTelegramCandidates() {
+  async findChannelCandidates() {
     return [
       {
         channelUserId: context.channelUserId,
@@ -56,7 +56,7 @@ const repository: BotIdentityRepository = {
 };
 
 function candidate(
-  overrides: Partial<Awaited<ReturnType<BotIdentityRepository["findTelegramCandidates"]>>[number]> = {},
+  overrides: Partial<Awaited<ReturnType<BotIdentityRepository["findChannelCandidates"]>>[number]> = {},
 ) {
   return {
     channelUserId: context.channelUserId,
@@ -127,7 +127,7 @@ type VerifyInput = Parameters<NonNullable<Parameters<typeof handleBotApiRequest>
 test("does not call identity when SEC-01 fails", async () => {
   let identityCalls = 0;
   const identity: BotIdentityRepository = {
-    async findTelegramCandidates() {
+    async findChannelCandidates() {
       identityCalls += 1;
       return [];
     },
@@ -145,15 +145,15 @@ test("does not call identity when SEC-01 fails", async () => {
   assert.equal(identityCalls, 0);
 });
 
-test("parses raw body once and returns capability_not_ready after SEC, identity and authorization", async () => {
+test("parses raw body once and dispatches after SEC, identity and authorization", async () => {
   let readBodyCalls = 0;
   let identityCalls = 0;
   let dispatchCalls = 0;
   const tracked = request(validBody());
   const identity: BotIdentityRepository = {
-    async findTelegramCandidates() {
+    async findChannelCandidates() {
       identityCalls += 1;
-      return repository.findTelegramCandidates("telegram-1");
+      return repository.findChannelCandidates("telegram", "telegram-1");
     },
   };
   const response = await handleBotApiRequest(
@@ -162,7 +162,8 @@ test("parses raw body once and returns capability_not_ready after SEC, identity 
       identity,
       dispatch: (input: Parameters<BotApiHandlerDependencies["dispatch"]>[0]) => {
         dispatchCalls += 1;
-        return dispatchRegisteredCapability(input);
+        void input;
+        return { outcome: "success", retryable: false, result: { ticketId: "ticket-1", ticketCode: "ELI-2609-0001" } };
       },
       readBody: async (input) => {
         readBodyCalls += 1;
@@ -171,11 +172,40 @@ test("parses raw body once and returns capability_not_ready after SEC, identity 
     }),
   );
   const payload = await response.json();
-  assert.equal(response.status, 501);
-  assert.equal(payload.outcome, "capability_not_ready");
+  assert.equal(response.status, 200);
+  assert.equal(payload.outcome, "success");
+  assert.equal("error" in payload, false);
+  assert.deepEqual(payload.result, { ticketId: "ticket-1", ticketCode: "ELI-2609-0001" });
   assert.equal(readBodyCalls, 1);
   assert.equal(identityCalls, 1);
   assert.equal(dispatchCalls, 1);
+});
+
+test("routes a signed WhatsApp tickets.create request through channel identity", async () => {
+  let lookedUp: { channel: string; senderId: string } | null = null;
+  const dispatched: { value?: Parameters<BotApiHandlerDependencies["dispatch"]>[0] } = {};
+  const response = await handleBotApiRequest(
+    request(validBody({ source: { channel: "whatsapp", externalSenderId: "5491123456789" } })),
+    dependencies({
+      identity: {
+        async findChannelCandidates(channel, senderId) {
+          lookedUp = { channel, senderId };
+          return [candidate()];
+        },
+      },
+      dispatch: (input) => {
+        dispatched.value = input;
+        return { outcome: "success", retryable: false, result: { ticketId: "ticket-1", ticketCode: "ELI-2609-0001" } };
+      },
+    }),
+  );
+  const payload = await response.json();
+  assert.equal(response.status, 200);
+  assert.deepEqual(lookedUp, { channel: "whatsapp", senderId: "5491123456789" });
+  assert.equal(dispatched.value?.request.source.channel, "whatsapp");
+  assert.equal(dispatched.value?.context.channel, "whatsapp");
+  assert.equal(payload.outcome, "success");
+  assert.equal("error" in payload, false);
 });
 
 test("rejects malformed payload after authentication without dispatch", async () => {
@@ -222,7 +252,7 @@ test("rejects body requestId and inbound tenant selectors", async () => {
 test("maps identity failures without dispatch", async () => {
   let dispatchCalls = 0;
   const identity: BotIdentityRepository = {
-    async findTelegramCandidates() {
+    async findChannelCandidates() {
       return [];
     },
   };
@@ -266,7 +296,7 @@ test("rejects an invalid API version at the handler boundary", async () => {
 test("maps every non-resolved identity outcome without dispatch", async () => {
   const cases: Array<{
     name: string;
-    candidates: Awaited<ReturnType<BotIdentityRepository["findTelegramCandidates"]>>;
+    candidates: Awaited<ReturnType<BotIdentityRepository["findChannelCandidates"]>>;
     outcome: string;
   }> = [
     { name: "blocked", candidates: [candidate({ channelUserStatus: "blocked" })], outcome: "identity_blocked" },
@@ -308,7 +338,7 @@ test("maps every non-resolved identity outcome without dispatch", async () => {
       request(validBody({ correlationId: `corr-${testCase.name}` })),
       dependencies({
         identity: {
-          async findTelegramCandidates() {
+          async findChannelCandidates() {
             return testCase.candidates;
           },
         },
@@ -353,7 +383,7 @@ test("maps replay, nonce-store, stale, and invalid-HMAC failures before identity
       request(validBody()),
       dependencies({
         identity: {
-          async findTelegramCandidates() {
+          async findChannelCandidates() {
             identityCalls += 1;
             return [];
           },

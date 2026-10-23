@@ -1,6 +1,7 @@
 import type {
   BotContext,
   BotIdentityCandidate,
+  BotIdentityChannel,
   BotIdentityInput,
   BotIdentityRepository,
   BotIdentityResolution,
@@ -8,6 +9,13 @@ import type {
 import { BotIdentityInputError } from "./identity-errors";
 
 const TELEGRAM_SENDER_ID = /^[^\s]{1,256}$/;
+const WHATSAPP_SENDER_ID = /^\d{8,15}$/;
+
+function isValidSenderId(channel: string, externalSenderId: string): channel is BotIdentityChannel {
+  if (channel === "telegram") return TELEGRAM_SENDER_ID.test(externalSenderId);
+  if (channel === "whatsapp") return WHATSAPP_SENDER_ID.test(externalSenderId);
+  return false;
+}
 
 function isTenantMismatch(candidate: BotIdentityCandidate): boolean {
   if (candidate.residentOrganizationId !== null && candidate.residentOrganizationId !== candidate.organizationId) {
@@ -27,13 +35,13 @@ function hasInactiveRelation(candidate: BotIdentityCandidate): boolean {
   return candidate.organizationStatus !== "active" || candidate.residentActive === false;
 }
 
-function resolvedContexts(candidates: BotIdentityCandidate[]): BotContext[] {
+function resolvedContexts(candidates: BotIdentityCandidate[], channel: BotIdentityChannel): BotContext[] {
   return candidates.flatMap((candidate) =>
     candidate.links.flatMap((link) =>
       candidate.residentId && link.consorcioId
         ? [
             {
-              channel: "telegram" as const,
+              channel,
               channelUserId: candidate.channelUserId,
               organizationId: candidate.organizationId,
               residentId: candidate.residentId,
@@ -66,11 +74,11 @@ export async function resolveBotContext(
   input: BotIdentityInput,
   repository: BotIdentityRepository,
 ): Promise<BotIdentityResolution> {
-  if (input.channel !== "telegram" || !TELEGRAM_SENDER_ID.test(input.externalSenderId)) {
+  if (!isValidSenderId(input.channel, input.externalSenderId)) {
     throw new BotIdentityInputError();
   }
 
-  const candidates = await repository.findTelegramCandidates(input.externalSenderId);
+  const candidates = await repository.findChannelCandidates(input.channel, input.externalSenderId);
   if (candidates.some((candidate) => candidate.channelUserStatus === "blocked")) {
     return { outcome: "blocked", context: null };
   }
@@ -82,7 +90,7 @@ export async function resolveBotContext(
     return { outcome: "inactive", context: null };
   }
 
-  const contexts = withoutDuplicateContexts(resolvedContexts(candidates));
+  const contexts = withoutDuplicateContexts(resolvedContexts(candidates, input.channel));
   if (contexts.length === 0) return { outcome: "unresolved", context: null };
 
   const organizationIds = new Set(contexts.map((context) => context.organizationId));

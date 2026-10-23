@@ -52,6 +52,7 @@ export type BotSecurityErrorCode =
   | "body_hash_mismatch"
   | "unsupported_method"
   | "invalid_path"
+  | "invalid_domain"
   | "unknown_key"
   | "key_identity_mismatch"
   | "key_environment_mismatch"

@@ -1,5 +1,5 @@
-const BOT_IDENTITY_CHANNELS = ["telegram"] as const;
-type BotIdentityChannel = (typeof BOT_IDENTITY_CHANNELS)[number];
+export const BOT_IDENTITY_CHANNELS = ["telegram", "whatsapp"] as const;
+export type BotIdentityChannel = (typeof BOT_IDENTITY_CHANNELS)[number];
 
 const BOT_IDENTITY_OUTCOMES = [
   "resolved",
@@ -48,6 +48,6 @@ export type BotIdentityCandidate = {
   }>;
 };
 
-export type BotIdentityRepository = {
-  findTelegramCandidates(externalSenderId: string): Promise<BotIdentityCandidate[]>;
-};
+export interface BotIdentityRepository {
+  findChannelCandidates(channel: BotIdentityChannel, externalSenderId: string): Promise<BotIdentityCandidate[]>;
+}
