@@ -48,6 +48,6 @@ export type BotIdentityCandidate = {
   }>;
 };
 
-export interface BotIdentityRepository {
+export type BotIdentityRepository = {
   findChannelCandidates(channel: BotIdentityChannel, externalSenderId: string): Promise<BotIdentityCandidate[]>;
-}
+};

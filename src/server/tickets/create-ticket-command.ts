@@ -33,9 +33,9 @@ export type BotTicketPersistenceResult =
   | { outcome: "created" | "existing"; ticketId: string; ticketCode: string }
   | { outcome: "conflict" };
 
-export interface BotTicketPersistence {
+export type BotTicketPersistence = {
   createIdempotentTicket(input: BotTicketPersistenceInput): Promise<BotTicketPersistenceResult>;
-}
+};
 
 export type CreateTicketCommand =
   | {

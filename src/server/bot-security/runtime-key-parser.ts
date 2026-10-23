@@ -21,6 +21,7 @@ export function parseRuntimeKeys(raw: string | undefined, trustedPrincipalId: st
   if (!Array.isArray(parsed) || parsed.length === 0) return null;
   const keys: BotHmacKey[] = [];
   const keyIds = new Set<string>();
+  // biome-ignore lint/plugin: rechaza el registro completo ante la primera key inválida o repetida
   for (const value of parsed) {
     if (!isRecord(value) || Object.keys(value).some((field) => !ALLOWED_FIELDS.has(field))) return null;
     if (
