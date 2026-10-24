@@ -34,6 +34,7 @@ type LinkRow = {
 
 type UnitRow = {
   id: string;
+  numero: string | null;
   edificio_id: string;
   organization_id: string;
 };
@@ -92,7 +93,7 @@ class SupabaseBotIdentityRepository implements BotIdentityRepository {
         ? await read<UnitRow>(
             this.client
               .from("unidades")
-              .select("id, edificio_id, organization_id")
+              .select("id, numero, edificio_id, organization_id")
               .in(
                 "id",
                 links.map((link) => link.unidad_id),
@@ -125,6 +126,7 @@ class SupabaseBotIdentityRepository implements BotIdentityRepository {
           return {
             organizationId: link.organization_id,
             unitId: link.unidad_id,
+            unitNumber: unit?.numero ?? null,
             unitOrganizationId: unit?.organization_id ?? null,
             consorcioId: unit?.edificio_id ?? null,
             consorcioOrganizationId: building?.organization_id ?? null,

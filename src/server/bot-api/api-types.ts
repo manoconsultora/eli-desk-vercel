@@ -22,6 +22,7 @@ export type BotApiRequest = {
   source: {
     channel: BotIdentityChannel;
     externalSenderId: string;
+    unitNumber?: string;
   };
   input: TicketsCreateApiInput;
 };

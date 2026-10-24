@@ -1,4 +1,4 @@
-export const BOT_IDENTITY_CHANNELS = ["telegram", "whatsapp"] as const;
+const BOT_IDENTITY_CHANNELS = ["telegram", "whatsapp"] as const;
 export type BotIdentityChannel = (typeof BOT_IDENTITY_CHANNELS)[number];
 
 const BOT_IDENTITY_OUTCOMES = [
@@ -15,6 +15,7 @@ type BotIdentityOutcome = (typeof BOT_IDENTITY_OUTCOMES)[number];
 export type BotIdentityInput = {
   channel: string;
   externalSenderId: string;
+  unitNumber?: string;
 };
 
 export type BotContext = {
@@ -23,11 +24,12 @@ export type BotContext = {
   organizationId: string;
   residentId: string;
   unitId: string;
+  unitNumber?: string;
   consorcioId: string;
 };
 
 export type BotIdentityResolution = {
-  outcome: BotIdentityOutcome;
+  outcome: BotIdentityOutcome | "invalid_unit_selection";
   context: BotContext | null;
 };
 
@@ -42,6 +44,7 @@ export type BotIdentityCandidate = {
   links: Array<{
     organizationId: string;
     unitId: string;
+    unitNumber: string | null;
     unitOrganizationId: string | null;
     consorcioId: string | null;
     consorcioOrganizationId: string | null;

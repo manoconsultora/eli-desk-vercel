@@ -16,6 +16,7 @@ const baseCandidate: BotIdentityCandidate = {
     {
       organizationId: "org-1",
       unitId: "unit-1",
+      unitNumber: "1A",
       unitOrganizationId: "org-1",
       consorcioId: "building-1",
       consorcioOrganizationId: "org-1",
@@ -48,6 +49,7 @@ test("resolves one valid Telegram context", async () => {
     organizationId: "org-1",
     residentId: "resident-1",
     unitId: "unit-1",
+    unitNumber: "1A",
     consorcioId: "building-1",
   });
 });
@@ -113,6 +115,29 @@ test("returns ambiguous_unit for multiple active units in one organization", asy
   assert.equal(result.context, null);
 });
 
+test("selects one explicitly requested active linked unit without removing other links", async () => {
+  const candidate = {
+    ...baseCandidate,
+    links: [baseCandidate.links[0], { ...baseCandidate.links[0], unitId: "unit-2", unitNumber: "4B" }],
+  };
+  const result = await resolveBotContext(
+    { channel: "telegram", externalSenderId: "telegram-user-1", unitNumber: "4B" },
+    repository([candidate]),
+  );
+  assert.equal(result.outcome, "resolved");
+  assert.equal(result.context?.unitId, "unit-2");
+  assert.equal(candidate.links.length, 2);
+});
+
+test("rejects an explicitly selected unit that is not actively linked", async () => {
+  const result = await resolveBotContext(
+    { channel: "telegram", externalSenderId: "telegram-user-1", unitNumber: "attacker-unit" },
+    repository([baseCandidate]),
+  );
+  assert.equal(result.outcome, "invalid_unit_selection");
+  assert.equal(result.context, null);
+});
+
 test("returns ambiguous_organization for contexts across organizations", async () => {
   const result = await resolve([
     baseCandidate,
@@ -163,7 +188,7 @@ test("repository failures fail closed and never produce a context", async () => 
   );
 });
 
-test("does not accept inbound tenant selectors or hide ambiguity with LIMIT 1", async () => {
+test("rejects an unlinked inbound unit selector instead of hiding identity ambiguity", async () => {
   const result = await resolveBotContext(
     {
       channel: "telegram",
@@ -171,6 +196,7 @@ test("does not accept inbound tenant selectors or hide ambiguity with LIMIT 1", 
       organizationId: "attacker-org",
       residentId: "attacker-resident",
       unitId: "attacker-unit",
+      unitNumber: "attacker-unit",
     } as never,
     repository([
       baseCandidate,
@@ -181,6 +207,6 @@ test("does not accept inbound tenant selectors or hide ambiguity with LIMIT 1", 
       },
     ]),
   );
-  assert.equal(result.outcome, "ambiguous_unit");
+  assert.equal(result.outcome, "invalid_unit_selection");
   assert.equal(result.context, null);
 });

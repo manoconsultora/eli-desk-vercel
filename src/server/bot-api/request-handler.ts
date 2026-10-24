@@ -21,7 +21,7 @@ import { type RawBodyError, readBoundedRawBody } from "./raw-body";
 
 type Verify = (input: VerifySignedRequestInput) => Promise<AuthenticatedTechnicalPrincipal>;
 
-export const BOT_HMAC_DOMAIN = "ELI-N8N-BOT-API-V1";
+const BOT_HMAC_DOMAIN = "ELI-N8N-BOT-API-V1";
 
 export type BotApiHandlerDependencies = {
   environment: BotSecurityEnvironment;
@@ -172,6 +172,7 @@ function responseForIdentity(identity: BotIdentityResolution, correlationId: str
       return createApiResponse("identity_inactive", { correlationId, code: "identity_inactive", category: "identity" });
     case "ambiguous_unit":
     case "ambiguous_organization":
+    case "invalid_unit_selection":
       return createApiResponse("clarification_required", {
         correlationId,
         code: identity.outcome,
@@ -214,13 +215,17 @@ function validateRequest(value: unknown): ValidationResult {
   if (value.capability !== BOT_API_CAPABILITY) return { ok: false, code: "unsupported_capability", correlationId };
   if (!stringField(value.idempotencyKey)) return { ok: false, code: "missing_idempotency_key", correlationId };
   if (!isRecord(value.source)) return { ok: false, code: "invalid_source", correlationId };
-  if (hasUnexpectedKeys(value.source, ["channel", "externalSenderId"])) {
+  if (hasUnexpectedKeys(value.source, ["channel", "externalSenderId", "unitNumber"])) {
     return { ok: false, code: "invalid_source", correlationId };
   }
   if (
     !isOneOf(value.source.channel, ["telegram", "whatsapp"] as const) ||
     !stringField(value.source.externalSenderId)
   ) {
+    return { ok: false, code: "invalid_source", correlationId };
+  }
+  const unitNumber = stringField(value.source.unitNumber);
+  if (value.source.unitNumber !== undefined && (!unitNumber || unitNumber.trim().length > 32)) {
     return { ok: false, code: "invalid_source", correlationId };
   }
   if (!isRecord(value.input)) return { ok: false, code: "invalid_input", correlationId };

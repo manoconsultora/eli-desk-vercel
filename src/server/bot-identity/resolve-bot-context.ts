@@ -46,6 +46,7 @@ function resolvedContexts(candidates: BotIdentityCandidate[], channel: BotIdenti
               organizationId: candidate.organizationId,
               residentId: candidate.residentId,
               unitId: link.unitId,
+              unitNumber: link.unitNumber ?? undefined,
               consorcioId: link.consorcioId,
             },
           ]
@@ -95,6 +96,13 @@ export async function resolveBotContext(
 
   const organizationIds = new Set(contexts.map((context) => context.organizationId));
   if (organizationIds.size > 1) return { outcome: "ambiguous_organization", context: null };
-  if (contexts.length > 1) return { outcome: "ambiguous_unit", context: null };
-  return { outcome: "resolved", context: contexts[0] };
+  const requestedUnitNumber = input.unitNumber?.trim().toLocaleLowerCase();
+  const selectedContexts = requestedUnitNumber
+    ? contexts.filter((context) => (context.unitNumber ?? "").trim().toLocaleLowerCase() === requestedUnitNumber)
+    : contexts;
+  if (requestedUnitNumber && selectedContexts.length === 0) {
+    return { outcome: "invalid_unit_selection", context: null };
+  }
+  if (selectedContexts.length > 1) return { outcome: "ambiguous_unit", context: null };
+  return { outcome: "resolved", context: selectedContexts[0] };
 }

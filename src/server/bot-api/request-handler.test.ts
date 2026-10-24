@@ -27,6 +27,7 @@ const context = {
   organizationId: "org-1",
   residentId: "resident-1",
   unitId: "unit-1",
+  unitNumber: "1A",
   consorcioId: "building-1",
 };
 
@@ -45,6 +46,7 @@ const repository: BotIdentityRepository = {
           {
             organizationId: context.organizationId,
             unitId: context.unitId,
+            unitNumber: context.unitNumber,
             unitOrganizationId: context.organizationId,
             consorcioId: context.consorcioId,
             consorcioOrganizationId: context.organizationId,
@@ -70,6 +72,7 @@ function candidate(
       {
         organizationId: context.organizationId,
         unitId: context.unitId,
+        unitNumber: context.unitNumber,
         unitOrganizationId: context.organizationId,
         consorcioId: context.consorcioId,
         consorcioOrganizationId: context.organizationId,
@@ -208,6 +211,55 @@ test("routes a signed WhatsApp tickets.create request through channel identity",
   assert.equal("error" in payload, false);
 });
 
+test("passes an explicit unit selector through identity checks before dispatch", async () => {
+  let dispatchedUnitId: string | undefined;
+  const response = await handleBotApiRequest(
+    request(validBody({ source: { channel: "whatsapp", externalSenderId: "5491123456789", unitNumber: "4B" } })),
+    dependencies({
+      identity: {
+        async findChannelCandidates() {
+          return [
+            candidate({
+              links: [candidate().links[0], { ...candidate().links[0], unitId: "unit-2", unitNumber: "4B" }],
+            }),
+          ];
+        },
+      },
+      dispatch: (input) => {
+        dispatchedUnitId = input.context.unitId;
+        return { outcome: "success", retryable: false, result: { ticketId: "ticket-1", ticketCode: "ELI-2609-0001" } };
+      },
+    }),
+  );
+  assert.equal(response.status, 200);
+  assert.equal(dispatchedUnitId, "unit-2");
+});
+
+test("does not dispatch when the requested unit is not linked to the sender", async () => {
+  let dispatchCalls = 0;
+  const response = await handleBotApiRequest(
+    request(
+      validBody({ source: { channel: "whatsapp", externalSenderId: "5491123456789", unitNumber: "attacker-unit" } }),
+    ),
+    dependencies({
+      identity: {
+        async findChannelCandidates() {
+          return [candidate()];
+        },
+      },
+      dispatch: () => {
+        dispatchCalls += 1;
+        return dispatchRegisteredCapability();
+      },
+    }),
+  );
+  const payload = await response.json();
+  assert.equal(response.status, 422);
+  assert.equal(payload.outcome, "clarification_required");
+  assert.equal(payload.error.code, "invalid_unit_selection");
+  assert.equal(dispatchCalls, 0);
+});
+
 test("rejects malformed payload after authentication without dispatch", async () => {
   let dispatchCalls = 0;
   const response = await handleBotApiRequest(
@@ -303,7 +355,9 @@ test("maps every non-resolved identity outcome without dispatch", async () => {
     { name: "inactive", candidates: [candidate({ channelUserStatus: "inactive" })], outcome: "identity_inactive" },
     {
       name: "ambiguous unit",
-      candidates: [candidate({ links: [candidate().links[0], { ...candidate().links[0], unitId: "unit-2" }] })],
+      candidates: [
+        candidate({ links: [candidate().links[0], { ...candidate().links[0], unitId: "unit-2", unitNumber: "4B" }] }),
+      ],
       outcome: "clarification_required",
     },
     {
