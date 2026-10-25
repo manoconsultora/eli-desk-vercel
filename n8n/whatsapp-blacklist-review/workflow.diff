@@ -1,0 +1,589 @@
+--- v3-baseline.sanitized.json
++++ v3-blacklist.draft.json
+@@ -1,5 +1,5 @@
+ {
+-  "name": "ELI BOT V3 — MULTICANAL DEV",
++  "name": "ELI BOT V3 — WHATSAPP BLACKLIST — REVIEW ONLY",
+   "nodes": [
+     {
+       "parameters": {
+@@ -418,7 +418,7 @@
+     {
+       "parameters": {
+         "httpMethod": "POST",
+-        "path": "eli-whatsapp",
++        "path": "review-blacklist-29e1e2ce-850b-4079-b34d-c94a8b6be4b1",
+         "responseMode": "responseNode",
+         "options": {
+           "rawBody": true
+@@ -429,7 +429,8 @@
+       "position": [-112, -992],
+       "id": "29e1e2ce-850b-4079-b34d-c94a8b6be4b1",
+       "name": "WhatsApp — Entrada",
+-      "webhookId": "d667ef2e-8f9d-44cb-a85a-a3922f1b5f9d"
++      "webhookId": "82d46df4-b5e7-45a0-a29b-99d982bbc750",
++      "disabled": true
+     },
+     {
+       "parameters": {
+@@ -443,7 +444,7 @@
+     },
+     {
+       "parameters": {
+-        "path": "eli-whatsapp",
++        "path": "review-blacklist-00e9b6f2-5728-4fbd-8420-fba6ce53897a",
+         "responseMode": "responseNode",
+         "options": {
+           "rawBody": true
+@@ -454,7 +455,8 @@
+       "position": [1376, 528],
+       "id": "00e9b6f2-5728-4fbd-8420-fba6ce53897a",
+       "name": "Webhook GET",
+-      "webhookId": "7e1f008f-7d99-4f83-9c94-3ee52d34f7ae"
++      "webhookId": "c66bf6b1-3452-4606-9fa6-f7ad24430618",
++      "disabled": true
+     },
+     {
+       "parameters": {
+@@ -558,7 +560,7 @@
+     },
+     {
+       "parameters": {
+-        "jsCode": "// Configuración: número de WhatsApp de ELI en Meta.\nconst phoneNumberId = 'REVIEW_PHONE_NUMBER_ID';\nconst output = [];\n\n// Recorrer los eventos que superaron la validación de firma.\nfor (const [itemIndex, item] of $input.all().entries()) {\n  if (item.json.signatureValid !== true) continue;\n\n  const body = item.json.body;\n\n  if (body?.object !== 'whatsapp_business_account') continue;\n\n  // Un evento puede contener varias entradas y mensajes.\n  for (const entry of body.entry ?? []) {\n    for (const change of entry.changes ?? []) {\n      const value = change.value;\n\n      if (change.field !== 'messages') continue;\n      if (value?.metadata?.phone_number_id !== phoneNumberId) continue;\n\n      // Ignorar estados de entrega y procesar solo mensajes de texto.\n      for (const incoming of value.messages ?? []) {\n        if (incoming.type !== 'text') continue;\n\n        const text = incoming.text?.body?.trim();\n        const senderId = incoming.from;\n        const messageId = incoming.id;\n\n        if (!text || !senderId || !messageId) continue;\n\n        // Entregar los mismos campos base que la entrada de Telegram.\n        output.push({\n          json: {\n            channel: 'whatsapp',\n            externalSenderId: String(senderId),\n            chatId: String(senderId),\n            providerMessageId: String(messageId),\n            phoneNumberId,\n            message: text,\n            locale: 'es-AR',\n            inputValid: true,\n            correlationId: `wa-${messageId}`,\n            idempotencyKey: [\n              'whatsapp',\n              phoneNumberId,\n              messageId,\n            ].join(':'),\n          },\n          pairedItem: {\n            item: itemIndex,\n          },\n        });\n      }\n    }\n  }\n}\n\nreturn output;"
++        "jsCode": "// Configuración: número de WhatsApp de ELI en Meta.\nconst phoneNumberId = 'REVIEW_PHONE_NUMBER_ID';\nconst output = [];\n\n// Recorrer los eventos que superaron la validación de firma.\nfor (const [itemIndex, item] of $input.all().entries()) {\n  if (item.json.signatureValid !== true) continue;\n\n  const body = item.json.body;\n\n  if (body?.object !== 'whatsapp_business_account') continue;\n\n  // Un evento puede contener varias entradas y mensajes.\n  for (const entry of body.entry ?? []) {\n    for (const change of entry.changes ?? []) {\n      const value = change.value;\n\n      if (change.field !== 'messages') continue;\n      if (value?.metadata?.phone_number_id !== phoneNumberId) continue;\n\n      // Ignorar estados de entrega y procesar solo mensajes de texto.\n      for (const incoming of value.messages ?? []) {\n        // All incoming message types pass the access check first.\n\n        const text = incoming.type === 'text' ? incoming.text?.body?.trim() : null;\n        const senderId = incoming.from;\n        const messageId = incoming.id;\n\n        if (!senderId || !messageId || !incoming.type) continue;\n\n        // Entregar los mismos campos base que la entrada de Telegram.\n        output.push({\n          json: {\n            channel: 'whatsapp',\n            externalSenderId: String(senderId),\n            chatId: String(senderId),\n            providerMessageId: String(messageId),\n            phoneNumberId,\n            message: text,\n            locale: 'es-AR',\n            inputValid: Boolean(text),\n            providerMessageType: incoming.type,\n            correlationId: `wa-${messageId}`,\n            idempotencyKey: [\n              'whatsapp',\n              phoneNumberId,\n              messageId,\n            ].join(':'),\n          },\n          pairedItem: {\n            item: itemIndex,\n          },\n        });\n      }\n    }\n  }\n}\n\nreturn output;"
+       },
+       "type": "n8n-nodes-base.code",
+       "typeVersion": 2,
+@@ -666,6 +668,307 @@
+           "name": "REVIEW_BIND_whatsAppApi"
+         }
+       }
++    },
++    {
++      "name": "BL — Preparar consulta",
++      "id": "d6934f8f-a721-4544-97f3-6122ca8359af",
++      "type": "n8n-nodes-base.code",
++      "typeVersion": 2,
++      "position": [1100, -1450],
++      "parameters": {
++        "mode": "runOnceForEachItem",
++        "jsCode": "// Run once for each item. Context comes only from the validated Meta adapter.\nconst context = { ...$json };\nif (context.channel !== \"whatsapp\" || !/^\\d{8,15}$/.test(context.externalSenderId) ||\n    context.chatId !== context.externalSenderId || !context.phoneNumberId || !context.correlationId) {\n  throw new Error(\"fail_closed_missing_verified_whatsapp_context\");\n}\nreturn { json: {\n  context,\n  rawBody: JSON.stringify({ apiVersion: \"v1\", capability: \"messages.authorize\",\n    correlationId: context.correlationId,\n    source: { channel: \"whatsapp\", externalSenderId: context.externalSenderId } }),\n  requestPath: \"/api/integrations/n8n/v1/messages.authorize\",\n}};\n"
++      }
++    },
++    {
++      "parameters": {
++        "action": "generate",
++        "dataPropertyName": "secNonceEntropyHex",
++        "encodingType": "hex"
++      },
++      "id": "d16da82d-d5d3-47f1-9d55-d56a07accb9f",
++      "name": "BL — SEC-01 Generate Nonce Material",
++      "type": "n8n-nodes-base.crypto",
++      "typeVersion": 2,
++      "position": [1300, -1450],
++      "notesInFlow": true,
++      "notes": "Generates exactly 128 bits of cryptographic entropy as 32 lowercase hex characters. The next Edit Fields node encodes that random value as unpadded base64url.",
++      "onError": "continueRegularOutput"
++    },
++    {
++      "parameters": {
++        "action": "generate",
++        "dataPropertyName": "secRequestId"
++      },
++      "id": "0c08fc24-623b-4ea8-b5bc-c370373f98c0",
++      "name": "BL — SEC-01 Generate Request ID",
++      "type": "n8n-nodes-base.crypto",
++      "typeVersion": 2,
++      "position": [1500, -1450],
++      "onError": "continueRegularOutput"
++    },
++    {
++      "parameters": {
++        "assignments": {
++          "assignments": [
++            {
++              "id": "73c039cc-ba54-4b05-b0b9-0ab7017d9145",
++              "name": "secKeyId",
++              "value": "n8n-channel-dev-01",
++              "type": "string"
++            },
++            {
++              "id": "57de182d-2920-4707-bf65-65f855ea3f88",
++              "name": "secTimestamp",
++              "value": "={{ Math.floor(Date.now() / 1000).toString() }}",
++              "type": "string"
++            },
++            {
++              "id": "76051b14-10a9-47db-9012-993e004fa034",
++              "name": "secNonce",
++              "value": "={{ $json.secNonceEntropyHex.base64Encode().replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '') }}",
++              "type": "string"
++            }
++          ]
++        },
++        "includeOtherFields": true,
++        "options": {}
++      },
++      "id": "a9b28992-fbdd-485d-bdf9-ef10e29b06c7",
++      "name": "BL — SEC-01 Set Public Metadata",
++      "type": "n8n-nodes-base.set",
++      "typeVersion": 3.4,
++      "position": [1700, -1450],
++      "onError": "continueRegularOutput"
++    },
++    {
++      "parameters": {
++        "value": "={{ $json.rawBody }}",
++        "dataPropertyName": "secBodySha256"
++      },
++      "id": "09669875-809c-4533-befd-406cf715f026",
++      "name": "BL — SEC-01 Hash Raw Body",
++      "type": "n8n-nodes-base.crypto",
++      "typeVersion": 2,
++      "position": [1900, -1450],
++      "onError": "continueRegularOutput"
++    },
++    {
++      "parameters": {
++        "assignments": {
++          "assignments": [
++            {
++              "id": "386870e7-3a78-4795-8ea6-2ffdf77a79d4",
++              "name": "secCanonicalInput",
++              "value": "={{ ['ELI-N8N-BOT-API-V1', 'POST', $json.requestPath, $json.secKeyId, $json.secTimestamp, $json.secNonce, $json.secRequestId, $json.secBodySha256].join('\\n') }}",
++              "type": "string"
++            }
++          ]
++        },
++        "includeOtherFields": true,
++        "options": {}
++      },
++      "id": "cda436f6-4e81-4825-8763-760baea5c114",
++      "name": "BL — SEC-01 Build Canonical Input",
++      "type": "n8n-nodes-base.set",
++      "typeVersion": 3.4,
++      "position": [2100, -1450],
++      "onError": "continueRegularOutput"
++    },
++    {
++      "parameters": {
++        "action": "hmac",
++        "value": "={{ $json.secCanonicalInput }}",
++        "dataPropertyName": "secSignatureBase64",
++        "encoding": "base64"
++      },
++      "id": "1db0da80-9cfd-4b54-8ee2-61232ad2dd42",
++      "name": "BL — SEC-01 HMAC SHA256",
++      "type": "n8n-nodes-base.crypto",
++      "typeVersion": 2,
++      "position": [2300, -1450],
++      "notesInFlow": true,
++      "credentials": {
++        "crypto": {
++          "id": "REVIEW_BIND_crypto",
++          "name": "REVIEW_BIND_crypto"
++        }
++      },
++      "notes": "DEV only. Bind the managed Crypto credential containing the approved SEC-01 HMAC secret. Never expose the secret.",
++      "onError": "continueRegularOutput"
++    },
++    {
++      "parameters": {
++        "assignments": {
++          "assignments": [
++            {
++              "id": "dd2c8333-5a52-4a7a-9d13-085816e0890c",
++              "name": "rawBody",
++              "value": "={{ $json.rawBody }}",
++              "type": "string"
++            },
++            {
++              "id": "b51d159f-4542-4255-a60b-13abba0edfd6",
++              "name": "requestPath",
++              "value": "={{ $json.requestPath }}",
++              "type": "string"
++            },
++            {
++              "id": "d1148363-ff20-4543-8dbe-e0a594e3d54c",
++              "name": "sec01",
++              "value": "={{ { keyId: $json.secKeyId, timestamp: $json.secTimestamp, nonce: $json.secNonce, requestId: $json.secRequestId, bodySha256: $json.secBodySha256, signature: 'v1=' + $json.secSignatureBase64.replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '') } }}",
++              "type": "object"
++            }
++          ]
++        },
++        "options": {}
++      },
++      "id": "68c68b70-dc35-4fce-a8ee-57c3df67f22b",
++      "name": "BL — SEC-01 Assemble Signed Request",
++      "type": "n8n-nodes-base.set",
++      "typeVersion": 3.4,
++      "position": [2500, -1450],
++      "onError": "continueRegularOutput"
++    },
++    {
++      "parameters": {
++        "assignments": {
++          "assignments": [
++            {
++              "id": "59ca6697-91cc-4eb6-a622-6d05c8b927e2",
++              "name": "apiBaseUrl",
++              "value": "https://eli-desk-vercel-1ezw3vv9i-manoconsultoras-projects.vercel.app",
++              "type": "string"
++            }
++          ]
++        },
++        "includeOtherFields": true,
++        "options": {}
++      },
++      "type": "n8n-nodes-base.set",
++      "typeVersion": 3.5,
++      "position": [2700, -1450],
++      "id": "86bba766-9c3b-421b-a1f3-97732014cd32",
++      "name": "BL — DEV Config"
++    },
++    {
++      "parameters": {
++        "method": "POST",
++        "url": "={{ $json.apiBaseUrl + $json.requestPath }}",
++        "sendHeaders": true,
++        "headerParameters": {
++          "parameters": [
++            {
++              "name": "Content-Type",
++              "value": "application/json"
++            },
++            {
++              "name": "X-ELI-Key-Id",
++              "value": "={{ $json.sec01.keyId }}"
++            },
++            {
++              "name": "X-ELI-Timestamp",
++              "value": "={{ $json.sec01.timestamp }}"
++            },
++            {
++              "name": "X-ELI-Nonce",
++              "value": "={{ $json.sec01.nonce }}"
++            },
++            {
++              "name": "X-ELI-Request-Id",
++              "value": "={{ $json.sec01.requestId }}"
++            },
++            {
++              "name": "X-ELI-Body-SHA256",
++              "value": "={{ $json.sec01.bodySha256 }}"
++            },
++            {
++              "name": "X-ELI-Signature",
++              "value": "={{ $json.sec01.signature }}"
++            }
++          ]
++        },
++        "sendBody": true,
++        "contentType": "raw",
++        "rawContentType": "application/json",
++        "body": "={{ $json.rawBody }}",
++        "options": {
++          "redirect": {
++            "redirect": {
++              "followRedirects": false
++            }
++          },
++          "response": {
++            "response": {
++              "fullResponse": true,
++              "neverError": true
++            }
++          },
++          "timeout": 10000
++        }
++      },
++      "id": "fc0c9af2-0422-4c09-814a-693df8ef6a4e",
++      "name": "BL — Consultar acceso DEV",
++      "type": "n8n-nodes-base.httpRequest",
++      "typeVersion": 4.2,
++      "position": [2900, -1450],
++      "notesInFlow": true,
++      "onError": "continueRegularOutput",
++      "notes": "LOCAL REVIEW ONLY: messages.authorize is implemented in this worktree and NOT deployed. Requires a separately reviewed DEV deployment. Never route this to tickets.create."
++    },
++    {
++      "name": "BL — Evaluar resultado",
++      "id": "c19717e4-7de8-4d85-a29f-07bdc72bc9a2",
++      "type": "n8n-nodes-base.code",
++      "typeVersion": 2,
++      "position": [3100, -1450],
++      "parameters": {
++        "mode": "runOnceForEachItem",
++        "jsCode": "// Item linking, not array position, keeps the correct recipient in batches.\nconst context = $(\"BL — Preparar consulta\").item.json.context;\nif (context?.channel !== \"whatsapp\" || context.chatId !== context.externalSenderId ||\n    !context.chatId || !context.phoneNumberId || !context.correlationId) {\n  throw new Error(\"fail_closed_missing_verified_whatsapp_context\");\n}\nconst blockedText = \"[BL] Acceso Denegado. Recomendamos contactar al Administrador de tu Edificio.\";\nconst unavailableText = \"El servicio no está disponible en este momento. Intentá nuevamente más tarde.\";\nlet body = $json.body ?? $json.data;\nif (typeof body === \"string\") {\n  try { body = JSON.parse(body); } catch { body = null; }\n}\nconst valid = !$json.error && $json.statusCode === 200 && body?.apiVersion === \"v1\" &&\n  body.capability === \"messages.authorize\" && body.correlationId === context.correlationId;\nconst decision = valid && [\"allowed\", \"blocked\", \"unavailable\"].includes(body.decision)\n  ? body.decision : \"unavailable\";\nconst textMessage = context.providerMessageType === \"text\" && context.inputValid === true &&\n  typeof context.message === \"string\" && context.message.trim().length > 0;\nconst accessAllowed = decision === \"allowed\" && textMessage;\nreturn { json: {\n  ...context,\n  accessDecision: decision,\n  accessAllowed,\n  ...(accessAllowed ? {} : {\n    responseText: decision === \"blocked\" ? blockedText : decision === \"allowed\"\n      ? \"Por ahora puedo procesar mensajes de texto.\" : unavailableText,\n    outcome: decision === \"blocked\" ? \"contact_blocked\" : decision === \"allowed\"\n      ? \"unsupported_message_type\" : \"service_unavailable\",\n  }),\n}};\n"
++      }
++    },
++    {
++      "parameters": {
++        "conditions": {
++          "options": {
++            "caseSensitive": true,
++            "leftValue": "",
++            "typeValidation": "strict",
++            "version": 2
++          },
++          "conditions": [
++            {
++              "id": "182b7be3-ecc2-44a4-8c43-ddf985a95bb3",
++              "leftValue": "={{ $json.accessAllowed }}",
++              "rightValue": true,
++              "operator": {
++                "type": "boolean",
++                "operation": "true",
++                "singleValue": true
++              }
++            }
++          ],
++          "combinator": "and"
++        },
++        "options": {}
++      },
++      "id": "f3c1caf7-f272-49cf-8b40-2af4e195a607",
++      "name": "BL — Mensaje habilitado?",
++      "type": "n8n-nodes-base.if",
++      "typeVersion": 2,
++      "position": [3300, -1450]
++    },
++    {
++      "id": "19815886-698d-4f3f-b34a-5bd826415d37",
++      "name": "BL — Review warning",
++      "type": "n8n-nodes-base.stickyNote",
++      "typeVersion": 1,
++      "position": [1100, -1770],
++      "parameters": {
++        "width": 900,
++        "height": 220,
++        "content": "## REVIEW ONLY — INACTIVE\nServer precheck messages.authorize is implemented locally, NOT deployed.\nTriggers disabled; credential bindings and Meta phone ID require private DEV review.\nNo Desk/Join/DB changes, no deployment or workflow publication authorized.\nBlocked/unavailable messages never reach classification or tickets.create."
++      }
+     }
+   ],
+   "connections": {
+@@ -962,40 +1265,179 @@
+       "main": [
+         [
+           {
++            "node": "BL — Preparar consulta",
++            "type": "main",
++            "index": 0
++          }
++        ]
++      ]
++    },
++    "ELI — Entrada común": {
++      "main": [
++        [
++          {
++            "node": "Interpret Resident Message",
++            "type": "main",
++            "index": 0
++          }
++        ]
++      ]
++    },
++    "ELI — Preparar respuesta": {
++      "main": [
++        [
++          {
++            "node": "ELI — Canal de respuesta entre ELI — Preparar respuesta y Send Telegram",
++            "type": "main",
++            "index": 0
++          }
++        ]
++      ]
++    },
++    "ELI — Canal de respuesta entre ELI — Preparar respuesta y Send Telegram": {
++      "main": [
++        [
++          {
++            "node": "Send Telegram",
++            "type": "main",
++            "index": 0
++          }
++        ],
++        [
++          {
++            "node": "Send Whatsapp",
++            "type": "main",
++            "index": 0
++          }
++        ]
++      ]
++    },
++    "BL — Preparar consulta": {
++      "main": [
++        [
++          {
++            "node": "BL — SEC-01 Generate Nonce Material",
++            "type": "main",
++            "index": 0
++          }
++        ]
++      ]
++    },
++    "BL — SEC-01 Generate Nonce Material": {
++      "main": [
++        [
++          {
++            "node": "BL — SEC-01 Generate Request ID",
++            "type": "main",
++            "index": 0
++          }
++        ]
++      ]
++    },
++    "BL — SEC-01 Generate Request ID": {
++      "main": [
++        [
++          {
++            "node": "BL — SEC-01 Set Public Metadata",
++            "type": "main",
++            "index": 0
++          }
++        ]
++      ]
++    },
++    "BL — SEC-01 Set Public Metadata": {
++      "main": [
++        [
++          {
++            "node": "BL — SEC-01 Hash Raw Body",
++            "type": "main",
++            "index": 0
++          }
++        ]
++      ]
++    },
++    "BL — SEC-01 Hash Raw Body": {
++      "main": [
++        [
++          {
++            "node": "BL — SEC-01 Build Canonical Input",
++            "type": "main",
++            "index": 0
++          }
++        ]
++      ]
++    },
++    "BL — SEC-01 Build Canonical Input": {
++      "main": [
++        [
++          {
++            "node": "BL — SEC-01 HMAC SHA256",
++            "type": "main",
++            "index": 0
++          }
++        ]
++      ]
++    },
++    "BL — SEC-01 HMAC SHA256": {
++      "main": [
++        [
++          {
++            "node": "BL — SEC-01 Assemble Signed Request",
++            "type": "main",
++            "index": 0
++          }
++        ]
++      ]
++    },
++    "BL — SEC-01 Assemble Signed Request": {
++      "main": [
++        [
++          {
++            "node": "BL — DEV Config",
++            "type": "main",
++            "index": 0
++          }
++        ]
++      ]
++    },
++    "BL — DEV Config": {
++      "main": [
++        [
++          {
++            "node": "BL — Consultar acceso DEV",
++            "type": "main",
++            "index": 0
++          }
++        ]
++      ]
++    },
++    "BL — Consultar acceso DEV": {
++      "main": [
++        [
++          {
++            "node": "BL — Evaluar resultado",
++            "type": "main",
++            "index": 0
++          }
++        ]
++      ]
++    },
++    "BL — Evaluar resultado": {
++      "main": [
++        [
++          {
++            "node": "BL — Mensaje habilitado?",
++            "type": "main",
++            "index": 0
++          }
++        ]
++      ]
++    },
++    "BL — Mensaje habilitado?": {
++      "main": [
++        [
++          {
+             "node": "ELI — Entrada común",
+-            "type": "main",
+-            "index": 0
+-          }
+-        ]
+-      ]
+-    },
+-    "ELI — Entrada común": {
+-      "main": [
+-        [
+-          {
+-            "node": "Interpret Resident Message",
+-            "type": "main",
+-            "index": 0
+-          }
+-        ]
+-      ]
+-    },
+-    "ELI — Preparar respuesta": {
+-      "main": [
+-        [
+-          {
+-            "node": "ELI — Canal de respuesta entre ELI — Preparar respuesta y Send Telegram",
+-            "type": "main",
+-            "index": 0
+-          }
+-        ]
+-      ]
+-    },
+-    "ELI — Canal de respuesta entre ELI — Preparar respuesta y Send Telegram": {
+-      "main": [
+-        [
+-          {
+-            "node": "Send Telegram",
+             "type": "main",
+             "index": 0
+           }
+@@ -1018,6 +1460,10 @@
+   "active": false,
+   "meta": {
+     "sourceWorkflowId": "mH2hMPWPHrvdf9JQ",
+-    "sourceVersionId": "f2acc514-0729-4146-b815-50c8171dd0ec"
++    "sourceVersionId": "f2acc514-0729-4146-b815-50c8171dd0ec",
++    "reviewOnly": true,
++    "pendingServerEndpoint": false,
++    "serverEndpointImplemented": true,
++    "deploymentPending": true
+   }
+ }

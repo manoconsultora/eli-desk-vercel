@@ -3,6 +3,8 @@
   // Trabajo en curso que todavía no tiene pantalla: se analiza como entrada
   // para que lo que importa cuente como usado. Sacarlo de acá cuando se conecte.
   "entry": [
+    // Generador local de la copia V3 para revisión; no es un módulo del servidor.
+    "n8n/whatsapp-blacklist-review/build-draft.mjs",
     // Onboarding de administraciones (#49): server actions, invitación y reglas.
     "src/server/platform-onboarding/actions.ts",
     "src/server/platform-onboarding/auth-invitation.ts",

@@ -1,0 +1,19 @@
+✔ precheck sends no text, tenant, unit or recipient metadata (6.828083ms)
+✔ blocked reply is exact and cannot reach classifier (0.329291ms)
+✔ allowed preserves all context; batch results use item linking in any order (0.181166ms)
+✔ unknown, HTTP failure, malformed JSON, bad correlation and transport errors deny processing (0.481625ms)
+✔ nontext messages are checked before unsupported-type reply (0.616917ms)
+✔ missing response context stops instead of using another recipient (0.978708ms)
+✔ draft uses the locally implemented read-only messages.authorize contract (0.653291ms)
+✔ review copy is inactive, no live triggers, bindings or original webhook routes (0.352542ms)
+✔ WhatsApp has no path to AI or business response without the access gate (0.314042ms)
+✔ normalizer ignores statuses and checks text and media, preserving pairing (0.879208ms)
+✔ all code nodes compile; connections and paired names resolve (2.765542ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 191.139333

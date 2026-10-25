@@ -1,0 +1,13 @@
+// Run once for each item. Context comes only from the validated Meta adapter.
+const context = { ...$json };
+if (context.channel !== "whatsapp" || !/^\d{8,15}$/.test(context.externalSenderId) ||
+    context.chatId !== context.externalSenderId || !context.phoneNumberId || !context.correlationId) {
+  throw new Error("fail_closed_missing_verified_whatsapp_context");
+}
+return { json: {
+  context,
+  rawBody: JSON.stringify({ apiVersion: "v1", capability: "messages.authorize",
+    correlationId: context.correlationId,
+    source: { channel: "whatsapp", externalSenderId: context.externalSenderId } }),
+  requestPath: "/api/integrations/n8n/v1/messages.authorize",
+}};

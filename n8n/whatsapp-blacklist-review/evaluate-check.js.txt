@@ -1,0 +1,30 @@
+// Item linking, not array position, keeps the correct recipient in batches.
+const context = $("BL — Preparar consulta").item.json.context;
+if (context?.channel !== "whatsapp" || context.chatId !== context.externalSenderId ||
+    !context.chatId || !context.phoneNumberId || !context.correlationId) {
+  throw new Error("fail_closed_missing_verified_whatsapp_context");
+}
+const blockedText = "[BL] Acceso Denegado. Recomendamos contactar al Administrador de tu Edificio.";
+const unavailableText = "El servicio no está disponible en este momento. Intentá nuevamente más tarde.";
+let body = $json.body ?? $json.data;
+if (typeof body === "string") {
+  try { body = JSON.parse(body); } catch { body = null; }
+}
+const valid = !$json.error && $json.statusCode === 200 && body?.apiVersion === "v1" &&
+  body.capability === "messages.authorize" && body.correlationId === context.correlationId;
+const decision = valid && ["allowed", "blocked", "unavailable"].includes(body.decision)
+  ? body.decision : "unavailable";
+const textMessage = context.providerMessageType === "text" && context.inputValid === true &&
+  typeof context.message === "string" && context.message.trim().length > 0;
+const accessAllowed = decision === "allowed" && textMessage;
+return { json: {
+  ...context,
+  accessDecision: decision,
+  accessAllowed,
+  ...(accessAllowed ? {} : {
+    responseText: decision === "blocked" ? blockedText : decision === "allowed"
+      ? "Por ahora puedo procesar mensajes de texto." : unavailableText,
+    outcome: decision === "blocked" ? "contact_blocked" : decision === "allowed"
+      ? "unsupported_message_type" : "service_unavailable",
+  }),
+}};

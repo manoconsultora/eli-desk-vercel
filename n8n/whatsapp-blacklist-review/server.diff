@@ -1,0 +1,777 @@
+diff --git a/.knip.jsonc b/.knip.jsonc
+index cfea3b1..c1d9521 100644
+--- a/.knip.jsonc
++++ b/.knip.jsonc
+@@ -3,6 +3,8 @@
+   // Trabajo en curso que todavía no tiene pantalla: se analiza como entrada
+   // para que lo que importa cuente como usado. Sacarlo de acá cuando se conecte.
+   "entry": [
++    // Generador local de la copia V3 para revisión; no es un módulo del servidor.
++    "n8n/whatsapp-blacklist-review/build-draft.mjs",
+     // Onboarding de administraciones (#49): server actions, invitación y reglas.
+     "src/server/platform-onboarding/actions.ts",
+     "src/server/platform-onboarding/auth-invitation.ts",
+diff --git a/src/app/api/integrations/n8n/v1/messages.authorize/route.ts b/src/app/api/integrations/n8n/v1/messages.authorize/route.ts
+new file mode 100644
+index 0000000..012aba5
+--- /dev/null
++++ b/src/app/api/integrations/n8n/v1/messages.authorize/route.ts
+@@ -0,0 +1,26 @@
++import { createServerBotIdentityRepository } from "../../../../../../server/bot-identity/channel-identity-repository";
++import { createServerPhoneBlacklistRepository } from "../../../../../../server/bot-message-access/phone-blacklist-repository";
++import {
++  handleMessageAccessRequest,
++  messageAccessResponse,
++} from "../../../../../../server/bot-message-access/request-handler";
++import { createRuntimeBotKeyRegistry } from "../../../../../../server/bot-security/runtime-key-registry";
++import { createSupabaseNonceReplayStore } from "../../../../../../server/bot-security/supabase-nonce-store";
++
++export const runtime = "nodejs";
++
++export async function POST(request: Request): Promise<Response> {
++  if (process.env.ELI_N8N_BOT_ENVIRONMENT !== "dev") {
++    return messageAccessResponse({ decision: "unavailable", status: 503 });
++  }
++  try {
++    return await handleMessageAccessRequest(request, {
++      keyRegistry: createRuntimeBotKeyRegistry(),
++      nonceStore: createSupabaseNonceReplayStore(),
++      identityRepository: createServerBotIdentityRepository(),
++      blacklistRepository: createServerPhoneBlacklistRepository(),
++    });
++  } catch {
++    return messageAccessResponse({ decision: "unavailable", status: 503 });
++  }
++}
+diff --git a/src/server/bot-message-access/phone-blacklist-repository.test.ts b/src/server/bot-message-access/phone-blacklist-repository.test.ts
+new file mode 100644
+index 0000000..ddc5c66
+--- /dev/null
++++ b/src/server/bot-message-access/phone-blacklist-repository.test.ts
+@@ -0,0 +1,131 @@
++import type { SupabaseClient } from "@supabase/supabase-js";
++
++import { createPhoneBlacklistRepository } from "./phone-blacklist-repository";
++import assert from "node:assert/strict";
++import { test } from "node:test";
++
++function fakeClient(result: { data: unknown; error: unknown }) {
++  const calls: unknown[][] = [];
++  const builder = {
++    select(fields: string) {
++      calls.push(["select", fields]);
++      return this;
++    },
++    eq(key: string, value: string) {
++      calls.push(["eq", key, value]);
++      return this;
++    },
++    is(key: string, value: null) {
++      calls.push(["is", key, value]);
++      return this;
++    },
++    async limit(count: number) {
++      calls.push(["limit", count]);
++      return result;
++    },
++  };
++  const client = {
++    from(table: string) {
++      calls.push(["from", table]);
++      return builder;
++    },
++  };
++  return { calls, client: client as unknown as SupabaseClient };
++}
++
++test("uses existing blacklist model, exact phone and active administration scope, with no write API", async () => {
++  const { client, calls } = fakeClient({ data: [], error: null });
++  assert.equal(
++    await createPhoneBlacklistRepository(client).isPhoneBlocked({
++      organizationId: "org-1",
++      phoneDigits: "5491100000001",
++    }),
++    false,
++  );
++  assert.deepEqual(calls, [
++    ["from", "resident_blacklist"],
++    ["select", "id, phone_digits"],
++    ["eq", "organization_id", "org-1"],
++    ["is", "removed_at", null],
++    ["eq", "phone_digits", "5491100000001"],
++    ["limit", 1],
++  ]);
++});
++
++test("active phone match blocks", async () => {
++  const { client } = fakeClient({ data: [{ id: "bl-1", phone_digits: "5491100000001" }], error: null });
++  assert.equal(
++    await createPhoneBlacklistRepository(client).isPhoneBlocked({
++      organizationId: "org-1",
++      phoneDigits: "5491100000001",
++    }),
++    true,
++  );
++});
++
++[
++  { data: null, error: null },
++  { data: {}, error: null },
++  { data: [], error: { message: "unavailable" } },
++  { data: [{ id: "bl-1", phone_digits: "other" }], error: null },
++  { data: [null], error: null },
++].forEach((result, index) => {
++  test(`unknown lookup result ${index} is an error, not permission`, async () => {
++    const { client } = fakeClient(result);
++    await assert.rejects(
++      createPhoneBlacklistRepository(client).isPhoneBlocked({
++        organizationId: "org-1",
++        phoneDigits: "5491100000001",
++      }),
++      /unavailable/,
++    );
++  });
++});
++
++test("invalid phone or missing organization never issues a query", async () => {
++  const { client, calls } = fakeClient({ data: [], error: null });
++  const repo = createPhoneBlacklistRepository(client);
++  await assert.rejects(repo.isPhoneBlocked({ organizationId: "", phoneDigits: "5491100000001" }));
++  await assert.rejects(repo.isPhoneBlocked({ organizationId: "org-1", phoneDigits: "+54 11" }));
++  assert.deepEqual(calls, []);
++});
++
++test("same phone in another administration and removed entries do not block this administration", async () => {
++  const rows = [
++    { id: "other-org", organization_id: "org-2", phone_digits: "5491100000001", removed_at: null },
++    { id: "removed", organization_id: "org-1", phone_digits: "5491100000001", removed_at: "removed" },
++    { id: "email-only", organization_id: "org-1", phone_digits: null, removed_at: null },
++  ];
++  const filters: [string, unknown][] = [];
++  const builder = {
++    select() {
++      return this;
++    },
++    eq(key: string, value: unknown) {
++      filters.push([key, value]);
++      return this;
++    },
++    is(key: string, value: unknown) {
++      filters.push([key, value]);
++      return this;
++    },
++    async limit() {
++      return {
++        data: rows.filter((row) => filters.every(([key, value]) => row[key as keyof typeof row] === value)),
++        error: null,
++      };
++    },
++  };
++  const client = {
++    from() {
++      return builder;
++    },
++  } as unknown as SupabaseClient;
++  assert.equal(
++    await createPhoneBlacklistRepository(client).isPhoneBlocked({
++      organizationId: "org-1",
++      phoneDigits: "5491100000001",
++    }),
++    false,
++  );
++});
+diff --git a/src/server/bot-message-access/phone-blacklist-repository.ts b/src/server/bot-message-access/phone-blacklist-repository.ts
+new file mode 100644
+index 0000000..5f6ca52
+--- /dev/null
++++ b/src/server/bot-message-access/phone-blacklist-repository.ts
+@@ -0,0 +1,39 @@
++import "server-only";
++
++import { createClient, type SupabaseClient } from "@supabase/supabase-js";
++
++export type PhoneBlacklistRepository = {
++  isPhoneBlocked(input: { organizationId: string; phoneDigits: string }): Promise<boolean>;
++};
++
++export function createPhoneBlacklistRepository(client: SupabaseClient): PhoneBlacklistRepository {
++  return {
++    async isPhoneBlocked({ organizationId, phoneDigits }) {
++      if (!organizationId || !/^\d{8,15}$/.test(phoneDigits)) throw new Error("Blacklist scope is unavailable.");
++      // Same table and active organization scope as Desk listBlacklist / Join.
++      // No building filter: a contact is blocked for the whole administration.
++      const { data, error } = await client
++        .from("resident_blacklist")
++        .select("id, phone_digits")
++        .eq("organization_id", organizationId)
++        .is("removed_at", null)
++        .eq("phone_digits", phoneDigits)
++        .limit(1);
++      if (
++        error ||
++        !Array.isArray(data) ||
++        data.some((row) => typeof row?.id !== "string" || !row.id || row.phone_digits !== phoneDigits)
++      ) {
++        throw new Error("Blacklist query is unavailable.");
++      }
++      return data.length > 0;
++    },
++  };
++}
++
++export function createServerPhoneBlacklistRepository(): PhoneBlacklistRepository {
++  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
++  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
++  if (!url || !serviceRoleKey) throw new Error("Blacklist runtime configuration is unavailable.");
++  return createPhoneBlacklistRepository(createClient(url, serviceRoleKey));
++}
+diff --git a/src/server/bot-message-access/request-handler.test.ts b/src/server/bot-message-access/request-handler.test.ts
+new file mode 100644
+index 0000000..36f9055
+--- /dev/null
++++ b/src/server/bot-message-access/request-handler.test.ts
+@@ -0,0 +1,348 @@
++import type { BotIdentityCandidate } from "../../lib/bot-identity/identity-types";
++import { buildCanonicalRequest, sha256Hex } from "../../lib/bot-security/canonical-request";
++import type { BotKeyRegistry, NonceReplayStore } from "../../lib/bot-security/security-types";
++import { handleMessageAccessRequest } from "./request-handler";
++import assert from "node:assert/strict";
++import { createHmac, randomBytes, randomUUID } from "node:crypto";
++import { readFile } from "node:fs/promises";
++import { test } from "node:test";
++import { compileFunction } from "node:vm";
++
++const path = "/api/integrations/n8n/v1/messages.authorize";
++const fixtureSecret = "unit-test-only-message-access-key";
++const candidate: BotIdentityCandidate = {
++  channelUserId: "channel-1",
++  channelUserStatus: "active",
++  organizationId: "org-1",
++  organizationStatus: "active",
++  residentId: "resident-1",
++  residentOrganizationId: "org-1",
++  residentActive: true,
++  links: ["1A", "4B"].map((unitNumber) => ({
++    unitId: `unit-${unitNumber}`,
++    unitNumber,
++    organizationId: "org-1",
++    unitOrganizationId: "org-1",
++    consorcioId: "building-1",
++    consorcioOrganizationId: "org-1",
++  })),
++};
++
++function body(overrides: Record<string, unknown> = {}) {
++  return {
++    apiVersion: "v1",
++    capability: "messages.authorize",
++    correlationId: "wa-test-1",
++    source: { channel: "whatsapp", externalSenderId: "5491100000001" },
++    ...overrides,
++  };
++}
++
++function signedRequest(
++  payload: unknown = body(),
++  options: {
++    signedPath?: string;
++    timestamp?: number;
++    badSignature?: boolean;
++    rawBody?: string;
++  } = {},
++) {
++  const rawBody = new TextEncoder().encode(options.rawBody ?? JSON.stringify(payload));
++  const timestamp = options.timestamp ?? Math.floor(Date.now() / 1000);
++  const nonce = randomBytes(16).toString("base64url");
++  const requestId = randomUUID();
++  const hash = sha256Hex(rawBody);
++  const canonical = buildCanonicalRequest({
++    domain: "ELI-N8N-BOT-API-V1",
++    method: "POST",
++    path: options.signedPath ?? path,
++    keyId: "test-access-key",
++    timestamp,
++    nonce,
++    requestId,
++    bodySha256: hash,
++  });
++  const signature = createHmac("sha256", options.badSignature ? "wrong-key" : fixtureSecret)
++    .update(canonical)
++    .digest("base64url");
++  return new Request(`https://eli.test${path}`, {
++    method: "POST",
++    body: rawBody,
++    headers: {
++      "content-type": "application/json",
++      "X-ELI-Key-Id": "test-access-key",
++      "X-ELI-Timestamp": String(timestamp),
++      "X-ELI-Nonce": nonce,
++      "X-ELI-Request-Id": requestId,
++      "X-ELI-Body-SHA256": hash,
++      "X-ELI-Signature": `v1=${signature}`,
++    },
++  });
++}
++
++function dependencies(
++  options: {
++    candidates?: BotIdentityCandidate[];
++    blocked?: boolean;
++    identityError?: boolean;
++    blacklistError?: boolean;
++    principalId?: string;
++    nonceError?: boolean;
++  } = {},
++) {
++  const calls: unknown[][] = [];
++  const nonces = new Set<string>();
++  const keyRegistry: BotKeyRegistry = {
++    async resolve(keyId, environment) {
++      return {
++        keyId,
++        environment,
++        state: "active",
++        secret: fixtureSecret,
++        principalId: options.principalId ?? "n8n-bot-dev",
++      };
++    },
++  };
++  const nonceStore: NonceReplayStore = {
++    async reserve(input) {
++      if (options.nonceError) throw new Error("nonce unavailable");
++      if (nonces.has(input.nonce)) return "replay";
++      nonces.add(input.nonce);
++      return "reserved";
++    },
++  };
++  return {
++    calls,
++    keyRegistry,
++    nonceStore,
++    identityRepository: {
++      async findChannelCandidates(channel: string, sender: string) {
++        calls.push(["identity", channel, sender]);
++        if (options.identityError) throw new Error("sensitive identity dependency error");
++        return options.candidates ?? [structuredClone(candidate)];
++      },
++    },
++    blacklistRepository: {
++      async isPhoneBlocked(input: { organizationId: string; phoneDigits: string }) {
++        calls.push(["blacklist", input]);
++        if (options.blacklistError) throw new Error("sensitive blacklist dependency error");
++        return options.blocked ?? false;
++      },
++    },
++  };
++}
++
++test("signed SEC-01 request resolves administration, checks phone and does not select or change either unit", async () => {
++  const input = [structuredClone(candidate)];
++  const original = structuredClone(input);
++  const deps = dependencies({ candidates: input });
++  const response = await handleMessageAccessRequest(signedRequest(), deps);
++  assert.equal(response.status, 200);
++  assert.deepEqual(await response.json(), {
++    apiVersion: "v1",
++    capability: "messages.authorize",
++    correlationId: "wa-test-1",
++    decision: "allowed",
++  });
++  assert.deepEqual(deps.calls, [
++    ["identity", "whatsapp", "5491100000001"],
++    ["blacklist", { organizationId: "org-1", phoneDigits: "5491100000001" }],
++  ]);
++  assert.deepEqual(input, original);
++  assert.match(response.headers.get("cache-control") ?? "", /no-store/);
++});
++
++test("blocked returns only the decision and correlation, no tenant or personal data", async () => {
++  const response = await handleMessageAccessRequest(signedRequest(), dependencies({ blocked: true }));
++  assert.equal(response.status, 200);
++  assert.deepEqual(await response.json(), {
++    apiVersion: "v1",
++    capability: "messages.authorize",
++    correlationId: "wa-test-1",
++    decision: "blocked",
++  });
++});
++
++test("each new signed message rechecks the existing blacklist instead of caching permission", async () => {
++  const options = { blocked: false };
++  const deps = dependencies(options);
++  assert.equal((await (await handleMessageAccessRequest(signedRequest(), deps)).json()).decision, "allowed");
++  options.blocked = true;
++  assert.equal((await (await handleMessageAccessRequest(signedRequest(), deps)).json()).decision, "blocked");
++  assert.equal(deps.calls.filter(([operation]) => operation === "blacklist").length, 2);
++});
++
++[
++  ["wrong signature", { badSignature: true }],
++  ["signature for tickets.create cannot authorize messages", { signedPath: "/api/integrations/n8n/v1/tickets.create" }],
++  ["expired signature", { timestamp: 1 }],
++].forEach(([name, options]) => {
++  test(String(name), async () => {
++    const deps = dependencies();
++    const response = await handleMessageAccessRequest(
++      signedRequest(body(), options as Parameters<typeof signedRequest>[1]),
++      deps,
++    );
++    assert.equal(response.status, 401);
++    assert.equal((await response.json()).decision, "unavailable");
++    assert.deepEqual(deps.calls, []);
++  });
++});
++
++test("missing authentication cannot consult identity or blacklist", async () => {
++  const deps = dependencies();
++  const response = await handleMessageAccessRequest(
++    new Request(`https://eli.test${path}`, {
++      method: "POST",
++      headers: { "content-type": "application/json" },
++      body: JSON.stringify(body()),
++    }),
++    deps,
++  );
++  assert.equal(response.status, 401);
++  assert.deepEqual(deps.calls, []);
++});
++
++test("same signed nonce is rejected without a second identity or blacklist lookup", async () => {
++  const deps = dependencies();
++  const request = signedRequest();
++  assert.equal((await handleMessageAccessRequest(request.clone(), deps)).status, 200);
++  const response = await handleMessageAccessRequest(request.clone(), deps);
++  assert.equal(response.status, 409);
++  assert.equal((await response.json()).decision, "unavailable");
++  assert.equal(deps.calls.length, 2);
++});
++
++test("nonce failure and an authenticated but unauthorized principal cannot consult contacts", async () => {
++  for (const options of [{ nonceError: true }, { principalId: "other-integration" }]) {
++    const deps = dependencies(options);
++    const response = await handleMessageAccessRequest(signedRequest(), deps);
++    assert.ok([401, 403].includes(response.status));
++    assert.equal((await response.json()).decision, "unavailable");
++    assert.deepEqual(deps.calls, []);
++  }
++});
++
++const invalidBodies: unknown[] = [
++  null,
++  [],
++  {},
++  body({ organizationId: "attacker-org" }),
++  body({ principal: { principalId: "n8n-bot-dev" } }),
++  body({ capability: "tickets.create" }),
++  body({ correlationId: " " }),
++  body({ correlationId: "a".repeat(257) }),
++  body({ source: { channel: "whatsapp", externalSenderId: "5491100000001", unitNumber: "4B" } }),
++  body({ source: { channel: "whatsapp", externalSenderId: "5491100000001", organizationId: "attacker-org" } }),
++  body({ source: { channel: "telegram", externalSenderId: "5491100000001" } }),
++  body({ source: { channel: "whatsapp", externalSenderId: 5491100000001 } }),
++  body({ source: { channel: "whatsapp", externalSenderId: "x);sql" } }),
++  body({ source: [] }),
++];
++invalidBodies.forEach((payload, index) => {
++  test(`invalid source / authority input ${index} fails before identity`, async () => {
++    const deps = dependencies();
++    const response = await handleMessageAccessRequest(signedRequest(payload), deps);
++    assert.equal(response.status, 422);
++    assert.equal((await response.json()).decision, "unavailable");
++    assert.deepEqual(deps.calls, []);
++  });
++});
++
++test("malformed JSON after valid signature is unavailable", async () => {
++  const deps = dependencies();
++  const response = await handleMessageAccessRequest(signedRequest(null, { rawBody: "{" }), deps);
++  assert.equal(response.status, 422);
++  assert.deepEqual(deps.calls, []);
++});
++
++const deniedCandidates: BotIdentityCandidate[][] = [
++  [],
++  [candidate, { ...candidate, organizationId: "org-2" }],
++  [{ ...candidate, channelUserStatus: "blocked" }],
++  [{ ...candidate, channelUserStatus: "inactive" }],
++  [{ ...candidate, residentActive: null }],
++  [{ ...candidate, residentActive: false }],
++  [{ ...candidate, residentId: null }],
++  [{ ...candidate, residentOrganizationId: "org-2" }],
++  [{ ...candidate, organizationStatus: "suspended" }],
++  [{ ...candidate, links: [] }],
++  [{ ...candidate, links: [{ ...candidate.links[0], unitOrganizationId: "org-2" }] }],
++  [{ ...candidate, links: [{ ...candidate.links[0], organizationId: "org-2" }] }],
++  [{ ...candidate, links: [{ ...candidate.links[0], consorcioId: null }] }],
++  [{ ...candidate, links: [{ ...candidate.links[0], consorcioOrganizationId: "org-2" }] }],
++];
++deniedCandidates.forEach((candidates, index) => {
++  test(`unverified administration ${index} never queries blacklist`, async () => {
++    const deps = dependencies({ candidates });
++    const response = await handleMessageAccessRequest(signedRequest(), deps);
++    assert.equal(response.status, 503);
++    assert.equal((await response.json()).decision, "unavailable");
++    assert.equal(deps.calls.length, 1);
++  });
++});
++
++test("dependency failures are unavailable and redact private errors", async () => {
++  for (const options of [{ identityError: true }, { blacklistError: true }]) {
++    const response = await handleMessageAccessRequest(signedRequest(), dependencies(options));
++    assert.equal(response.status, 503);
++    const text = await response.text();
++    assert.match(text, /unavailable/);
++    assert.doesNotMatch(text, /sensitive/);
++  }
++});
++
++test("body size, method and content type failures do not query contacts", async () => {
++  const deps = dependencies();
++  const requests = [
++    new Request(`https://eli.test${path}`, { method: "GET" }),
++    new Request(`https://eli.test${path}`, { method: "POST", body: "x" }),
++    new Request(`https://eli.test${path}`, {
++      method: "POST",
++      headers: { "content-type": "application/json" },
++      body: "a".repeat(65537),
++    }),
++  ];
++  for (const request of requests) {
++    const response = await handleMessageAccessRequest(request, deps);
++    assert.ok([400, 413].includes(response.status));
++    assert.equal((await response.json()).decision, "unavailable");
++  }
++  assert.deepEqual(deps.calls, []);
++});
++
++test("authenticated server response drives the actual V3 gate, preserving recipient and denial text", async () => {
++  const code = await readFile(
++    new URL("../../../n8n/whatsapp-blacklist-review/evaluate-check.js.txt", import.meta.url),
++    "utf8",
++  );
++  const evaluate = compileFunction(code, ["$json", "$"]);
++  const context = {
++    channel: "whatsapp",
++    externalSenderId: "5491100000001",
++    chatId: "5491100000001",
++    phoneNumberId: "test-phone",
++    correlationId: "wa-test-1",
++    idempotencyKey: "idem-1",
++    providerMessageType: "text",
++    inputValid: true,
++    message: "Reclamo para 4B",
++  };
++  for (const options of [{ blocked: true }, { blocked: false }, { blacklistError: true }]) {
++    const response = await handleMessageAccessRequest(signedRequest(), dependencies(options));
++    const result = evaluate({ statusCode: response.status, body: await response.json() }, () => ({
++      item: { json: { context } },
++    })).json;
++    assert.equal(result.chatId, context.chatId);
++    assert.equal(result.phoneNumberId, context.phoneNumberId);
++    assert.equal(result.idempotencyKey, context.idempotencyKey);
++    assert.equal(result.accessAllowed, !options.blocked && !options.blacklistError);
++    if (options.blocked) {
++      assert.equal(
++        result.responseText,
++        "[BL] Acceso Denegado. Recomendamos contactar al Administrador de tu Edificio.",
++      );
++    }
++    if (options.blacklistError) assert.equal(result.outcome, "service_unavailable");
++  }
++});
+diff --git a/src/server/bot-message-access/request-handler.ts b/src/server/bot-message-access/request-handler.ts
+new file mode 100644
+index 0000000..7ceeddf
+--- /dev/null
++++ b/src/server/bot-message-access/request-handler.ts
+@@ -0,0 +1,154 @@
++import type { BotIdentityCandidate, BotIdentityRepository } from "../../lib/bot-identity/identity-types";
++import { verifySignedRequest } from "../../lib/bot-security/hmac-verifier";
++import type {
++  AuthenticatedTechnicalPrincipal,
++  BotKeyRegistry,
++  NonceReplayStore,
++} from "../../lib/bot-security/security-types";
++import { RawBodyError, readBoundedRawBody } from "../bot-api/raw-body";
++import { BotSecurityError } from "../bot-security/security-errors";
++import type { PhoneBlacklistRepository } from "./phone-blacklist-repository";
++
++type AccessRequest = {
++  apiVersion: "v1";
++  capability: "messages.authorize";
++  correlationId: string;
++  source: { channel: "whatsapp"; externalSenderId: string };
++};
++
++type AccessDependencies = {
++  keyRegistry: BotKeyRegistry;
++  nonceStore: NonceReplayStore;
++  identityRepository: BotIdentityRepository;
++  blacklistRepository: PhoneBlacklistRepository;
++};
++
++export function messageAccessResponse(input: {
++  decision: "allowed" | "blocked" | "unavailable";
++  correlationId?: string | null;
++  status?: number;
++}): Response {
++  return Response.json(
++    {
++      apiVersion: "v1",
++      capability: "messages.authorize",
++      correlationId: input.correlationId ?? null,
++      decision: input.decision,
++    },
++    { status: input.status ?? 200, headers: { "cache-control": "no-store, private" } },
++  );
++}
++
++function isRecord(value: unknown): value is Record<string, unknown> {
++  return typeof value === "object" && value !== null && !Array.isArray(value);
++}
++
++function parseRequest(value: unknown): AccessRequest | null {
++  if (
++    !isRecord(value) ||
++    Object.keys(value).some((key) => !["apiVersion", "capability", "correlationId", "source"].includes(key)) ||
++    value.apiVersion !== "v1" ||
++    value.capability !== "messages.authorize" ||
++    typeof value.correlationId !== "string" ||
++    !value.correlationId.trim() ||
++    value.correlationId.length > 256 ||
++    !isRecord(value.source) ||
++    Object.keys(value.source).some((key) => !["channel", "externalSenderId"].includes(key)) ||
++    value.source.channel !== "whatsapp" ||
++    typeof value.source.externalSenderId !== "string" ||
++    !/^\d{8,15}$/.test(value.source.externalSenderId)
++  )
++    return null;
++  return value as unknown as AccessRequest;
++}
++
++function authorizedPrincipal(principal: AuthenticatedTechnicalPrincipal): boolean {
++  return (
++    principal.kind === "technical_integration" &&
++    principal.name === "integration:n8n" &&
++    principal.principalId === "n8n-bot-dev" &&
++    principal.environment === "dev" &&
++    principal.tenantAuthority === null &&
++    principal.businessAuthority === false
++  );
++}
++
++function hasVerifiedOrganization(candidate: BotIdentityCandidate): boolean {
++  return Boolean(
++    candidate.channelUserId &&
++      candidate.channelUserStatus === "active" &&
++      candidate.organizationId &&
++      candidate.organizationStatus === "active" &&
++      candidate.residentId &&
++      candidate.residentActive === true &&
++      candidate.residentOrganizationId === candidate.organizationId &&
++      candidate.links.length > 0 &&
++      candidate.links.every(
++        (link) =>
++          link.unitId &&
++          link.consorcioId &&
++          link.organizationId === candidate.organizationId &&
++          link.unitOrganizationId === candidate.organizationId &&
++          link.consorcioOrganizationId === candidate.organizationId,
++      ),
++  );
++}
++
++export async function handleMessageAccessRequest(
++  request: Request,
++  dependencies: AccessDependencies,
++): Promise<Response> {
++  let rawBody: Uint8Array;
++  try {
++    rawBody = await readBoundedRawBody(request);
++  } catch (error) {
++    const status = error instanceof RawBodyError && error.code === "payload_too_large" ? 413 : 400;
++    return messageAccessResponse({ decision: "unavailable", status });
++  }
++
++  let principal: AuthenticatedTechnicalPrincipal;
++  try {
++    principal = await verifySignedRequest({
++      domain: "ELI-N8N-BOT-API-V1",
++      method: request.method,
++      path: new URL(request.url).pathname,
++      rawBody,
++      headers: request.headers,
++      environment: "dev",
++      keyRegistry: dependencies.keyRegistry,
++      nonceStore: dependencies.nonceStore,
++    });
++  } catch (error) {
++    const status = error instanceof BotSecurityError && error.code === "nonce_replay" ? 409 : 401;
++    return messageAccessResponse({ decision: "unavailable", status });
++  }
++  if (!authorizedPrincipal(principal)) return messageAccessResponse({ decision: "unavailable", status: 403 });
++
++  let parsed: AccessRequest | null;
++  try {
++    parsed = parseRequest(JSON.parse(new TextDecoder().decode(rawBody)));
++  } catch {
++    parsed = null;
++  }
++  if (!parsed) return messageAccessResponse({ decision: "unavailable", status: 422 });
++
++  try {
++    const candidates = await dependencies.identityRepository.findChannelCandidates(
++      "whatsapp",
++      parsed.source.externalSenderId,
++    );
++    // The scope is derived from the authenticated sender's verified relation.
++    // 1A and 4B in one organization are valid here; no unit is selected or mutated.
++    if (candidates.length !== 1 || !hasVerifiedOrganization(candidates[0])) {
++      return messageAccessResponse({ decision: "unavailable", correlationId: parsed.correlationId, status: 503 });
++    }
++    const blocked = await dependencies.blacklistRepository.isPhoneBlocked({
++      organizationId: candidates[0].organizationId,
++      phoneDigits: parsed.source.externalSenderId,
++    });
++    if (typeof blocked !== "boolean") throw new Error("Blacklist result is unavailable.");
++    return messageAccessResponse({ decision: blocked ? "blocked" : "allowed", correlationId: parsed.correlationId });
++  } catch {
++    return messageAccessResponse({ decision: "unavailable", correlationId: parsed.correlationId, status: 503 });
++  }
++}
+diff --git a/src/server/bot-message-access/route.test.ts b/src/server/bot-message-access/route.test.ts
+new file mode 100644
+index 0000000..937d74a
+--- /dev/null
++++ b/src/server/bot-message-access/route.test.ts
+@@ -0,0 +1,30 @@
++import { POST } from "../../app/api/integrations/n8n/v1/messages.authorize/route";
++import assert from "node:assert/strict";
++import { test } from "node:test";
++
++test("route cannot enable message access in Production or with unknown environment", async () => {
++  const original = process.env.ELI_N8N_BOT_ENVIRONMENT;
++  try {
++    for (const value of ["prod", "production", "", "unknown"]) {
++      process.env.ELI_N8N_BOT_ENVIRONMENT = value;
++      const response = await POST(
++        new Request("https://eli.test/api/integrations/n8n/v1/messages.authorize", {
++          method: "POST",
++          headers: { "content-type": "application/json" },
++          body: "{}",
++        }),
++      );
++      assert.equal(response.status, 503);
++      assert.deepEqual(await response.json(), {
++        apiVersion: "v1",
++        capability: "messages.authorize",
++        correlationId: null,
++        decision: "unavailable",
++      });
++      assert.match(response.headers.get("cache-control") ?? "", /no-store/);
++    }
++  } finally {
++    if (original === undefined) delete process.env.ELI_N8N_BOT_ENVIRONMENT;
++    else process.env.ELI_N8N_BOT_ENVIRONMENT = original;
++  }
++});

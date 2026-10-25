@@ -2,7 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": {
-      "agent/eli-n8n-dev-deploy-prep": false
+      "agent/eli-n8n-dev-deploy-prep": false,
+      "agent/eli-v3-whatsapp-blacklist-review": false
     }
   }
 }

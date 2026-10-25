@@ -1,0 +1,1426 @@
+TAP version 13
+# Subtest: usa la etiqueta definida para valores conocidos
+ok 1 - usa la etiqueta definida para valores conocidos
+  ---
+  duration_ms: 1.01125
+  type: 'test'
+  ...
+# Subtest: un valor sin etiqueta se muestra con mayúscula inicial
+ok 2 - un valor sin etiqueta se muestra con mayúscula inicial
+  ---
+  duration_ms: 0.189709
+  type: 'test'
+  ...
+# Subtest: sin valor no muestra nada
+ok 3 - sin valor no muestra nada
+  ---
+  duration_ms: 0.139042
+  type: 'test'
+  ...
+# Subtest: sin filtros devuelve todas las unidades
+ok 4 - sin filtros devuelve todas las unidades
+  ---
+  duration_ms: 2.422667
+  type: 'test'
+  ...
+# Subtest: busca por número de unidad y por nombre de residente
+ok 5 - busca por número de unidad y por nombre de residente
+  ---
+  duration_ms: 0.391
+  type: 'test'
+  ...
+# Subtest: filtra por estado
+ok 6 - filtra por estado
+  ---
+  duration_ms: 0.163416
+  type: 'test'
+  ...
+# Subtest: filtra con y sin residentes
+ok 7 - filtra con y sin residentes
+  ---
+  duration_ms: 0.3355
+  type: 'test'
+  ...
+# Subtest: combina filtros
+ok 8 - combina filtros
+  ---
+  duration_ms: 0.140458
+  type: 'test'
+  ...
+# Subtest: las opciones de estado salen de los datos, sin repetidos ni vacíos
+ok 9 - las opciones de estado salen de los datos, sin repetidos ni vacíos
+  ---
+  duration_ms: 0.214042
+  type: 'test'
+  ...
+# Subtest: ordena PB primero y después los pisos, cada uno por letra
+ok 10 - ordena PB primero y después los pisos, cada uno por letra
+  ---
+  duration_ms: 78.866708
+  type: 'test'
+  ...
+# Subtest: usa el piso cuando viene cargado aparte del número
+ok 11 - usa el piso cuando viene cargado aparte del número
+  ---
+  duration_ms: 0.260208
+  type: 'test'
+  ...
+# Subtest: corta la página pedida
+ok 12 - corta la página pedida
+  ---
+  duration_ms: 1.708125
+  type: 'test'
+  ...
+# Subtest: una página fuera de rango se ajusta a la primera o la última
+ok 13 - una página fuera de rango se ajusta a la primera o la última
+  ---
+  duration_ms: 0.290625
+  type: 'test'
+  ...
+# Subtest: sin elementos hay una sola página vacía
+ok 14 - sin elementos hay una sola página vacía
+  ---
+  duration_ms: 0.173958
+  type: 'test'
+  ...
+# Subtest: lee el CSV con encabezado y punto y coma, como lo guarda Excel en español
+ok 15 - lee el CSV con encabezado y punto y coma, como lo guarda Excel en español
+  ---
+  duration_ms: 14.82925
+  type: 'test'
+  ...
+# Subtest: acepta coma, tabulación (celdas pegadas) y encabezados con tilde o mayúsculas
+ok 16 - acepta coma, tabulación (celdas pegadas) y encabezados con tilde o mayúsculas
+  ---
+  duration_ms: 0.521542
+  type: 'test'
+  ...
+# Subtest: sin encabezado, la primera columna es el número y la segunda el piso
+ok 17 - sin encabezado, la primera columna es el número y la segunda el piso
+  ---
+  duration_ms: 0.147125
+  type: 'test'
+  ...
+# Subtest: el piso es opcional y las líneas vacías se ignoran
+ok 18 - el piso es opcional y las líneas vacías se ignoran
+  ---
+  duration_ms: 0.359417
+  type: 'test'
+  ...
+# Subtest: respeta comillas y el BOM de Excel
+ok 19 - respeta comillas y el BOM de Excel
+  ---
+  duration_ms: 0.193
+  type: 'test'
+  ...
+# Subtest: marca las que ya existen y las repetidas, sin distinguir mayúsculas
+ok 20 - marca las que ya existen y las repetidas, sin distinguir mayúsculas
+  ---
+  duration_ms: 0.125416
+  type: 'test'
+  ...
+# Subtest: marca las filas sin número y los números que Excel pasó a notación científica
+ok 21 - marca las filas sin número y los números que Excel pasó a notación científica
+  ---
+  duration_ms: 0.491208
+  type: 'test'
+  ...
+# Subtest: avisa si hay más filas que el máximo
+ok 22 - avisa si hay más filas que el máximo
+  ---
+  duration_ms: 2.116209
+  type: 'test'
+  ...
+# Subtest: la plantilla se lee sin errores
+ok 23 - la plantilla se lee sin errores
+  ---
+  duration_ms: 0.524667
+  type: 'test'
+  ...
+# Subtest: sin filtros devuelve todos
+ok 24 - sin filtros devuelve todos
+  ---
+  duration_ms: 1.485542
+  type: 'test'
+  ...
+# Subtest: busca por nombre, teléfono o email
+ok 25 - busca por nombre, teléfono o email
+  ---
+  duration_ms: 0.225917
+  type: 'test'
+  ...
+# Subtest: filtra por consorcio y por estado
+ok 26 - filtra por consorcio y por estado
+  ---
+  duration_ms: 0.270042
+  type: 'test'
+  ...
+# Subtest: las opciones de consorcio salen de las unidades, ordenadas y sin repetir
+ok 27 - las opciones de consorcio salen de las unidades, ordenadas y sin repetir
+  ---
+  duration_ms: 73.349667
+  type: 'test'
+  ...
+# Subtest: requestedAgo usa la unidad más grande que entra
+ok 28 - requestedAgo usa la unidad más grande que entra
+  ---
+  duration_ms: 10.117584
+  type: 'test'
+  ...
+# Subtest: requestedAgo no da tiempos negativos si el reloj está atrasado
+ok 29 - requestedAgo no da tiempos negativos si el reloj está atrasado
+  ---
+  duration_ms: 0.251041
+  type: 'test'
+  ...
+# Subtest: isNewRequest marca las solicitudes de las últimas 24 horas
+ok 30 - isNewRequest marca las solicitudes de las últimas 24 horas
+  ---
+  duration_ms: 0.25125
+  type: 'test'
+  ...
+# Subtest: el contexto elegido resuelve el tenant pagado entre varias membresías
+ok 31 - el contexto elegido resuelve el tenant pagado entre varias membresías
+  ---
+  duration_ms: 39.357416
+  type: 'test'
+  ...
+# Subtest: una cookie de organización ajena no concede acceso ni evita la selección
+ok 32 - una cookie de organización ajena no concede acceso ni evita la selección
+  ---
+  duration_ms: 216.039959
+  type: 'test'
+  ...
+# Subtest: seleccionar un tenant pendiente sin pago no habilita su acceso
+ok 33 - seleccionar un tenant pendiente sin pago no habilita su acceso
+  ---
+  duration_ms: 20.831
+  type: 'test'
+  ...
+# Subtest: consulta platform_users y membresías en paralelo
+ok 34 - consulta platform_users y membresías en paralelo
+  ---
+  duration_ms: 12.846083
+  type: 'test'
+  ...
+# Subtest: un usuario de plataforma se resuelve aunque falle la consulta de membresías
+ok 35 - un usuario de plataforma se resuelve aunque falle la consulta de membresías
+  ---
+  duration_ms: 7.821083
+  type: 'test'
+  ...
+# Subtest: un usuario de organización se resuelve con su membresía activa
+ok 36 - un usuario de organización se resuelve con su membresía activa
+  ---
+  duration_ms: 6.648
+  type: 'test'
+  ...
+# Subtest: si falla la consulta de membresías y hace falta, el error se propaga
+ok 37 - si falla la consulta de membresías y hace falta, el error se propaga
+  ---
+  duration_ms: 5.556917
+  type: 'test'
+  ...
+# Subtest: preserves exact streamed bytes and reads the body once
+ok 38 - preserves exact streamed bytes and reads the body once
+  ---
+  duration_ms: 88.728833
+  type: 'test'
+  ...
+# Subtest: rejects a declared body over the limit before opening the stream
+ok 39 - rejects a declared body over the limit before opening the stream
+  ---
+  duration_ms: 5.287833
+  type: 'test'
+  ...
+# Subtest: rejects a streamed body that crosses the limit
+ok 40 - rejects a streamed body that crosses the limit
+  ---
+  duration_ms: 0.912292
+  type: 'test'
+  ...
+# Subtest: rejects unsupported method and content type before reading
+ok 41 - rejects unsupported method and content type before reading
+  ---
+  duration_ms: 0.574583
+  type: 'test'
+  ...
+# Subtest: fails closed when the stream exceeds the read timeout
+ok 42 - fails closed when the stream exceeds the read timeout
+  ---
+  duration_ms: 63.644958
+  type: 'test'
+  ...
+# Subtest: returns at timeout when reader cancellation never settles
+ok 43 - returns at timeout when reader cancellation never settles
+  ---
+  duration_ms: 11.923917
+  type: 'test'
+  ...
+# Subtest: does not call identity when SEC-01 fails
+ok 44 - does not call identity when SEC-01 fails
+  ---
+  duration_ms: 89.2605
+  type: 'test'
+  ...
+# Subtest: parses raw body once and dispatches after SEC, identity and authorization
+ok 45 - parses raw body once and dispatches after SEC, identity and authorization
+  ---
+  duration_ms: 2.550166
+  type: 'test'
+  ...
+# Subtest: routes a signed WhatsApp tickets.create request through channel identity
+ok 46 - routes a signed WhatsApp tickets.create request through channel identity
+  ---
+  duration_ms: 1.185375
+  type: 'test'
+  ...
+# Subtest: passes an explicit unit selector through identity checks before dispatch
+ok 47 - passes an explicit unit selector through identity checks before dispatch
+  ---
+  duration_ms: 0.886084
+  type: 'test'
+  ...
+# Subtest: does not dispatch when the requested unit is not linked to the sender
+ok 48 - does not dispatch when the requested unit is not linked to the sender
+  ---
+  duration_ms: 1.447542
+  type: 'test'
+  ...
+# Subtest: rejects malformed payload after authentication without dispatch
+ok 49 - rejects malformed payload after authentication without dispatch
+  ---
+  duration_ms: 0.896666
+  type: 'test'
+  ...
+# Subtest: requires correlationId and idempotencyKey
+ok 50 - requires correlationId and idempotencyKey
+  ---
+  duration_ms: 1.119792
+  type: 'test'
+  ...
+# Subtest: rejects body requestId and inbound tenant selectors
+ok 51 - rejects body requestId and inbound tenant selectors
+  ---
+  duration_ms: 44.3085
+  type: 'test'
+  ...
+# Subtest: maps identity failures without dispatch
+ok 52 - maps identity failures without dispatch
+  ---
+  duration_ms: 18.237375
+  type: 'test'
+  ...
+# Subtest: wrong technical principal is denied
+ok 53 - wrong technical principal is denied
+  ---
+  duration_ms: 1.285417
+  type: 'test'
+  ...
+# Subtest: unsupported capability fails closed
+ok 54 - unsupported capability fails closed
+  ---
+  duration_ms: 0.6345
+  type: 'test'
+  ...
+# Subtest: rejects an invalid API version at the handler boundary
+ok 55 - rejects an invalid API version at the handler boundary
+  ---
+  duration_ms: 0.360542
+  type: 'test'
+  ...
+# Subtest: maps every non-resolved identity outcome without dispatch
+ok 56 - maps every non-resolved identity outcome without dispatch
+  ---
+  duration_ms: 2.28
+  type: 'test'
+  ...
+# Subtest: denies a principal from the wrong environment before dispatch
+ok 57 - denies a principal from the wrong environment before dispatch
+  ---
+  duration_ms: 0.827125
+  type: 'test'
+  ...
+# Subtest: maps replay, nonce-store, stale, and invalid-HMAC failures before identity
+ok 58 - maps replay, nonce-store, stale, and invalid-HMAC failures before identity
+  ---
+  duration_ms: 1.89075
+  type: 'test'
+  ...
+# Subtest: resolves one valid Telegram context
+ok 59 - resolves one valid Telegram context
+  ---
+  duration_ms: 2.167125
+  type: 'test'
+  ...
+# Subtest: returns unresolved for unknown or unbound Telegram users
+ok 60 - returns unresolved for unknown or unbound Telegram users
+  ---
+  duration_ms: 0.256958
+  type: 'test'
+  ...
+# Subtest: rejects unsupported and malformed identity input before repository access
+ok 61 - rejects unsupported and malformed identity input before repository access
+  ---
+  duration_ms: 0.598541
+  type: 'test'
+  ...
+# Subtest: resolves WhatsApp only through a valid channel identity
+ok 62 - resolves WhatsApp only through a valid channel identity
+  ---
+  duration_ms: 31.94325
+  type: 'test'
+  ...
+# Subtest: returns blocked and inactive without constructing context
+ok 63 - returns blocked and inactive without constructing context
+  ---
+  duration_ms: 0.41575
+  type: 'test'
+  ...
+# Subtest: returns ambiguous_unit for multiple active units in one organization
+ok 64 - returns ambiguous_unit for multiple active units in one organization
+  ---
+  duration_ms: 0.320333
+  type: 'test'
+  ...
+# Subtest: selects one explicitly requested active linked unit without removing other links
+ok 65 - selects one explicitly requested active linked unit without removing other links
+  ---
+  duration_ms: 0.304459
+  type: 'test'
+  ...
+# Subtest: rejects an explicitly selected unit that is not actively linked
+ok 66 - rejects an explicitly selected unit that is not actively linked
+  ---
+  duration_ms: 0.141167
+  type: 'test'
+  ...
+# Subtest: returns ambiguous_organization for contexts across organizations
+ok 67 - returns ambiguous_organization for contexts across organizations
+  ---
+  duration_ms: 0.707833
+  type: 'test'
+  ...
+# Subtest: fails closed for cross-tenant relation inconsistencies
+ok 68 - fails closed for cross-tenant relation inconsistencies
+  ---
+  duration_ms: 1.31675
+  type: 'test'
+  ...
+# Subtest: repository failures fail closed and never produce a context
+ok 69 - repository failures fail closed and never produce a context
+  ---
+  duration_ms: 2.436417
+  type: 'test'
+  ...
+# Subtest: rejects an unlinked inbound unit selector instead of hiding identity ambiguity
+ok 70 - rejects an unlinked inbound unit selector instead of hiding identity ambiguity
+  ---
+  duration_ms: 0.321417
+  type: 'test'
+  ...
+# Subtest: uses existing blacklist model, exact phone and active administration scope, with no write API
+ok 71 - uses existing blacklist model, exact phone and active administration scope, with no write API
+  ---
+  duration_ms: 3.202083
+  type: 'test'
+  ...
+# Subtest: active phone match blocks
+ok 72 - active phone match blocks
+  ---
+  duration_ms: 0.483541
+  type: 'test'
+  ...
+# Subtest: unknown lookup result 0 is an error, not permission
+ok 73 - unknown lookup result 0 is an error, not permission
+  ---
+  duration_ms: 0.618666
+  type: 'test'
+  ...
+# Subtest: unknown lookup result 1 is an error, not permission
+ok 74 - unknown lookup result 1 is an error, not permission
+  ---
+  duration_ms: 0.143958
+  type: 'test'
+  ...
+# Subtest: unknown lookup result 2 is an error, not permission
+ok 75 - unknown lookup result 2 is an error, not permission
+  ---
+  duration_ms: 0.119625
+  type: 'test'
+  ...
+# Subtest: unknown lookup result 3 is an error, not permission
+ok 76 - unknown lookup result 3 is an error, not permission
+  ---
+  duration_ms: 0.112125
+  type: 'test'
+  ...
+# Subtest: unknown lookup result 4 is an error, not permission
+ok 77 - unknown lookup result 4 is an error, not permission
+  ---
+  duration_ms: 0.167292
+  type: 'test'
+  ...
+# Subtest: invalid phone or missing organization never issues a query
+ok 78 - invalid phone or missing organization never issues a query
+  ---
+  duration_ms: 0.410917
+  type: 'test'
+  ...
+# Subtest: same phone in another administration and removed entries do not block this administration
+ok 79 - same phone in another administration and removed entries do not block this administration
+  ---
+  duration_ms: 0.596583
+  type: 'test'
+  ...
+# Subtest: signed SEC-01 request resolves administration, checks phone and does not select or change either unit
+ok 80 - signed SEC-01 request resolves administration, checks phone and does not select or change either unit
+  ---
+  duration_ms: 81.787875
+  type: 'test'
+  ...
+# Subtest: blocked returns only the decision and correlation, no tenant or personal data
+ok 81 - blocked returns only the decision and correlation, no tenant or personal data
+  ---
+  duration_ms: 1.500375
+  type: 'test'
+  ...
+# Subtest: each new signed message rechecks the existing blacklist instead of caching permission
+ok 82 - each new signed message rechecks the existing blacklist instead of caching permission
+  ---
+  duration_ms: 35.47875
+  type: 'test'
+  ...
+# Subtest: wrong signature
+ok 83 - wrong signature
+  ---
+  duration_ms: 9.094375
+  type: 'test'
+  ...
+# Subtest: signature for tickets.create cannot authorize messages
+ok 84 - signature for tickets.create cannot authorize messages
+  ---
+  duration_ms: 0.952792
+  type: 'test'
+  ...
+# Subtest: expired signature
+ok 85 - expired signature
+  ---
+  duration_ms: 0.797042
+  type: 'test'
+  ...
+# Subtest: missing authentication cannot consult identity or blacklist
+ok 86 - missing authentication cannot consult identity or blacklist
+  ---
+  duration_ms: 0.48125
+  type: 'test'
+  ...
+# Subtest: same signed nonce is rejected without a second identity or blacklist lookup
+ok 87 - same signed nonce is rejected without a second identity or blacklist lookup
+  ---
+  duration_ms: 38.44125
+  type: 'test'
+  ...
+# Subtest: nonce failure and an authenticated but unauthorized principal cannot consult contacts
+ok 88 - nonce failure and an authenticated but unauthorized principal cannot consult contacts
+  ---
+  duration_ms: 2.68475
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 0 fails before identity
+ok 89 - invalid source / authority input 0 fails before identity
+  ---
+  duration_ms: 1.26925
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 1 fails before identity
+ok 90 - invalid source / authority input 1 fails before identity
+  ---
+  duration_ms: 1.281709
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 2 fails before identity
+ok 91 - invalid source / authority input 2 fails before identity
+  ---
+  duration_ms: 1.355417
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 3 fails before identity
+ok 92 - invalid source / authority input 3 fails before identity
+  ---
+  duration_ms: 1.37575
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 4 fails before identity
+ok 93 - invalid source / authority input 4 fails before identity
+  ---
+  duration_ms: 0.662667
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 5 fails before identity
+ok 94 - invalid source / authority input 5 fails before identity
+  ---
+  duration_ms: 0.524
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 6 fails before identity
+ok 95 - invalid source / authority input 6 fails before identity
+  ---
+  duration_ms: 4.869291
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 7 fails before identity
+ok 96 - invalid source / authority input 7 fails before identity
+  ---
+  duration_ms: 0.573333
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 8 fails before identity
+ok 97 - invalid source / authority input 8 fails before identity
+  ---
+  duration_ms: 0.446708
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 9 fails before identity
+ok 98 - invalid source / authority input 9 fails before identity
+  ---
+  duration_ms: 0.426416
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 10 fails before identity
+ok 99 - invalid source / authority input 10 fails before identity
+  ---
+  duration_ms: 0.423958
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 11 fails before identity
+ok 100 - invalid source / authority input 11 fails before identity
+  ---
+  duration_ms: 0.494292
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 12 fails before identity
+ok 101 - invalid source / authority input 12 fails before identity
+  ---
+  duration_ms: 0.38025
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 13 fails before identity
+ok 102 - invalid source / authority input 13 fails before identity
+  ---
+  duration_ms: 0.358125
+  type: 'test'
+  ...
+# Subtest: malformed JSON after valid signature is unavailable
+ok 103 - malformed JSON after valid signature is unavailable
+  ---
+  duration_ms: 0.410042
+  type: 'test'
+  ...
+# Subtest: unverified administration 0 never queries blacklist
+ok 104 - unverified administration 0 never queries blacklist
+  ---
+  duration_ms: 0.479125
+  type: 'test'
+  ...
+# Subtest: unverified administration 1 never queries blacklist
+ok 105 - unverified administration 1 never queries blacklist
+  ---
+  duration_ms: 0.386375
+  type: 'test'
+  ...
+# Subtest: unverified administration 2 never queries blacklist
+ok 106 - unverified administration 2 never queries blacklist
+  ---
+  duration_ms: 0.393625
+  type: 'test'
+  ...
+# Subtest: unverified administration 3 never queries blacklist
+ok 107 - unverified administration 3 never queries blacklist
+  ---
+  duration_ms: 0.445792
+  type: 'test'
+  ...
+# Subtest: unverified administration 4 never queries blacklist
+ok 108 - unverified administration 4 never queries blacklist
+  ---
+  duration_ms: 0.384459
+  type: 'test'
+  ...
+# Subtest: unverified administration 5 never queries blacklist
+ok 109 - unverified administration 5 never queries blacklist
+  ---
+  duration_ms: 0.467125
+  type: 'test'
+  ...
+# Subtest: unverified administration 6 never queries blacklist
+ok 110 - unverified administration 6 never queries blacklist
+  ---
+  duration_ms: 0.419833
+  type: 'test'
+  ...
+# Subtest: unverified administration 7 never queries blacklist
+ok 111 - unverified administration 7 never queries blacklist
+  ---
+  duration_ms: 0.366666
+  type: 'test'
+  ...
+# Subtest: unverified administration 8 never queries blacklist
+ok 112 - unverified administration 8 never queries blacklist
+  ---
+  duration_ms: 0.540375
+  type: 'test'
+  ...
+# Subtest: unverified administration 9 never queries blacklist
+ok 113 - unverified administration 9 never queries blacklist
+  ---
+  duration_ms: 0.380625
+  type: 'test'
+  ...
+# Subtest: unverified administration 10 never queries blacklist
+ok 114 - unverified administration 10 never queries blacklist
+  ---
+  duration_ms: 0.36775
+  type: 'test'
+  ...
+# Subtest: unverified administration 11 never queries blacklist
+ok 115 - unverified administration 11 never queries blacklist
+  ---
+  duration_ms: 0.373667
+  type: 'test'
+  ...
+# Subtest: unverified administration 12 never queries blacklist
+ok 116 - unverified administration 12 never queries blacklist
+  ---
+  duration_ms: 0.357833
+  type: 'test'
+  ...
+# Subtest: unverified administration 13 never queries blacklist
+ok 117 - unverified administration 13 never queries blacklist
+  ---
+  duration_ms: 24.388
+  type: 'test'
+  ...
+# Subtest: dependency failures are unavailable and redact private errors
+ok 118 - dependency failures are unavailable and redact private errors
+  ---
+  duration_ms: 8.861667
+  type: 'test'
+  ...
+# Subtest: body size, method and content type failures do not query contacts
+ok 119 - body size, method and content type failures do not query contacts
+  ---
+  duration_ms: 10.706541
+  type: 'test'
+  ...
+# Subtest: authenticated server response drives the actual V3 gate, preserving recipient and denial text
+ok 120 - authenticated server response drives the actual V3 gate, preserving recipient and denial text
+  ---
+  duration_ms: 129.200041
+  type: 'test'
+  ...
+# Subtest: route cannot enable message access in Production or with unknown environment
+ok 121 - route cannot enable message access in Production or with unknown environment
+  ---
+  duration_ms: 116.254625
+  type: 'test'
+  ...
+# Subtest: builds the exact canonical request and hashes raw body bytes
+ok 122 - builds the exact canonical request and hashes raw body bytes
+  ---
+  duration_ms: 1.61075
+  type: 'test'
+  ...
+# Subtest: accepts a valid active DEV HMAC and returns a non-tenant principal
+ok 123 - accepts a valid active DEV HMAC and returns a non-tenant principal
+  ---
+  duration_ms: 2.470709
+  type: 'test'
+  ...
+# Subtest: rejects missing, malformed and duplicate signed headers
+ok 124 - rejects missing, malformed and duplicate signed headers
+  ---
+  duration_ms: 1.061041
+  type: 'test'
+  ...
+# Subtest: rejects invalid HMAC and handles unequal signature lengths safely
+ok 125 - rejects invalid HMAC and handles unequal signature lengths safely
+  ---
+  duration_ms: 0.449666
+  type: 'test'
+  ...
+# Subtest: rejects a body hash mismatch before authentication succeeds
+ok 126 - rejects a body hash mismatch before authentication succeeds
+  ---
+  duration_ms: 0.357584
+  type: 'test'
+  ...
+# Subtest: accepts timestamps inside the five-minute window and rejects old/future values
+ok 127 - accepts timestamps inside the five-minute window and rejects old/future values
+  ---
+  duration_ms: 0.742042
+  type: 'test'
+  ...
+# Subtest: enforces active, retiring, revoked, unknown and environment-mismatched keys
+ok 128 - enforces active, retiring, revoked, unknown and environment-mismatched keys
+  ---
+  duration_ms: 2.276833
+  type: 'test'
+  ...
+# Subtest: reserves a nonce once and rejects replay or uncertain store results
+ok 129 - reserves a nonce once and rejects replay or uncertain store results
+  ---
+  duration_ms: 0.568958
+  type: 'test'
+  ...
+# Subtest: does not reserve a nonce when signature or timestamp authentication fails
+ok 130 - does not reserve a nonce when signature or timestamp authentication fails
+  ---
+  duration_ms: 0.640333
+  type: 'test'
+  ...
+# Subtest: fails closed when the nonce store throws
+ok 131 - fails closed when the nonce store throws
+  ---
+  duration_ms: 0.759083
+  type: 'test'
+  ...
+# Subtest: uses the signed request ID and redacts observable identifiers
+ok 132 - uses the signed request ID and redacts observable identifiers
+  ---
+  duration_ms: 0.324667
+  type: 'test'
+  ...
+# Subtest: returns safe errors without exposing secrets
+ok 133 - returns safe errors without exposing secrets
+  ---
+  duration_ms: 0.198084
+  type: 'test'
+  ...
+# Subtest: cryptographically separates BOT, MCV CLAIM and MCV COMPLETE domains
+ok 134 - cryptographically separates BOT, MCV CLAIM and MCV COMPLETE domains
+  ---
+  duration_ms: 0.424125
+  type: 'test'
+  ...
+# Subtest: resolves active and retiring keys by key id and environment
+ok 135 - resolves active and retiring keys by key id and environment
+  ---
+  duration_ms: 9.404959
+  type: 'test'
+  ...
+# Subtest: rejects unknown keys and environment mismatches
+ok 136 - rejects unknown keys and environment mismatches
+  ---
+  duration_ms: 0.527084
+  type: 'test'
+  ...
+# Subtest: fails closed for malformed, duplicate, or ambiguous key configuration
+ok 137 - fails closed for malformed, duplicate, or ambiguous key configuration
+  ---
+  duration_ms: 0.282875
+  type: 'test'
+  ...
+# Subtest: does not accept legacy single-key environment variables
+ok 138 - does not accept legacy single-key environment variables
+  ---
+  duration_ms: 0.1225
+  type: 'test'
+  ...
+# Subtest: getCommunityDetail no consulta si el consorcio no está en el scope explicit
+ok 139 - getCommunityDetail no consulta si el consorcio no está en el scope explicit
+  ---
+  duration_ms: 1.382042
+  type: 'test'
+  ...
+# Subtest: getCommunityDetail devuelve null si el consorcio no existe en la organización
+ok 140 - getCommunityDetail devuelve null si el consorcio no existe en la organización
+  ---
+  duration_ms: 0.438
+  type: 'test'
+  ...
+# Subtest: getCommunityDetail filtra todas las tablas por organization_id
+ok 141 - getCommunityDetail filtra todas las tablas por organization_id
+  ---
+  duration_ms: 2.045583
+  type: 'test'
+  ...
+# Subtest: getCommunityDetail arma unidades con residentes, principal primero
+ok 142 - getCommunityDetail arma unidades con residentes, principal primero
+  ---
+  duration_ms: 0.62025
+  type: 'test'
+  ...
+# Subtest: getCommunityDetail muestra el número de unidad de cada ticket, o null si no tiene
+ok 143 - getCommunityDetail muestra el número de unidad de cada ticket, o null si no tiene
+  ---
+  duration_ms: 0.38475
+  type: 'test'
+  ...
+# Subtest: listCommunities devuelve dirección y estado de cada consorcio
+ok 144 - listCommunities devuelve dirección y estado de cada consorcio
+  ---
+  duration_ms: 0.523584
+  type: 'test'
+  ...
+# Subtest: createUnit inserta la unidad desocupada, con la organización y el consorcio
+ok 145 - createUnit inserta la unidad desocupada, con la organización y el consorcio
+  ---
+  duration_ms: 0.425083
+  type: 'test'
+  ...
+# Subtest: createUnit devuelve duplicate si el número ya existe en el consorcio
+ok 146 - createUnit devuelve duplicate si el número ya existe en el consorcio
+  ---
+  duration_ms: 0.13125
+  type: 'test'
+  ...
+# Subtest: createUnit devuelve forbidden si RLS rechaza el insert
+ok 147 - createUnit devuelve forbidden si RLS rechaza el insert
+  ---
+  duration_ms: 0.441792
+  type: 'test'
+  ...
+# Subtest: createUnit lanza ante otros errores de la base
+ok 148 - createUnit lanza ante otros errores de la base
+  ---
+  duration_ms: 1.355292
+  type: 'test'
+  ...
+# Subtest: importUnits inserta las unidades salteando los números que ya existen
+ok 149 - importUnits inserta las unidades salteando los números que ya existen
+  ---
+  duration_ms: 0.559125
+  type: 'test'
+  ...
+# Subtest: importUnits devuelve forbidden si RLS rechaza el insert
+ok 150 - importUnits devuelve forbidden si RLS rechaza el insert
+  ---
+  duration_ms: 0.151625
+  type: 'test'
+  ...
+# Subtest: updateUnit cambia número y piso de la unidad de la organización
+ok 151 - updateUnit cambia número y piso de la unidad de la organización
+  ---
+  duration_ms: 0.4295
+  type: 'test'
+  ...
+# Subtest: updateUnit devuelve duplicate si el número ya existe en el consorcio
+ok 152 - updateUnit devuelve duplicate si el número ya existe en el consorcio
+  ---
+  duration_ms: 0.134333
+  type: 'test'
+  ...
+# Subtest: updateUnit devuelve forbidden si RLS no deja actualizar ninguna fila
+ok 153 - updateUnit devuelve forbidden si RLS no deja actualizar ninguna fila
+  ---
+  duration_ms: 0.112125
+  type: 'test'
+  ...
+# Subtest: updateUnit lanza ante otros errores de la base
+ok 154 - updateUnit lanza ante otros errores de la base
+  ---
+  duration_ms: 0.136833
+  type: 'test'
+  ...
+# Subtest: deleteUnit borra la unidad de la organización
+ok 155 - deleteUnit borra la unidad de la organización
+  ---
+  duration_ms: 0.21875
+  type: 'test'
+  ...
+# Subtest: deleteUnit devuelve forbidden si RLS no deja borrar ninguna fila
+ok 156 - deleteUnit devuelve forbidden si RLS no deja borrar ninguna fila
+  ---
+  duration_ms: 0.101417
+  type: 'test'
+  ...
+# Subtest: deleteUnit dice qué tiene la unidad según la FK que bloqueó el borrado
+ok 157 - deleteUnit dice qué tiene la unidad según la FK que bloqueó el borrado
+  ---
+  duration_ms: 0.401375
+  type: 'test'
+  ...
+# Subtest: deleteUnit lanza ante otros errores de la base
+ok 158 - deleteUnit lanza ante otros errores de la base
+  ---
+  duration_ms: 0.12225
+  type: 'test'
+  ...
+# Subtest: lista solo las entradas activas de la organización
+ok 159 - lista solo las entradas activas de la organización
+  ---
+  duration_ms: 5.542375
+  type: 'test'
+  ...
+# Subtest: agregar y quitar llaman a las RPCs
+ok 160 - agregar y quitar llaman a las RPCs
+  ---
+  duration_ms: 0.957625
+  type: 'test'
+  ...
+# Subtest: forbidden se muestra como error de permiso; otro error no
+ok 161 - forbidden se muestra como error de permiso; otro error no
+  ---
+  duration_ms: 0.785792
+  type: 'test'
+  ...
+# Subtest: isBlacklisted compara el email sin mayúsculas y el teléfono por dígitos
+ok 162 - isBlacklisted compara el email sin mayúsculas y el teléfono por dígitos
+  ---
+  duration_ms: 0.267458
+  type: 'test'
+  ...
+# Subtest: acepta la firma de Resend sobre el cuerpo crudo
+ok 163 - acepta la firma de Resend sobre el cuerpo crudo
+  ---
+  duration_ms: 1.67275
+  type: 'test'
+  ...
+# Subtest: acepta el secreto configurado con un salto de línea al final
+ok 164 - acepta el secreto configurado con un salto de línea al final
+  ---
+  duration_ms: 0.385959
+  type: 'test'
+  ...
+# Subtest: acepta si alguna de las firmas del header coincide
+ok 165 - acepta si alguna de las firmas del header coincide
+  ---
+  duration_ms: 0.177584
+  type: 'test'
+  ...
+# Subtest: rechaza un cuerpo cambiado, otro secreto, un aviso viejo o headers faltantes
+ok 166 - rechaza un cuerpo cambiado, otro secreto, un aviso viejo o headers faltantes
+  ---
+  duration_ms: 0.360625
+  type: 'test'
+  ...
+# Subtest: guarda el rebote en el mail de la cola, sin pisar un aviso más nuevo
+ok 167 - guarda el rebote en el mail de la cola, sin pisar un aviso más nuevo
+  ---
+  duration_ms: 1.142875
+  type: 'test'
+  ...
+# Subtest: ignora los eventos que no son de entrega
+ok 168 - ignora los eventos que no son de entrega
+  ---
+  duration_ms: 0.155375
+  type: 'test'
+  ...
+# Subtest: el drenado programado exige el secreto exacto
+ok 169 - el drenado programado exige el secreto exacto
+  ---
+  duration_ms: 1.136708
+  type: 'test'
+  ...
+# Subtest: ignora espacios y saltos de línea alrededor del secreto configurado
+ok 170 - ignora espacios y saltos de línea alrededor del secreto configurado
+  ---
+  duration_ms: 0.352958
+  type: 'test'
+  ...
+# Subtest: sin secreto configurado no autoriza a nadie
+ok 171 - sin secreto configurado no autoriza a nadie
+  ---
+  duration_ms: 0.207583
+  type: 'test'
+  ...
+# Subtest: aceptado por Resend sin confirmación es enviado, no entregado
+ok 172 - aceptado por Resend sin confirmación es enviado, no entregado
+  ---
+  duration_ms: 19.277834
+  type: 'test'
+  ...
+# Subtest: el webhook de entrega lo marca entregado
+ok 173 - el webhook de entrega lo marca entregado
+  ---
+  duration_ms: 0.210208
+  type: 'test'
+  ...
+# Subtest: rebote, error de envío y dirección suprimida no llegan, cada uno con su motivo
+ok 174 - rebote, error de envío y dirección suprimida no llegan, cada uno con su motivo
+  ---
+  duration_ms: 0.166833
+  type: 'test'
+  ...
+# Subtest: agotar los intentos sin que Resend lo acepte tampoco llega
+ok 175 - agotar los intentos sin que Resend lo acepte tampoco llega
+  ---
+  duration_ms: 0.346583
+  type: 'test'
+  ...
+# Subtest: sin Resend habilitado no consulta ni envía
+ok 176 - sin Resend habilitado no consulta ni envía
+  ---
+  duration_ms: 5.581834
+  type: 'test'
+  ...
+# Subtest: resendConfigFromEnv exige RESEND_ENABLED=true, clave y remitente
+ok 177 - resendConfigFromEnv exige RESEND_ENABLED=true, clave y remitente
+  ---
+  duration_ms: 0.290083
+  type: 'test'
+  ...
+# Subtest: envía cada mail y lo marca como enviado
+ok 178 - envía cada mail y lo marca como enviado
+  ---
+  duration_ms: 73.241583
+  type: 'test'
+  ...
+# Subtest: no envía un mail que otro proceso ya tomó
+ok 179 - no envía un mail que otro proceso ya tomó
+  ---
+  duration_ms: 0.650375
+  type: 'test'
+  ...
+# Subtest: si Resend falla lo marca failed y lo reprograma
+ok 180 - si Resend falla lo marca failed y lo reprograma
+  ---
+  duration_ms: 0.711958
+  type: 'test'
+  ...
+# Subtest: solo toma mails con intentos disponibles, incluidos los trabados en sending
+ok 181 - solo toma mails con intentos disponibles, incluidos los trabados en sending
+  ---
+  duration_ms: 3.0195
+  type: 'test'
+  ...
+# Subtest: reclama un mail trabado en sending solo si nadie lo tocó desde que se leyó
+ok 182 - reclama un mail trabado en sending solo si nadie lo tocó desde que se leyó
+  ---
+  duration_ms: 2.327709
+  type: 'test'
+  ...
+# Subtest: un mail con un tipo desconocido queda failed para reintentarlo, sin mandarse
+ok 183 - un mail con un tipo desconocido queda failed para reintentarlo, sin mandarse
+  ---
+  duration_ms: 2.525209
+  type: 'test'
+  ...
+# Subtest: el mail del código muestra el código y el edificio
+ok 184 - el mail del código muestra el código y el edificio
+  ---
+  duration_ms: 11.891625
+  type: 'test'
+  ...
+# Subtest: el mail del código escapa el HTML del payload
+ok 185 - el mail del código escapa el HTML del payload
+  ---
+  duration_ms: 0.264416
+  type: 'test'
+  ...
+# Subtest: un tipo de mail desconocido falla en vez de mandarse como rechazo
+ok 186 - un tipo de mail desconocido falla en vez de mandarse como rechazo
+  ---
+  duration_ms: 0.439042
+  type: 'test'
+  ...
+# Subtest: la aceptación usa el diseño del mail de alta y dice que la cuenta está activa
+ok 187 - la aceptación usa el diseño del mail de alta y dice que la cuenta está activa
+  ---
+  duration_ms: 0.178459
+  type: 'test'
+  ...
+# Subtest: la aceptación lleva al bot de Telegram con el botón, el link visible y el texto plano
+ok 188 - la aceptación lleva al bot de Telegram con el botón, el link visible y el texto plano
+  ---
+  duration_ms: 0.335542
+  type: 'test'
+  ...
+# Subtest: el rechazo no lleva al bot
+ok 189 - el rechazo no lleva al bot
+  ---
+  duration_ms: 0.120042
+  type: 'test'
+  ...
+# Subtest: cada mail tiene versión en texto plano, sin HTML
+ok 190 - cada mail tiene versión en texto plano, sin HTML
+  ---
+  duration_ms: 0.392375
+  type: 'test'
+  ...
+# Subtest: con todos los consorcios devuelve todas las solicitudes con consorcio y unidad
+ok 191 - con todos los consorcios devuelve todas las solicitudes con consorcio y unidad
+  ---
+  duration_ms: 2.115542
+  type: 'test'
+  ...
+# Subtest: cada solicitud trae el estado de su último mail
+ok 192 - cada solicitud trae el estado de su último mail
+  ---
+  duration_ms: 1.921709
+  type: 'test'
+  ...
+# Subtest: con consorcios asignados solo devuelve solicitudes de esos consorcios
+ok 193 - con consorcios asignados solo devuelve solicitudes de esos consorcios
+  ---
+  duration_ms: 0.259333
+  type: 'test'
+  ...
+# Subtest: con scope explicit vacío no consulta
+ok 194 - con scope explicit vacío no consulta
+  ---
+  duration_ms: 0.324083
+  type: 'test'
+  ...
+# Subtest: filtra todas las tablas por organization_id
+ok 195 - filtra todas las tablas por organization_id
+  ---
+  duration_ms: 0.252209
+  type: 'test'
+  ...
+# Subtest: aceptar llama a la RPC y devuelve el residente
+ok 196 - aceptar llama a la RPC y devuelve el residente
+  ---
+  duration_ms: 1.555166
+  type: 'test'
+  ...
+# Subtest: rechazar pasa el motivo
+ok 197 - rechazar pasa el motivo
+  ---
+  duration_ms: 0.218083
+  type: 'test'
+  ...
+# Subtest: traduce los errores conocidos de la base
+ok 198 - traduce los errores conocidos de la base
+  ---
+  duration_ms: 0.682375
+  type: 'test'
+  ...
+# Subtest: un error desconocido no se muestra como error de revisión
+ok 199 - un error desconocido no se muestra como error de revisión
+  ---
+  duration_ms: 0.165667
+  type: 'test'
+  ...
+# Subtest: dar de alta llama a la RPC y devuelve si creó al residente
+ok 200 - dar de alta llama a la RPC y devuelve si creó al residente
+  ---
+  duration_ms: 1.582625
+  type: 'test'
+  ...
+# Subtest: traduce los errores conocidos de la base
+ok 201 - traduce los errores conocidos de la base
+  ---
+  duration_ms: 0.791541
+  type: 'test'
+  ...
+# Subtest: un error desconocido no se muestra como uno conocido
+ok 202 - un error desconocido no se muestra como uno conocido
+  ---
+  duration_ms: 0.165583
+  type: 'test'
+  ...
+# Subtest: las unidades salen ordenadas por consorcio y número, solo las del scope
+ok 203 - las unidades salen ordenadas por consorcio y número, solo las del scope
+  ---
+  duration_ms: 20.164208
+  type: 'test'
+  ...
+# Subtest: con todos los consorcios devuelve todos los residentes, con y sin unidad
+ok 204 - con todos los consorcios devuelve todos los residentes, con y sin unidad
+  ---
+  duration_ms: 3.64375
+  type: 'test'
+  ...
+# Subtest: con consorcios asignados solo devuelve residentes de unidades de esos consorcios
+ok 205 - con consorcios asignados solo devuelve residentes de unidades de esos consorcios
+  ---
+  duration_ms: 0.439208
+  type: 'test'
+  ...
+# Subtest: con scope explicit vacío no consulta
+ok 206 - con scope explicit vacío no consulta
+  ---
+  duration_ms: 0.164458
+  type: 'test'
+  ...
+# Subtest: filtra todas las tablas por organization_id
+ok 207 - filtra todas las tablas por organization_id
+  ---
+  duration_ms: 0.258
+  type: 'test'
+  ...
+# Subtest: dar de baja llama a la RPC con el vínculo
+ok 208 - dar de baja llama a la RPC con el vínculo
+  ---
+  duration_ms: 2.736708
+  type: 'test'
+  ...
+# Subtest: traduce los errores conocidos de la base
+ok 209 - traduce los errores conocidos de la base
+  ---
+  duration_ms: 0.7495
+  type: 'test'
+  ...
+# Subtest: un error desconocido no se muestra como uno conocido
+ok 210 - un error desconocido no se muestra como uno conocido
+  ---
+  duration_ms: 0.282458
+  type: 'test'
+  ...
+# Subtest: editar llama a la RPC con los datos
+ok 211 - editar llama a la RPC con los datos
+  ---
+  duration_ms: 1.636833
+  type: 'test'
+  ...
+# Subtest: traduce los errores conocidos de la base
+ok 212 - traduce los errores conocidos de la base
+  ---
+  duration_ms: 0.790292
+  type: 'test'
+  ...
+# Subtest: un error desconocido no se muestra como uno conocido
+ok 213 - un error desconocido no se muestra como uno conocido
+  ---
+  duration_ms: 0.180208
+  type: 'test'
+  ...
+# Subtest: el mail de invitación lleva la administración escapada, el rol y el botón al link
+ok 214 - el mail de invitación lleva la administración escapada, el rol y el botón al link
+  ---
+  duration_ms: 1.450625
+  type: 'test'
+  ...
+# Subtest: sin Resend habilitado no se manda y lo informa
+ok 215 - sin Resend habilitado no se manda y lo informa
+  ---
+  duration_ms: 0.259583
+  type: 'test'
+  ...
+# Subtest: con Resend manda a quien se invitó y devuelve si salió
+ok 216 - con Resend manda a quien se invitó y devuelve si salió
+  ---
+  duration_ms: 22.10975
+  type: 'test'
+  ...
+# Subtest: invitar llama a la RPC y devuelve el token con el email normalizado
+ok 217 - invitar llama a la RPC y devuelve el token con el email normalizado
+  ---
+  duration_ms: 1.402917
+  type: 'test'
+  ...
+# Subtest: traduce los errores de la base y no confunde uno desconocido
+ok 218 - traduce los errores de la base y no confunde uno desconocido
+  ---
+  duration_ms: 0.878708
+  type: 'test'
+  ...
+# Subtest: el equipo se arma con los consorcios de cada fila
+ok 219 - el equipo se arma con los consorcios de cada fila
+  ---
+  duration_ms: 0.451
+  type: 'test'
+  ...
+# Subtest: normalizes and fingerprints equivalent business input deterministically
+ok 220 - normalizes and fingerprints equivalent business input deterministically
+  ---
+  duration_ms: 2.331792
+  type: 'test'
+  ...
+# Subtest: Bot command takes all tenant and actor authority from BotContext/principal
+ok 221 - Bot command takes all tenant and actor authority from BotContext/principal
+  ---
+  duration_ms: 0.504667
+  type: 'test'
+  ...
+# Subtest: same normalized business input produces the same fingerprint independent of object order
+ok 222 - same normalized business input produces the same fingerprint independent of object order
+  ---
+  duration_ms: 0.241458
+  type: 'test'
+  ...
+# Subtest: created and existing map to authoritative ticket references
+ok 223 - created and existing map to authoritative ticket references
+  ---
+  duration_ms: 1.473167
+  type: 'test'
+  ...
+# Subtest: conflict never returns a ticket reference
+ok 224 - conflict never returns a ticket reference
+  ---
+  duration_ms: 0.321125
+  type: 'test'
+  ...
+# Subtest: Desk adapter remains on the shared command
+ok 225 - Desk adapter remains on the shared command
+  ---
+  duration_ms: 0.207375
+  type: 'test'
+  ...
+# Subtest: API dispatch returns success for created and existing, conflict for conflict
+ok 226 - API dispatch returns success for created and existing, conflict for conflict
+  ---
+  duration_ms: 0.690375
+  type: 'test'
+  ...
+# Subtest: API dispatch fails closed on persistence uncertainty
+ok 227 - API dispatch fails closed on persistence uncertainty
+  ---
+  duration_ms: 0.263584
+  type: 'test'
+  ...
+# Subtest: updateTicket filtra por edificio_id cuando el scope es explicit
+ok 228 - updateTicket filtra por edificio_id cuando el scope es explicit
+  ---
+  duration_ms: 4.706
+  type: 'test'
+  ...
+# Subtest: updateTicketStatus filtra por edificio_id cuando el scope es explicit
+ok 229 - updateTicketStatus filtra por edificio_id cuando el scope es explicit
+  ---
+  duration_ms: 0.31275
+  type: 'test'
+  ...
+# Subtest: closeTicket filtra por edificio_id cuando el scope es explicit
+ok 230 - closeTicket filtra por edificio_id cuando el scope es explicit
+  ---
+  duration_ms: 0.322041
+  type: 'test'
+  ...
+# Subtest: closeTicket no filtra por edificio_id cuando el scope es all_consorcios
+ok 231 - closeTicket no filtra por edificio_id cuando el scope es all_consorcios
+  ---
+  duration_ms: 0.2555
+  type: 'test'
+  ...
+# Subtest: createTicket rechaza un consorcio fuera del scope
+ok 232 - createTicket rechaza un consorcio fuera del scope
+  ---
+  duration_ms: 0.616583
+  type: 'test'
+  ...
+# Subtest: createTicket acepta un consorcio dentro del scope
+ok 233 - createTicket acepta un consorcio dentro del scope
+  ---
+  duration_ms: 3.532959
+  type: 'test'
+  ...
+# Subtest: updateTicket rechaza mover el ticket a un consorcio fuera del scope
+ok 234 - updateTicket rechaza mover el ticket a un consorcio fuera del scope
+  ---
+  duration_ms: 0.439834
+  type: 'test'
+  ...
+# Subtest: la prioridad urgente es válida y se guarda tal cual
+ok 235 - la prioridad urgente es válida y se guarda tal cual
+  ---
+  duration_ms: 1.078625
+  type: 'test'
+  ...
+# Subtest: una prioridad desconocida se rechaza
+ok 236 - una prioridad desconocida se rechaza
+  ---
+  duration_ms: 0.529958
+  type: 'test'
+  ...
+1..236
+# tests 236
+# suites 0
+# pass 236
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3466.118708

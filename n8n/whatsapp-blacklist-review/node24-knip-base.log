@@ -1,0 +1,3 @@
+Unused exports (2)
+BotTicketRepositoryError      class  src/server/tickets/bot-ticket-repository.ts:15:14
+SupabaseBotTicketPersistence  class  src/server/tickets/bot-ticket-repository.ts:22:14

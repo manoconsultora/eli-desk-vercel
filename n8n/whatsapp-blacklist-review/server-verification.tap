@@ -1,0 +1,316 @@
+TAP version 13
+# Subtest: uses existing blacklist model, exact phone and active administration scope, with no write API
+ok 1 - uses existing blacklist model, exact phone and active administration scope, with no write API
+  ---
+  duration_ms: 1.808166
+  type: 'test'
+  ...
+# Subtest: active phone match blocks
+ok 2 - active phone match blocks
+  ---
+  duration_ms: 0.219584
+  type: 'test'
+  ...
+# Subtest: unknown lookup result 0 is an error, not permission
+ok 3 - unknown lookup result 0 is an error, not permission
+  ---
+  duration_ms: 0.410667
+  type: 'test'
+  ...
+# Subtest: unknown lookup result 1 is an error, not permission
+ok 4 - unknown lookup result 1 is an error, not permission
+  ---
+  duration_ms: 0.105125
+  type: 'test'
+  ...
+# Subtest: unknown lookup result 2 is an error, not permission
+ok 5 - unknown lookup result 2 is an error, not permission
+  ---
+  duration_ms: 0.100041
+  type: 'test'
+  ...
+# Subtest: unknown lookup result 3 is an error, not permission
+ok 6 - unknown lookup result 3 is an error, not permission
+  ---
+  duration_ms: 0.106083
+  type: 'test'
+  ...
+# Subtest: unknown lookup result 4 is an error, not permission
+ok 7 - unknown lookup result 4 is an error, not permission
+  ---
+  duration_ms: 0.089708
+  type: 'test'
+  ...
+# Subtest: invalid phone or missing organization never issues a query
+ok 8 - invalid phone or missing organization never issues a query
+  ---
+  duration_ms: 0.383916
+  type: 'test'
+  ...
+# Subtest: same phone in another administration and removed entries do not block this administration
+ok 9 - same phone in another administration and removed entries do not block this administration
+  ---
+  duration_ms: 0.530792
+  type: 'test'
+  ...
+# Subtest: signed SEC-01 request resolves administration, checks phone and does not select or change either unit
+ok 10 - signed SEC-01 request resolves administration, checks phone and does not select or change either unit
+  ---
+  duration_ms: 24.120833
+  type: 'test'
+  ...
+# Subtest: blocked returns only the decision and correlation, no tenant or personal data
+ok 11 - blocked returns only the decision and correlation, no tenant or personal data
+  ---
+  duration_ms: 1.250541
+  type: 'test'
+  ...
+# Subtest: each new signed message rechecks the existing blacklist instead of caching permission
+ok 12 - each new signed message rechecks the existing blacklist instead of caching permission
+  ---
+  duration_ms: 1.876708
+  type: 'test'
+  ...
+# Subtest: wrong signature
+ok 13 - wrong signature
+  ---
+  duration_ms: 2.732375
+  type: 'test'
+  ...
+# Subtest: signature for tickets.create cannot authorize messages
+ok 14 - signature for tickets.create cannot authorize messages
+  ---
+  duration_ms: 0.874375
+  type: 'test'
+  ...
+# Subtest: expired signature
+ok 15 - expired signature
+  ---
+  duration_ms: 0.69525
+  type: 'test'
+  ...
+# Subtest: missing authentication cannot consult identity or blacklist
+ok 16 - missing authentication cannot consult identity or blacklist
+  ---
+  duration_ms: 0.45125
+  type: 'test'
+  ...
+# Subtest: same signed nonce is rejected without a second identity or blacklist lookup
+ok 17 - same signed nonce is rejected without a second identity or blacklist lookup
+  ---
+  duration_ms: 2.886333
+  type: 'test'
+  ...
+# Subtest: nonce failure and an authenticated but unauthorized principal cannot consult contacts
+ok 18 - nonce failure and an authenticated but unauthorized principal cannot consult contacts
+  ---
+  duration_ms: 1.547334
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 0 fails before identity
+ok 19 - invalid source / authority input 0 fails before identity
+  ---
+  duration_ms: 0.960083
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 1 fails before identity
+ok 20 - invalid source / authority input 1 fails before identity
+  ---
+  duration_ms: 0.419916
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 2 fails before identity
+ok 21 - invalid source / authority input 2 fails before identity
+  ---
+  duration_ms: 0.395125
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 3 fails before identity
+ok 22 - invalid source / authority input 3 fails before identity
+  ---
+  duration_ms: 0.462625
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 4 fails before identity
+ok 23 - invalid source / authority input 4 fails before identity
+  ---
+  duration_ms: 0.371792
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 5 fails before identity
+ok 24 - invalid source / authority input 5 fails before identity
+  ---
+  duration_ms: 0.321292
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 6 fails before identity
+ok 25 - invalid source / authority input 6 fails before identity
+  ---
+  duration_ms: 0.447542
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 7 fails before identity
+ok 26 - invalid source / authority input 7 fails before identity
+  ---
+  duration_ms: 0.345416
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 8 fails before identity
+ok 27 - invalid source / authority input 8 fails before identity
+  ---
+  duration_ms: 0.316167
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 9 fails before identity
+ok 28 - invalid source / authority input 9 fails before identity
+  ---
+  duration_ms: 0.313083
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 10 fails before identity
+ok 29 - invalid source / authority input 10 fails before identity
+  ---
+  duration_ms: 0.309333
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 11 fails before identity
+ok 30 - invalid source / authority input 11 fails before identity
+  ---
+  duration_ms: 0.407375
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 12 fails before identity
+ok 31 - invalid source / authority input 12 fails before identity
+  ---
+  duration_ms: 0.323291
+  type: 'test'
+  ...
+# Subtest: invalid source / authority input 13 fails before identity
+ok 32 - invalid source / authority input 13 fails before identity
+  ---
+  duration_ms: 0.306292
+  type: 'test'
+  ...
+# Subtest: malformed JSON after valid signature is unavailable
+ok 33 - malformed JSON after valid signature is unavailable
+  ---
+  duration_ms: 0.364084
+  type: 'test'
+  ...
+# Subtest: unverified administration 0 never queries blacklist
+ok 34 - unverified administration 0 never queries blacklist
+  ---
+  duration_ms: 0.377875
+  type: 'test'
+  ...
+# Subtest: unverified administration 1 never queries blacklist
+ok 35 - unverified administration 1 never queries blacklist
+  ---
+  duration_ms: 0.313084
+  type: 'test'
+  ...
+# Subtest: unverified administration 2 never queries blacklist
+ok 36 - unverified administration 2 never queries blacklist
+  ---
+  duration_ms: 0.352208
+  type: 'test'
+  ...
+# Subtest: unverified administration 3 never queries blacklist
+ok 37 - unverified administration 3 never queries blacklist
+  ---
+  duration_ms: 0.355667
+  type: 'test'
+  ...
+# Subtest: unverified administration 4 never queries blacklist
+ok 38 - unverified administration 4 never queries blacklist
+  ---
+  duration_ms: 0.323542
+  type: 'test'
+  ...
+# Subtest: unverified administration 5 never queries blacklist
+ok 39 - unverified administration 5 never queries blacklist
+  ---
+  duration_ms: 0.315417
+  type: 'test'
+  ...
+# Subtest: unverified administration 6 never queries blacklist
+ok 40 - unverified administration 6 never queries blacklist
+  ---
+  duration_ms: 0.3465
+  type: 'test'
+  ...
+# Subtest: unverified administration 7 never queries blacklist
+ok 41 - unverified administration 7 never queries blacklist
+  ---
+  duration_ms: 0.2925
+  type: 'test'
+  ...
+# Subtest: unverified administration 8 never queries blacklist
+ok 42 - unverified administration 8 never queries blacklist
+  ---
+  duration_ms: 0.457709
+  type: 'test'
+  ...
+# Subtest: unverified administration 9 never queries blacklist
+ok 43 - unverified administration 9 never queries blacklist
+  ---
+  duration_ms: 0.305333
+  type: 'test'
+  ...
+# Subtest: unverified administration 10 never queries blacklist
+ok 44 - unverified administration 10 never queries blacklist
+  ---
+  duration_ms: 0.295041
+  type: 'test'
+  ...
+# Subtest: unverified administration 11 never queries blacklist
+ok 45 - unverified administration 11 never queries blacklist
+  ---
+  duration_ms: 0.304875
+  type: 'test'
+  ...
+# Subtest: unverified administration 12 never queries blacklist
+ok 46 - unverified administration 12 never queries blacklist
+  ---
+  duration_ms: 0.314417
+  type: 'test'
+  ...
+# Subtest: unverified administration 13 never queries blacklist
+ok 47 - unverified administration 13 never queries blacklist
+  ---
+  duration_ms: 0.268917
+  type: 'test'
+  ...
+# Subtest: dependency failures are unavailable and redact private errors
+ok 48 - dependency failures are unavailable and redact private errors
+  ---
+  duration_ms: 0.7805
+  type: 'test'
+  ...
+# Subtest: body size, method and content type failures do not query contacts
+ok 49 - body size, method and content type failures do not query contacts
+  ---
+  duration_ms: 0.767541
+  type: 'test'
+  ...
+# Subtest: authenticated server response drives the actual V3 gate, preserving recipient and denial text
+ok 50 - authenticated server response drives the actual V3 gate, preserving recipient and denial text
+  ---
+  duration_ms: 15.8675
+  type: 'test'
+  ...
+# Subtest: route cannot enable message access in Production or with unknown environment
+ok 51 - route cannot enable message access in Production or with unknown environment
+  ---
+  duration_ms: 20.672625
+  type: 'test'
+  ...
+1..51
+# tests 51
+# suites 0
+# pass 51
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 539.699208

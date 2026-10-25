@@ -1,0 +1,41 @@
+{
+  "runtime": {
+    "version": "v24.22.1",
+    "execPath": "/private/tmp/eli-node24-validation/node-v24.22.1-darwin-arm64/bin/node",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "officialArtifact": {
+    "url": "https://nodejs.org/dist/v24.22.1/node-v24.22.1-darwin-arm64.tar.gz",
+    "sha256": "89c682593d76cd44233fa53b1563264e7de9cbb189cad169135c5b4fadfbc0a7"
+  },
+  "baseBranch": "agent/eli-n8n-dev-deploy-prep",
+  "baseCommit": "2af111aa0cc2ce7e0b4a5accdd81f949f62c9d0e",
+  "baseExtraction": "git archive of the immutable base into a temporary directory; no branch checkout or edits",
+  "exportsFile": "src/server/tickets/bot-ticket-repository.ts",
+  "baseGitBlob": "ca4464bf6f5f9660724f02a3881e93008a12b805",
+  "worktreeGitBlob": "ca4464bf6f5f9660724f02a3881e93008a12b805",
+  "fileSha256": "531113280b875e32bfa9ea90e4a6c951e0965b282ed7f8d3c46970b1c7592258",
+  "fileUnmodified": true,
+  "fullSuite": {
+    "passed": 236,
+    "failed": 0
+  },
+  "workflowFixtures": {
+    "passed": 11,
+    "failed": 0
+  },
+  "typecheck": "PASS",
+  "biome": "PASS",
+  "knip": {
+    "baseExitCode": 1,
+    "worktreeExitCode": 1,
+    "outputBytesIdentical": true,
+    "outputSha256": "1ac7b7fa69d2a852b53c57548d612cf565a9a59cba791954ccd92f990cd60c48",
+    "findings": [
+      "Unused exports (2)",
+      "BotTicketRepositoryError      class  src/server/tickets/bot-ticket-repository.ts:15:14",
+      "SupabaseBotTicketPersistence  class  src/server/tickets/bot-ticket-repository.ts:22:14"
+    ]
+  }
+}
