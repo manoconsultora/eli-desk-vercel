@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { toast } from "sonner";
 
+import { BlacklistDialog, RemoveFromBlacklistDialog } from "@/app/(main)/dashboard/_components/blacklist-dialogs";
 import {
   FilterSelect,
   InitialsAvatar,
@@ -31,6 +32,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import { useRefresh } from "@/hooks/use-refresh";
+import { addResidentRecordToBlacklistAction } from "@/server/resident-blacklist/resident-blacklist-actions";
+import { type BlacklistEntry, findBlacklistEntry } from "@/server/resident-blacklist/resident-blacklist-repository";
 import type { RelationshipOption, UnitOption } from "@/server/residents/add-resident-to-unit";
 import { endResidentUnitLinkAction } from "@/server/residents/resident-actions";
 import type { ResidentSummary, ResidentUnit } from "@/server/residents/resident-repository";
@@ -39,14 +42,61 @@ import { AddResidentDialog } from "./add-resident-dialog";
 import { EditResidentDialog } from "./edit-resident-dialog";
 import { ALL, communityOptions, filterResidents, type StatusFilter } from "./filter-residents";
 
+function BlacklistStatus({
+  entry,
+  canAdd,
+  canRemove,
+  busy,
+  onAdd,
+  onRemove,
+}: {
+  entry: BlacklistEntry | undefined;
+  canAdd: boolean;
+  canRemove: boolean;
+  busy: boolean;
+  onAdd: () => void;
+  onRemove: (entry: BlacklistEntry) => void;
+}) {
+  const linkClass = "h-auto p-0 text-muted-foreground text-xs";
+  if (!entry) {
+    return canAdd ? (
+      <Button type="button" variant="link" size="sm" className={linkClass} disabled={busy} onClick={onAdd}>
+        Agregar a blacklist
+      </Button>
+    ) : null;
+  }
+  return (
+    <>
+      <Pill tone="red">En blacklist</Pill>
+      {canRemove && (
+        <Button
+          type="button"
+          variant="link"
+          size="sm"
+          className={linkClass}
+          disabled={busy}
+          onClick={() => onRemove(entry)}
+        >
+          Quitar de la blacklist
+        </Button>
+      )}
+    </>
+  );
+}
+
 // Same list design as Solicitudes (resident-requests-list).
-// `manage` is null for VIEWER: no edit, add or end actions.
+// `manage` is null for VIEWER: no edit, add, end or blacklist actions.
+// `blacklist` is null if it didn't load: no blacklist actions then.
 export function ResidentsList({
   residents,
   manage,
+  blacklist,
+  canRemoveFromBlacklist,
 }: {
   residents: ResidentSummary[];
   manage: { units: UnitOption[]; relationships: RelationshipOption[] } | null;
+  blacklist: BlacklistEntry[] | null;
+  canRemoveFromBlacklist: boolean;
 }) {
   const canManage = manage !== null;
   const [search, setSearch] = React.useState("");
@@ -55,6 +105,8 @@ export function ResidentsList({
   const visibleResidents = filterResidents(residents, { search, communityId, status });
   const { refreshing, runAction } = useRefresh();
   const [ending, setEnding] = React.useState<{ resident: ResidentSummary; unit: ResidentUnit } | null>(null);
+  const [blacklisting, setBlacklisting] = React.useState<ResidentSummary | null>(null);
+  const [unblacklisting, setUnblacklisting] = React.useState<BlacklistEntry | null>(null);
   // Busy until the updated list is on screen.
   const busy = refreshing;
 
@@ -72,6 +124,24 @@ export function ResidentsList({
         }
         toast.success(`${resident.name} ya no es residente de la unidad ${unit.unitNumber ?? "s/n"}.`);
         setEnding(null);
+      },
+    );
+  }
+
+  function addToBlacklist(resident: ResidentSummary, reason: string) {
+    runAction(
+      () => addResidentRecordToBlacklistAction(resident.id, reason),
+      (result) => {
+        if (!result) {
+          toast.error("No se pudo completar. Recargá la página y probá de nuevo.");
+          return;
+        }
+        if (!result.success) {
+          toast.error(result.error);
+          return;
+        }
+        toast.success(`${resident.name} quedó en la blacklist.`);
+        setBlacklisting(null);
       },
     );
   }
@@ -186,13 +256,35 @@ export function ResidentsList({
                   </div>
                 </ListCell>
                 <ListCell>
-                  <Pill tone={resident.active ? "green" : "neutral"}>{resident.active ? "Activo" : "Inactivo"}</Pill>
+                  <div className="flex flex-col items-start gap-1.5">
+                    <Pill tone={resident.active ? "green" : "neutral"}>{resident.active ? "Activo" : "Inactivo"}</Pill>
+                    {blacklist && (
+                      <BlacklistStatus
+                        entry={findBlacklistEntry(resident, blacklist)}
+                        canAdd={canManage && Boolean(resident.email || resident.phone)}
+                        canRemove={canRemoveFromBlacklist}
+                        busy={busy}
+                        onAdd={() => setBlacklisting(resident)}
+                        onRemove={setUnblacklisting}
+                      />
+                    )}
+                  </div>
                 </ListCell>
               </TableRow>
             ))}
           </TableBody>
         </ListTable>
       )}
+
+      <BlacklistDialog
+        contact={blacklisting}
+        note="Sigue siendo residente de sus unidades."
+        busy={busy}
+        onConfirm={(reason) => blacklisting && addToBlacklist(blacklisting, reason)}
+        onClose={() => setBlacklisting(null)}
+      />
+
+      <RemoveFromBlacklistDialog entry={unblacklisting} onClose={() => setUnblacklisting(null)} />
 
       <AlertDialog open={ending !== null} onOpenChange={(open) => !open && !busy && setEnding(null)}>
         <AlertDialogContent>

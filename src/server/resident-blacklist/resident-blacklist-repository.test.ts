@@ -1,9 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
+  addResidentRecordToBlacklist,
   addToBlacklist,
   type BlacklistEntry,
   BlacklistError,
+  findBlacklistEntry,
   isBlacklisted,
   listBlacklist,
   removeFromBlacklist,
@@ -76,19 +78,25 @@ test("agregar y quitar llaman a las RPCs", async () => {
   const { client, calls } = fakeClient([]);
 
   await addToBlacklist(client, "q1", "insultos");
+  await addResidentRecordToBlacklist(client, "r1", null);
   await removeFromBlacklist(client, "b1");
 
   assert.deepEqual(
     calls.map((call) => call.args),
     [
       ["add_resident_to_blacklist", { p_request_id: "q1", p_reason: "insultos" }],
+      ["add_resident_record_to_blacklist", { p_resident_id: "r1", p_reason: null }],
       ["remove_resident_from_blacklist", { p_entry_id: "b1" }],
     ],
   );
 });
 
-test("forbidden se muestra como error de permiso; otro error no", async () => {
+test("forbidden y contact_required se muestran; otro error no", async () => {
   await assert.rejects(addToBlacklist(fakeClient([], { message: "forbidden" }).client, "q1", null), BlacklistError);
+  await assert.rejects(
+    addResidentRecordToBlacklist(fakeClient([], { message: "contact_required" }).client, "r1", null),
+    BlacklistError,
+  );
   await assert.rejects(removeFromBlacklist(fakeClient([], { message: "boom" }).client, "b1"), (error: unknown) => {
     assert.ok(!(error instanceof BlacklistError));
     return true;
@@ -102,4 +110,16 @@ test("isBlacklisted compara el email sin mayúsculas y el teléfono por dígitos
   assert.equal(isBlacklisted({ email: "otro@x.com", phone: "54 11 3388-9900" }, entries), true);
   assert.equal(isBlacklisted({ email: "otro@x.com", phone: "11 3388 9900" }, entries), false);
   assert.equal(isBlacklisted({ email: "otro@x.com", phone: "" }, entries), false);
+});
+
+test("findBlacklistEntry devuelve la entrada; un residente sin email no coincide con una entrada sin email", () => {
+  const entries = [
+    { id: "b1", email: null, phoneDigits: "541133889900" },
+    { id: "b2", email: "ana@x.com", phoneDigits: null },
+  ] as BlacklistEntry[];
+
+  assert.equal(findBlacklistEntry({ email: null, phone: "+54 11 3388-9900" }, entries)?.id, "b1");
+  assert.equal(findBlacklistEntry({ email: "ANA@x.com", phone: null }, entries)?.id, "b2");
+  assert.equal(findBlacklistEntry({ email: null, phone: null }, entries), undefined);
+  assert.equal(findBlacklistEntry({ email: "", phone: "11 0000 0000" }, entries), undefined);
 });

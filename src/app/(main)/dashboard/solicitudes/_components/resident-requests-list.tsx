@@ -5,6 +5,7 @@ import * as React from "react";
 import { Eye, LayoutGrid, List } from "lucide-react";
 import { toast } from "sonner";
 
+import { BlacklistDialog } from "@/app/(main)/dashboard/_components/blacklist-dialogs";
 import {
   FilterSelect,
   InitialsAvatar,
@@ -31,7 +32,6 @@ import {
 } from "@/server/resident-requests/resident-request-actions";
 import type { ResidentRequest } from "@/server/resident-requests/resident-request-repository";
 
-import { BlacklistDialog } from "./blacklist-dialog";
 import { BlacklistList } from "./blacklist-list";
 import { RejectRequestDialog } from "./reject-request-dialog";
 import { ResidentRequestCard } from "./resident-request-card";
@@ -330,7 +330,8 @@ export function ResidentRequestsList({
       />
 
       <BlacklistDialog
-        request={blacklisting}
+        contact={blacklisting}
+        note="La solicitud actual queda como está."
         busy={isBusy(blacklisting)}
         onConfirm={(reason) => blacklisting && addToBlacklist(blacklisting, reason)}
         onClose={() => setBlacklistId(null)}
