@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { ConsorcioScope } from "@/lib/access/feature-scope-types";
+import { formatPhone } from "@/lib/phone";
 
 export type CommunityAccess = { organizationId: string; supabase: SupabaseClient };
 
@@ -226,7 +227,7 @@ async function listResidentsByUnit(supabase: SupabaseClient, organizationId: str
       name: resident.nombre_completo ?? "Sin nombre",
       relationship: link.relationship_type,
       isPrimary: link.is_primary === true,
-      phone: resident.telefono,
+      phone: resident.telefono && formatPhone(resident.telefono),
       email: resident.email,
     });
     residentsByUnit.set(link.unidad_id, unitResidents);

@@ -213,7 +213,7 @@ export function AddResidentDialog({
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="add-resident-phone">Teléfono</Label>
+                <Label htmlFor="add-resident-phone">Celular</Label>
                 <Input
                   id="add-resident-phone"
                   type="tel"

@@ -24,7 +24,7 @@ test("editar llama a la RPC con los datos", async () => {
   assert.deepEqual(calls, [
     {
       fn: "update_resident",
-      args: { p_resident_id: "r1", p_name: "Laura Conti", p_email: "laura@x.com", p_phone: "+54 11 2345 6789" },
+      args: { p_resident_id: "r1", p_name: "Laura Conti", p_email: "laura@x.com", p_phone: "+5491123456789" },
     },
   ]);
 });
@@ -34,7 +34,7 @@ test("traduce los errores conocidos de la base", async () => {
     ["forbidden", "No tenés permiso para editar a este residente."],
     ["invalid_name", "Ingresá el nombre."],
     ["invalid_email", "Ingresá un email válido."],
-    ["invalid_phone", "Ingresá un teléfono válido, con código de área."],
+    ["invalid_phone", "Ingresá un celular válido, con código de área."],
     ["email_in_use", "Ese email ya lo usa otro residente de la administración."],
   ]) {
     const { client } = fakeRpc({ message: code });

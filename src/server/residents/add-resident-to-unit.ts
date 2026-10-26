@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { ConsorcioScope } from "@/lib/access/feature-scope-types";
+import { normalizePhone } from "@/lib/phone";
 
 import type { ResidentDetails } from "./update-resident";
 
@@ -10,7 +11,7 @@ const ADD_ERRORS: Record<string, string> = {
   invalid_relationship: "Elegí la relación con la unidad.",
   invalid_name: "Ingresá el nombre.",
   invalid_email: "Ingresá un email válido.",
-  invalid_phone: "Ingresá un teléfono válido, con código de área.",
+  invalid_phone: "Ingresá un celular válido, con código de área.",
   contact_blocked: "Ese email o teléfono está en la blacklist.",
   unit_limit_reached: "La unidad ya tiene 5 residentes activos.",
   already_in_unit: "Ya es residente de esa unidad.",
@@ -32,7 +33,7 @@ export async function addResidentToUnit(
       p_unidad_id: unitId,
       p_name: name,
       p_email: email,
-      p_phone: phone,
+      p_phone: normalizePhone(phone) ?? phone,
       p_relationship_type: relationship,
     })
     .single<{ resident_id: string; created: boolean }>();

@@ -1,11 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { normalizePhone } from "@/lib/phone";
+
 // The database rejects with these messages (eli-database-platform 20261012150000).
 const UPDATE_ERRORS: Record<string, string> = {
   forbidden: "No tenés permiso para editar a este residente.",
   invalid_name: "Ingresá el nombre.",
   invalid_email: "Ingresá un email válido.",
-  invalid_phone: "Ingresá un teléfono válido, con código de área.",
+  invalid_phone: "Ingresá un celular válido, con código de área.",
   email_in_use: "Ese email ya lo usa otro residente de la administración.",
 };
 
@@ -22,7 +24,7 @@ export async function updateResident(
     p_resident_id: residentId,
     p_name: name,
     p_email: email,
-    p_phone: phone,
+    p_phone: normalizePhone(phone) ?? phone,
   });
   if (!error) return;
   const message = UPDATE_ERRORS[error.message];

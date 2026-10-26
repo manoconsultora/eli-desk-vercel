@@ -30,7 +30,7 @@ test("dar de alta llama a la RPC y devuelve si creó al residente", async () => 
         p_unidad_id: "u1",
         p_name: "Ana Gil",
         p_email: "ana@x.com",
-        p_phone: "+54 11 2233 4455",
+        p_phone: "+5491122334455",
         p_relationship_type: "inquilino",
       },
     },
