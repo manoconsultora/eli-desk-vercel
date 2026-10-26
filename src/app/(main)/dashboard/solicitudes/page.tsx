@@ -1,7 +1,11 @@
 import { getRequestAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
 import { getDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
-import { type BlacklistEntry, listBlacklist } from "@/server/resident-blacklist/resident-blacklist-repository";
+import {
+  BLACKLIST_REMOVER_ROLES,
+  type BlacklistEntry,
+  listBlacklist,
+} from "@/server/resident-blacklist/resident-blacklist-repository";
 import { listResidentRequests, type ResidentRequest } from "@/server/resident-requests/resident-request-repository";
 
 import { ResidentRequestsList } from "./_components/resident-requests-list";
@@ -66,7 +70,7 @@ export default async function SolicitudesPage() {
       <ResidentRequestsList
         requests={requests}
         blacklist={blacklist}
-        canRemoveFromBlacklist={context.authenticated && ["TENANT_OWNER", "ADMIN"].includes(context.role ?? "")}
+        canRemoveFromBlacklist={context.authenticated && BLACKLIST_REMOVER_ROLES.includes(context.role ?? "")}
       />
     </div>
   );

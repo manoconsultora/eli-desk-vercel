@@ -3,23 +3,11 @@
 import * as React from "react";
 
 import { CalendarDays, Mail, MessageSquareText, Phone } from "lucide-react";
-import { toast } from "sonner";
 
+import { RemoveFromBlacklistDialog } from "@/app/(main)/dashboard/_components/blacklist-dialogs";
 import { Initials, ListEmpty } from "@/app/(main)/dashboard/_components/list-table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useRefresh } from "@/hooks/use-refresh";
-import { removeFromBlacklistAction } from "@/server/resident-blacklist/resident-blacklist-actions";
 import type { BlacklistEntry } from "@/server/resident-blacklist/resident-blacklist-repository";
 
 import { formatRequestDate } from "./request-time";
@@ -33,10 +21,7 @@ export function BlacklistList({
   canRemove: boolean;
   isFiltered: boolean;
 }) {
-  const { refreshing, runAction } = useRefresh();
   const [removing, setRemoving] = React.useState<BlacklistEntry | null>(null);
-  // Busy until the updated blacklist is on screen.
-  const busy = refreshing;
 
   if (entries === null) return <ListEmpty>No se pudo cargar la blacklist. Probá de nuevo en unos minutos.</ListEmpty>;
   if (entries.length === 0) {
@@ -44,24 +29,6 @@ export function BlacklistList({
       <ListEmpty>
         {isFiltered ? "No hay contactos que coincidan con la búsqueda." : "No hay contactos en la blacklist."}
       </ListEmpty>
-    );
-  }
-
-  function remove(entry: BlacklistEntry) {
-    runAction(
-      () => removeFromBlacklistAction(entry.id),
-      (result) => {
-        if (!result) {
-          toast.error("No se pudo completar. Recargá la página y probá de nuevo.");
-          return;
-        }
-        if (!result.success) {
-          toast.error(result.error);
-          return;
-        }
-        toast.success(`${entry.name} ya no está en la blacklist.`);
-        setRemoving(null);
-      },
     );
   }
 
@@ -95,7 +62,7 @@ export function BlacklistList({
               )}
             </ul>
             {canRemove && (
-              <Button type="button" variant="outline" disabled={busy} onClick={() => setRemoving(entry)}>
+              <Button type="button" variant="outline" onClick={() => setRemoving(entry)}>
                 Quitar de la blacklist
               </Button>
             )}
@@ -103,28 +70,7 @@ export function BlacklistList({
         ))}
       </div>
 
-      <AlertDialog open={removing !== null} onOpenChange={(open) => !open && setRemoving(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Quitar de la blacklist</AlertDialogTitle>
-            <AlertDialogDescription>
-              {removing?.name} va a poder volver a enviar solicitudes de alta.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={busy}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={busy}
-              onClick={(event) => {
-                event.preventDefault();
-                if (removing) remove(removing);
-              }}
-            >
-              Quitar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <RemoveFromBlacklistDialog entry={removing} onClose={() => setRemoving(null)} />
     </>
   );
 }

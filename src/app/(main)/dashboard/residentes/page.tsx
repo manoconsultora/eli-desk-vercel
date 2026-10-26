@@ -2,6 +2,11 @@ import { getRequestAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
 import { getDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
 import {
+  BLACKLIST_REMOVER_ROLES,
+  type BlacklistEntry,
+  listBlacklist,
+} from "@/server/resident-blacklist/resident-blacklist-repository";
+import {
   listRelationshipOptions,
   listUnitOptions,
   type RelationshipOption,
@@ -24,9 +29,16 @@ function MessageState({ title, body }: { title: string; body: string }) {
 }
 
 type Manage = { units: UnitOption[]; relationships: RelationshipOption[] };
+type Loaded = {
+  residents: ResidentSummary[];
+  manage: Manage | null;
+  blacklist: BlacklistEntry[] | null;
+  canRemoveFromBlacklist: boolean;
+};
 
 // `manage` (units and relationships to add residents) only for roles that can change the padrón.
-async function loadResidents(): Promise<{ residents: ResidentSummary[]; manage: Manage | null } | null> {
+// `blacklist` is null if it didn't load: the list then hides the blacklist actions, not the residents.
+async function loadResidents(): Promise<Loaded | null> {
   try {
     const access = await getDeskFeatureAccess("residentes");
     if (access?.consorcioScope == null) return null;
@@ -34,12 +46,18 @@ async function loadResidents(): Promise<{ residents: ResidentSummary[]; manage: 
     const context = await getRequestAuthContext();
     if (!context.authenticated || context.userType !== "tenant" || !context.organizationId) return null;
     const canManage = context.role !== "VIEWER";
-    const [residents, units, relationships] = await Promise.all([
+    const [residents, units, relationships, blacklist] = await Promise.all([
       listResidents(supabase, context.organizationId, access.consorcioScope),
       canManage ? listUnitOptions(supabase, context.organizationId, access.consorcioScope) : [],
       canManage ? listRelationshipOptions(supabase) : [],
+      listBlacklist(supabase, context.organizationId).catch(() => null),
     ]);
-    return { residents, manage: canManage ? { units, relationships } : null };
+    return {
+      residents,
+      manage: canManage ? { units, relationships } : null,
+      blacklist,
+      canRemoveFromBlacklist: BLACKLIST_REMOVER_ROLES.includes(context.role),
+    };
   } catch {
     return null;
   }
@@ -68,7 +86,12 @@ export default async function ResidentesPage() {
         {loaded.manage && <AddResidentDialog units={loaded.manage.units} relationships={loaded.manage.relationships} />}
       </header>
 
-      <ResidentsList residents={loaded.residents} manage={loaded.manage} />
+      <ResidentsList
+        residents={loaded.residents}
+        manage={loaded.manage}
+        blacklist={loaded.blacklist}
+        canRemoveFromBlacklist={loaded.canRemoveFromBlacklist}
+      />
     </div>
   );
 }

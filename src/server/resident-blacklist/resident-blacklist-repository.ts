@@ -22,8 +22,12 @@ type BlacklistRow = {
 
 export class BlacklistError extends Error {}
 
+// The blacklist applies to the whole organization, so only these roles remove (the RPC checks it too).
+export const BLACKLIST_REMOVER_ROLES = ["TENANT_OWNER", "ADMIN"];
+
 function throwBlacklistError(error: { message: string }, forbidden: string): never {
   if (error.message === "forbidden") throw new BlacklistError(forbidden);
+  if (error.message === "contact_required") throw new BlacklistError("No tiene email ni teléfono para bloquear.");
   throw new Error(error.message);
 }
 
@@ -53,14 +57,35 @@ export async function addToBlacklist(supabase: SupabaseClient, requestId: string
   if (error) throwBlacklistError(error, "No tenés permiso para agregar este contacto a la blacklist.");
 }
 
+// Blocks the resident's email and phone; the resident keeps their units.
+export async function addResidentRecordToBlacklist(
+  supabase: SupabaseClient,
+  residentId: string,
+  reason: string | null,
+) {
+  const { error } = await supabase.rpc("add_resident_record_to_blacklist", {
+    p_resident_id: residentId,
+    p_reason: reason,
+  });
+  if (error) throwBlacklistError(error, "No tenés permiso para agregar este residente a la blacklist.");
+}
+
 export async function removeFromBlacklist(supabase: SupabaseClient, entryId: string) {
   const { error } = await supabase.rpc("remove_resident_from_blacklist", { p_entry_id: entryId });
   if (error) throwBlacklistError(error, "No tenés permiso para quitar contactos de la blacklist.");
 }
 
+type Contact = { email: string | null; phone: string | null };
+
 // Same match as the database: email ignoring case, phone by its digits.
-export function isBlacklisted(contact: { email: string; phone: string | null }, entries: BlacklistEntry[]) {
-  const email = contact.email.trim().toLowerCase();
+export function findBlacklistEntry(contact: Contact, entries: BlacklistEntry[]) {
+  const email = contact.email?.trim().toLowerCase() || null;
   const digits = contact.phone?.replace(/\D/g, "") || null;
-  return entries.some((entry) => entry.email === email || (digits !== null && entry.phoneDigits === digits));
+  return entries.find(
+    (entry) => (email !== null && entry.email === email) || (digits !== null && entry.phoneDigits === digits),
+  );
+}
+
+export function isBlacklisted(contact: Contact, entries: BlacklistEntry[]) {
+  return findBlacklistEntry(contact, entries) !== undefined;
 }
