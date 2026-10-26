@@ -23,18 +23,25 @@ import type { ResidentSummary } from "@/server/residents/resident-repository";
 
 const SELECT = "h-10 rounded-md border bg-background px-3 text-sm";
 
-// Without `resident`, adds a new person (or reuses the one with that email). With it, adds a unit to them.
+// Without `onClose`: the "Agregar residente" button, for a new person (or the one with that email).
+// With `onClose`: opened from the row menu while `forResident` is set, to add a unit to them.
 export function AddResidentDialog({
   units,
   relationships,
-  resident,
+  forResident,
+  onClose,
 }: {
   units: UnitOption[];
   relationships: RelationshipOption[];
-  resident?: ResidentSummary;
+  forResident?: ResidentSummary | null;
+  onClose?: () => void;
 }) {
   const { refreshing, runAction } = useRefresh();
-  const [open, setOpen] = React.useState(false);
+  const [ownOpen, setOwnOpen] = React.useState(false);
+  const open = onClose ? Boolean(forResident) : ownOpen;
+  // Kept after closing so the closing animation doesn't change the texts.
+  const [resident, setResident] = React.useState<ResidentSummary | null>(null);
+  const [wasOpen, setWasOpen] = React.useState(false);
   const [communityId, setCommunityId] = React.useState("");
   const [unitId, setUnitId] = React.useState("");
   const [relationship, setRelationship] = React.useState("");
@@ -51,19 +58,32 @@ export function AddResidentDialog({
   const communities = [...new Map(availableUnits.map((unit) => [unit.communityId, unit.communityName]))];
   const communityUnits = availableUnits.filter((unit) => unit.communityId === communityId);
 
-  function changeOpen(next: boolean) {
-    if (!next && saving) return;
-    setOpen(next);
-    if (next) {
+  // Fills the form each time it opens (React's "adjust state when a prop changes").
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      const target = forResident ?? null;
+      const taken = new Set(target?.units.map((unit) => unit.unitId));
+      const targetCommunities = new Set(units.filter((unit) => !taken.has(unit.id)).map((unit) => unit.communityId));
+      setResident(target);
       // With a single consorcio there's nothing to choose.
-      setCommunityId(communities.length === 1 ? communities[0][0] : "");
+      setCommunityId(targetCommunities.size === 1 ? [...targetCommunities][0] : "");
       setUnitId("");
       setRelationship("");
-      setName(resident?.name ?? "");
-      setEmail(resident?.email ?? "");
-      setPhone(resident?.phone ?? "");
+      setName(target?.name ?? "");
+      setEmail(target?.email ?? "");
+      setPhone(target?.phone ?? "");
       setError(null);
     }
+  }
+
+  function changeOpen(next: boolean) {
+    if (!next && saving) return;
+    if (onClose) {
+      if (!next) onClose();
+      return;
+    }
+    setOwnOpen(next);
   }
 
   function save(event: React.FormEvent) {
@@ -81,7 +101,7 @@ export function AddResidentDialog({
           setError(result.error);
           return;
         }
-        setOpen(false);
+        changeOpen(false);
         const where = `la unidad ${unit?.number ?? ""} de ${unit?.communityName ?? ""}`;
         toast.success(
           resident
@@ -96,17 +116,7 @@ export function AddResidentDialog({
 
   return (
     <>
-      {resident ? (
-        <Button
-          type="button"
-          variant="link"
-          size="sm"
-          className="h-auto p-0 text-muted-foreground text-xs"
-          onClick={() => changeOpen(true)}
-        >
-          Sumar unidad
-        </Button>
-      ) : (
+      {!onClose && (
         <Button type="button" onClick={() => changeOpen(true)}>
           <Plus className="size-4" />
           Agregar residente

@@ -4,12 +4,14 @@ import * as React from "react";
 
 import Link from "next/link";
 
+import { Ban, Ellipsis, Pencil, Plus, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { BlacklistDialog, RemoveFromBlacklistDialog } from "@/app/(main)/dashboard/_components/blacklist-dialogs";
 import {
   FilterSelect,
   InitialsAvatar,
+  ListActionButton,
   ListCell,
   ListCount,
   ListEmpty,
@@ -30,6 +32,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import { useRefresh } from "@/hooks/use-refresh";
 import { addResidentRecordToBlacklistAction } from "@/server/resident-blacklist/resident-blacklist-actions";
@@ -42,50 +51,75 @@ import { AddResidentDialog } from "./add-resident-dialog";
 import { EditResidentDialog } from "./edit-resident-dialog";
 import { ALL, communityOptions, filterResidents, type StatusFilter } from "./filter-residents";
 
-function BlacklistStatus({
-  entry,
-  canAdd,
+function BlacklistPill() {
+  return (
+    <Pill tone="red">
+      <Ban aria-hidden="true" className="mr-1.5 size-3.5" />
+      En blacklist
+    </Pill>
+  );
+}
+
+// The row's actions live in a menu, as in tenant-account-menu: each item opens its dialog,
+// which stays outside the row. `blacklist` is null if it didn't load: no blacklist item then.
+function ResidentActions({
+  resident,
+  blacklist,
   canRemove,
   busy,
+  onEdit,
+  onAddUnit,
   onAdd,
   onRemove,
 }: {
-  entry: BlacklistEntry | undefined;
-  canAdd: boolean;
+  resident: ResidentSummary;
+  blacklist: { entry: BlacklistEntry | undefined } | null;
   canRemove: boolean;
   busy: boolean;
+  onEdit: () => void;
+  onAddUnit: () => void;
   onAdd: () => void;
   onRemove: (entry: BlacklistEntry) => void;
 }) {
-  const linkClass = "h-auto p-0 text-muted-foreground text-xs";
-  if (!entry) {
-    return canAdd ? (
-      <Button type="button" variant="link" size="sm" className={linkClass} disabled={busy} onClick={onAdd}>
-        Agregar a blacklist
-      </Button>
-    ) : null;
-  }
+  const entry = blacklist?.entry;
+  const hasContact = Boolean(resident.email || resident.phone);
   return (
-    <>
-      <Pill tone="red">En blacklist</Pill>
-      {canRemove && (
-        <Button
-          type="button"
-          variant="link"
-          size="sm"
-          className={linkClass}
-          disabled={busy}
-          onClick={() => onRemove(entry)}
-        >
-          Quitar de la blacklist
-        </Button>
-      )}
-    </>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <ListActionButton size="icon" aria-label={`Acciones para ${resident.name}`} disabled={busy}>
+          <Ellipsis aria-hidden="true" />
+        </ListActionButton>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-56">
+        <DropdownMenuItem onSelect={onEdit}>
+          <Pencil />
+          Editar datos
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={onAddUnit}>
+          <Plus />
+          Sumar unidad
+        </DropdownMenuItem>
+        {blacklist && <DropdownMenuSeparator />}
+        {!blacklist ? null : entry ? (
+          <DropdownMenuItem disabled={!canRemove} onSelect={() => onRemove(entry)}>
+            <ShieldCheck />
+            Quitar de la blacklist
+            {!canRemove && <span className="ml-auto text-muted-foreground text-xs">Sin permiso</span>}
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem variant="destructive" disabled={!hasContact} onSelect={onAdd}>
+            <Ban />
+            Agregar a blacklist
+            {!hasContact && <span className="ml-auto text-muted-foreground text-xs">Sin email ni teléfono</span>}
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
 // Same list design as Solicitudes (resident-requests-list).
-// `manage` is null for VIEWER: no edit, add, end or blacklist actions.
+// `manage` is null for VIEWER: no row menu and no "Dar de baja".
 // `blacklist` is null if it didn't load: no blacklist actions then.
 export function ResidentsList({
   residents,
@@ -105,6 +139,8 @@ export function ResidentsList({
   const visibleResidents = filterResidents(residents, { search, communityId, status });
   const { refreshing, runAction } = useRefresh();
   const [ending, setEnding] = React.useState<{ resident: ResidentSummary; unit: ResidentUnit } | null>(null);
+  const [editing, setEditing] = React.useState<ResidentSummary | null>(null);
+  const [addingUnit, setAddingUnit] = React.useState<ResidentSummary | null>(null);
   const [blacklisting, setBlacklisting] = React.useState<ResidentSummary | null>(null);
   const [unblacklisting, setUnblacklisting] = React.useState<BlacklistEntry | null>(null);
   // Busy until the updated list is on screen.
@@ -194,16 +230,16 @@ export function ResidentsList({
               <ListHead>Consorcio / Unidad</ListHead>
               <ListHead>Relación</ListHead>
               <ListHead>Estado</ListHead>
+              <ListHead>
+                <span className="sr-only">Acciones</span>
+              </ListHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {visibleResidents.map((resident) => (
               <TableRow key={resident.id}>
                 <ListCell>
-                  <div className="flex items-center gap-1">
-                    <InitialsAvatar name={resident.name} index={residents.indexOf(resident)} />
-                    {canManage && <EditResidentDialog resident={resident} />}
-                  </div>
+                  <InitialsAvatar name={resident.name} index={residents.indexOf(resident)} />
                 </ListCell>
                 <ListCell muted>
                   <p>{resident.phone ?? "Sin teléfono"}</p>
@@ -242,9 +278,6 @@ export function ResidentsList({
                       ))}
                     </ul>
                   )}
-                  {manage && (
-                    <AddResidentDialog units={manage.units} relationships={manage.relationships} resident={resident} />
-                  )}
                 </ListCell>
                 <ListCell>
                   <div className="flex flex-col items-start gap-1.5">
@@ -258,22 +291,38 @@ export function ResidentsList({
                 <ListCell>
                   <div className="flex flex-col items-start gap-1.5">
                     <Pill tone={resident.active ? "green" : "neutral"}>{resident.active ? "Activo" : "Inactivo"}</Pill>
-                    {blacklist && (
-                      <BlacklistStatus
-                        entry={findBlacklistEntry(resident, blacklist)}
-                        canAdd={canManage && Boolean(resident.email || resident.phone)}
-                        canRemove={canRemoveFromBlacklist}
-                        busy={busy}
-                        onAdd={() => setBlacklisting(resident)}
-                        onRemove={setUnblacklisting}
-                      />
-                    )}
+                    {blacklist && findBlacklistEntry(resident, blacklist) && <BlacklistPill />}
                   </div>
+                </ListCell>
+                <ListCell>
+                  {canManage && (
+                    <ResidentActions
+                      resident={resident}
+                      blacklist={blacklist && { entry: findBlacklistEntry(resident, blacklist) }}
+                      canRemove={canRemoveFromBlacklist}
+                      busy={busy}
+                      onEdit={() => setEditing(resident)}
+                      onAddUnit={() => setAddingUnit(resident)}
+                      onAdd={() => setBlacklisting(resident)}
+                      onRemove={setUnblacklisting}
+                    />
+                  )}
                 </ListCell>
               </TableRow>
             ))}
           </TableBody>
         </ListTable>
+      )}
+
+      <EditResidentDialog resident={editing} onClose={() => setEditing(null)} />
+
+      {manage && (
+        <AddResidentDialog
+          units={manage.units}
+          relationships={manage.relationships}
+          forResident={addingUnit}
+          onClose={() => setAddingUnit(null)}
+        />
       )}
 
       <BlacklistDialog
