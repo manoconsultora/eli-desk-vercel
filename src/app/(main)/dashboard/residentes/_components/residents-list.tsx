@@ -4,12 +4,14 @@ import * as React from "react";
 
 import Link from "next/link";
 
+import { Ban, Ellipsis, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { BlacklistDialog, RemoveFromBlacklistDialog } from "@/app/(main)/dashboard/_components/blacklist-dialogs";
 import {
   FilterSelect,
   InitialsAvatar,
+  ListActionButton,
   ListCell,
   ListCount,
   ListEmpty,
@@ -30,6 +32,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import { useRefresh } from "@/hooks/use-refresh";
 import { addResidentRecordToBlacklistAction } from "@/server/resident-blacklist/resident-blacklist-actions";
@@ -42,45 +50,56 @@ import { AddResidentDialog } from "./add-resident-dialog";
 import { EditResidentDialog } from "./edit-resident-dialog";
 import { ALL, communityOptions, filterResidents, type StatusFilter } from "./filter-residents";
 
-function BlacklistStatus({
+function BlacklistPill() {
+  return (
+    <Pill tone="red">
+      <Ban aria-hidden="true" className="mr-1.5 size-3.5" />
+      En blacklist
+    </Pill>
+  );
+}
+
+// Row actions that are rare and strong live in a menu, as in tenant-account-menu: the menu opens
+// the dialog, which stays outside the row.
+function ResidentActions({
+  resident,
   entry,
-  canAdd,
   canRemove,
   busy,
   onAdd,
   onRemove,
 }: {
+  resident: ResidentSummary;
   entry: BlacklistEntry | undefined;
-  canAdd: boolean;
   canRemove: boolean;
   busy: boolean;
   onAdd: () => void;
   onRemove: (entry: BlacklistEntry) => void;
 }) {
-  const linkClass = "h-auto p-0 text-muted-foreground text-xs";
-  if (!entry) {
-    return canAdd ? (
-      <Button type="button" variant="link" size="sm" className={linkClass} disabled={busy} onClick={onAdd}>
-        Agregar a blacklist
-      </Button>
-    ) : null;
-  }
+  const hasContact = Boolean(resident.email || resident.phone);
   return (
-    <>
-      <Pill tone="red">En blacklist</Pill>
-      {canRemove && (
-        <Button
-          type="button"
-          variant="link"
-          size="sm"
-          className={linkClass}
-          disabled={busy}
-          onClick={() => onRemove(entry)}
-        >
-          Quitar de la blacklist
-        </Button>
-      )}
-    </>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <ListActionButton size="icon" aria-label={`Acciones para ${resident.name}`} disabled={busy}>
+          <Ellipsis aria-hidden="true" />
+        </ListActionButton>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-56">
+        {entry ? (
+          <DropdownMenuItem disabled={!canRemove} onSelect={() => onRemove(entry)}>
+            <ShieldCheck />
+            Quitar de la blacklist
+            {!canRemove && <span className="ml-auto text-muted-foreground text-xs">Sin permiso</span>}
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem variant="destructive" disabled={!hasContact} onSelect={onAdd}>
+            <Ban />
+            Agregar a blacklist
+            {!hasContact && <span className="ml-auto text-muted-foreground text-xs">Sin email ni teléfono</span>}
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -194,6 +213,9 @@ export function ResidentsList({
               <ListHead>Consorcio / Unidad</ListHead>
               <ListHead>Relación</ListHead>
               <ListHead>Estado</ListHead>
+              <ListHead>
+                <span className="sr-only">Acciones</span>
+              </ListHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -258,17 +280,20 @@ export function ResidentsList({
                 <ListCell>
                   <div className="flex flex-col items-start gap-1.5">
                     <Pill tone={resident.active ? "green" : "neutral"}>{resident.active ? "Activo" : "Inactivo"}</Pill>
-                    {blacklist && (
-                      <BlacklistStatus
-                        entry={findBlacklistEntry(resident, blacklist)}
-                        canAdd={canManage && Boolean(resident.email || resident.phone)}
-                        canRemove={canRemoveFromBlacklist}
-                        busy={busy}
-                        onAdd={() => setBlacklisting(resident)}
-                        onRemove={setUnblacklisting}
-                      />
-                    )}
+                    {blacklist && findBlacklistEntry(resident, blacklist) && <BlacklistPill />}
                   </div>
+                </ListCell>
+                <ListCell>
+                  {canManage && blacklist && (
+                    <ResidentActions
+                      resident={resident}
+                      entry={findBlacklistEntry(resident, blacklist)}
+                      canRemove={canRemoveFromBlacklist}
+                      busy={busy}
+                      onAdd={() => setBlacklisting(resident)}
+                      onRemove={setUnblacklisting}
+                    />
+                  )}
                 </ListCell>
               </TableRow>
             ))}
