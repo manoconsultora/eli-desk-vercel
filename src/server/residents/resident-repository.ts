@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { ConsorcioScope } from "@/lib/access/feature-scope-types";
+import { formatPhone } from "@/lib/phone";
 
 // Domain uses resident/unit/community; the DB still names them residentes/unidades/edificios.
 export type ResidentUnit = {
@@ -99,7 +100,7 @@ export async function listResidents(
     .map((row) => ({
       id: row.id,
       name: row.nombre_completo ?? "Sin nombre",
-      phone: row.telefono,
+      phone: row.telefono && formatPhone(row.telefono),
       email: row.email,
       active: row.activo === true,
       units: unitsByResident.get(row.id) ?? [],

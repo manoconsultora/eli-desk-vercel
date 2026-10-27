@@ -88,7 +88,7 @@ export function EditResidentDialog({ resident, onClose }: { resident: ResidentSu
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="edit-resident-phone">Teléfono</Label>
+            <Label htmlFor="edit-resident-phone">Celular</Label>
             <Input
               id="edit-resident-phone"
               type="tel"

@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { formatPhone } from "@/lib/phone";
+
 export type BlacklistEntry = {
   id: string;
   name: string;
@@ -45,7 +47,7 @@ export async function listBlacklist(supabase: SupabaseClient, organizationId: st
     id: row.id,
     name: row.name,
     email: row.email,
-    phone: row.phone,
+    phone: row.phone && formatPhone(row.phone),
     phoneDigits: row.phone_digits,
     reason: row.reason,
     createdAt: row.created_at,

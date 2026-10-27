@@ -44,6 +44,9 @@ importers:
       date-fns:
         specifier: ^3.6.0
         version: 3.6.0
+      libphonenumber-js:
+        specifier: ^1.13.15
+        version: 1.13.15
       lucide-react:
         specifier: ^0.562.0
         version: 0.562.0(react@19.2.4)
@@ -2265,6 +2268,9 @@ packages:
     resolution: {integrity: sha512-DrhQlIuV6xScd5Q+WTF1znd1w41QzxFGCtAHXCajsH/ndGMotHoNYbdXbuFtzW3mIOmniHtZ7zCtvnQkUmJtQQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
+
+  libphonenumber-js@1.13.15:
+    resolution: {integrity: sha512-AHdhEQeDFEJ4GKDAQ9AwxChy+v2kUILUB3TGQRpkXMkWePjXTU/WQEzWVQoIx/Gz8fE73Wr5SEuZCy2vk8jrMQ==}
 
   lightningcss-android-arm64@1.30.2:
     resolution: {integrity: sha512-BH9sEdOCahSgmkVhBLeU7Hc9DWeZ1Eb6wNS6Da8igvUwAe0sqROHddIlvU06q3WyXVEOYDZ6ykBZQnjTbmo4+A==}
@@ -4697,6 +4703,8 @@ snapshots:
       unbash: 5.0.0
       yaml: 2.9.1
       zod: 4.6.5
+
+  libphonenumber-js@1.13.15: {}
 
   lightningcss-android-arm64@1.30.2:
     optional: true

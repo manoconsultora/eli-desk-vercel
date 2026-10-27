@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { ConsorcioScope } from "@/lib/access/feature-scope-types";
+import { formatPhone } from "@/lib/phone";
 import {
   type EmailDelivery,
   emailDeliveryOf,
@@ -105,7 +106,7 @@ export async function listResidentRequests(
       name: `${row.first_name} ${row.last_name}`.trim(),
       firstName: row.first_name,
       lastName: row.last_name,
-      phone: row.phone,
+      phone: row.phone && formatPhone(row.phone),
       email: row.email,
       communityName: communityById.get(row.edificio_id)?.nombre ?? "Sin consorcio",
       communityAddress: communityById.get(row.edificio_id)?.direccion ?? null,
