@@ -5,7 +5,7 @@ import { normalizePhone } from "@/lib/phone";
 
 import type { ResidentDetails } from "./update-resident";
 
-// The database rejects with these messages (eli-database-platform 20261012200000).
+// The database rejects with these messages (eli-database-platform 20261012200000, 20261028120000).
 const ADD_ERRORS: Record<string, string> = {
   forbidden: "No tenés permiso para dar de alta residentes en esa unidad.",
   invalid_relationship: "Elegí la relación con la unidad.",
@@ -15,6 +15,7 @@ const ADD_ERRORS: Record<string, string> = {
   contact_blocked: "Ese email o teléfono está en la blacklist.",
   unit_limit_reached: "La unidad ya tiene 5 residentes activos.",
   already_in_unit: "Ya es residente de esa unidad.",
+  phone_in_use: "Ese celular ya lo usa otro residente de la administración.",
 };
 
 export class AddResidentToUnitError extends Error {}

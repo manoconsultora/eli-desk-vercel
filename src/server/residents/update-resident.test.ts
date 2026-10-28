@@ -36,6 +36,7 @@ test("traduce los errores conocidos de la base", async () => {
     ["invalid_email", "Ingresá un email válido."],
     ["invalid_phone", "Ingresá un celular válido, con código de área."],
     ["email_in_use", "Ese email ya lo usa otro residente de la administración."],
+    ["phone_in_use", "Ese celular ya lo usa otro residente de la administración."],
   ]) {
     const { client } = fakeRpc({ message: code });
     await assert.rejects(updateResident(client, "r1", DETAILS), (error: unknown) => {

@@ -1,10 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-// The database rejects with these messages (eli-database-platform 20261005130000).
+// The database rejects with these messages (eli-database-platform 20261005130000, 20261028120000).
 const REVIEW_ERRORS: Record<string, string> = {
   forbidden: "No tenés permiso para revisar esta solicitud.",
   request_not_pending: "La solicitud ya fue revisada.",
   unit_limit_reached: "La unidad ya tiene 5 residentes activos.",
+  phone_in_use: "Ese celular ya lo usa otro residente de la administración.",
 };
 
 export class ResidentRequestReviewError extends Error {}
