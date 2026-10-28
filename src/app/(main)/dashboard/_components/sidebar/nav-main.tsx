@@ -11,6 +11,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import type { DeskNavigationItem } from "@/navigation/sidebar/sidebar-items";
@@ -31,7 +34,8 @@ function DeskNavItem({ item, pathname }: { item: DeskNavigationItem; pathname: s
   const state = useDeskNavigationState(item.featureId);
   if (state === "denied" || state === "unavailable" || state === "error") return null;
   const isAvailable = state === "resolved" && Boolean(href);
-  const isActive = isAvailable && pathname === item.href;
+  // With sub-entries, the active one is the sub-entry, not the parent.
+  const isActive = isAvailable && !item.children && pathname === item.href;
 
   return (
     <SidebarMenuItem>
@@ -49,6 +53,19 @@ function DeskNavItem({ item, pathname }: { item: DeskNavigationItem; pathname: s
           <span>{item.label}</span>
           <AvailabilityLabel state={state} />
         </SidebarMenuButton>
+      )}
+      {isAvailable && item.children && (
+        <SidebarMenuSub>
+          {item.children.map((child) => (
+            <SidebarMenuSubItem key={child.id}>
+              <SidebarMenuSubButton asChild isActive={pathname === child.href}>
+                <Link prefetch={false} href={child.href}>
+                  <span>{child.label}</span>
+                </Link>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+          ))}
+        </SidebarMenuSub>
       )}
     </SidebarMenuItem>
   );
