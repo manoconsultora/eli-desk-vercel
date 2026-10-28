@@ -31,6 +31,8 @@ export type DeskNavigationItem = {
   href?: string;
   placements: readonly DeskModulePlacement[];
   desktopSection: DeskDesktopSection;
+  // Sub-entries shown under the item in the desktop sidebar.
+  children?: readonly { id: string; label: string; href: string }[];
 };
 
 export const DESK_MOBILE_MORE_LABEL = "Más";
@@ -89,7 +91,9 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
     featureId: "documentos",
     label: "Documentos",
     icon: FileText,
-    availability: "unavailable",
+    availability: "available",
+    href: "/dashboard/documentos/comprobantes",
+    children: [{ id: "comprobantes", label: "Comprobantes", href: "/dashboard/documentos/comprobantes" }],
     placements: ["mobile_more", "desktop"],
     desktopSection: "primary",
   },
