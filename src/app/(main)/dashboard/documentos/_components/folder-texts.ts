@@ -20,7 +20,7 @@ export type FolderTexts = {
 export const FOLDER_TEXTS: Record<Carpeta, FolderTexts> = {
   liquidaciones: {
     title: "Liquidaciones",
-    description: "El PDF de la liquidación de expensas de cada mes, tal como sale de tu sistema.",
+    description: "El PDF de la liquidación de expensas de cada mes.",
     uploadHeading: "Cargar liquidaciones",
     monthLabel: "Liquidación de",
     notice: {

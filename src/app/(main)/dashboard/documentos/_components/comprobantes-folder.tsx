@@ -375,10 +375,8 @@ export function ComprobantesFolder({
           </div>
           <div className="mx-2 flex gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
             <ShieldAlert className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden="true" />
-            <div className="space-y-1">
-              <p id="documentos-aviso" className="font-medium">
-                {texts.notice.title}
-              </p>
+            <div id="documentos-aviso" className="space-y-1">
+              <p className="font-medium">{texts.notice.title}</p>
               <p className="text-muted-foreground">{texts.notice.body}</p>
             </div>
           </div>
