@@ -4,7 +4,7 @@ import * as React from "react";
 
 import { useRouter } from "next/navigation";
 
-import { CircleAlert, CircleCheck, Ellipsis, Eye, FileText, Trash2, Upload } from "lucide-react";
+import { CircleAlert, CircleCheck, Ellipsis, Eye, FileText, ShieldAlert, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -39,6 +39,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useRefresh } from "@/hooks/use-refresh";
 import {
+  type Carpeta,
   COMPROBANTE_BUCKET,
   comprobanteFileProblem,
   formatFileSize,
@@ -56,6 +57,7 @@ import {
 import type { ComprobanteSummary } from "@/server/comprobantes/comprobante-repository";
 
 import { filterComprobantes, groupByPeriod } from "./filter-comprobantes";
+import { FOLDER_TEXTS } from "./folder-texts";
 
 const monthFormat = new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric" });
 const dateFormat = new Intl.DateTimeFormat("es-AR", { dateStyle: "medium" });
@@ -96,9 +98,12 @@ function monthHeading(period: string): string {
 }
 
 // Register it, upload it to the signed path, then confirm it. Never throws: a failure comes back as its message.
-async function uploadOne(communityId: string, month: string, file: File): Promise<string | null> {
+async function uploadOne(
+  target: { communityId: string; carpeta: Carpeta; month: string },
+  file: File,
+): Promise<string | null> {
   try {
-    const started = await startComprobanteUploadAction({ communityId, month, fileName: file.name, size: file.size });
+    const started = await startComprobanteUploadAction({ ...target, fileName: file.name, size: file.size });
     if (!started.success) return started.error;
 
     const { error } = await createClient()
@@ -191,14 +196,17 @@ function UploadQueue({ items }: { items: UploadItem[] }) {
 }
 
 export function ComprobantesFolder({
+  carpeta,
   communities,
   communityId,
   data,
 }: {
+  carpeta: Carpeta;
   communities: { id: string; name: string }[];
   communityId: string;
   data: ComprobantesFolderData;
 }) {
+  const texts = FOLDER_TEXTS[carpeta];
   const router = useRouter();
   const { refresh, refreshing } = useRefresh();
   const [navigating, startNavigation] = React.useTransition();
@@ -260,20 +268,18 @@ export function ComprobantesFolder({
     for (const item of queue) {
       if (item.problem) continue;
       updateItem(item.id, { status: "uploading" });
-      const failure = await uploadOne(communityId, month, item.file);
+      const failure = await uploadOne({ communityId, carpeta, month }, item.file);
       updateItem(item.id, failure ? { status: "failed", error: failure } : { status: "done" });
       if (!failure) uploaded += 1;
     }
     refresh(() => {
       setUploading(false);
-      if (uploaded > 0) {
-        toast.success(uploaded === 1 ? "Se cargó 1 comprobante." : `Se cargaron ${uploaded} comprobantes.`);
-      }
+      if (uploaded > 0) toast.success(texts.uploaded(uploaded));
     });
   }
 
   function changeCommunity(id: string) {
-    startNavigation(() => router.replace(`/dashboard/documentos/comprobantes?consorcio=${encodeURIComponent(id)}`));
+    startNavigation(() => router.replace(`/dashboard/documentos/${carpeta}?consorcio=${encodeURIComponent(id)}`));
   }
 
   async function openFile(comprobante: ComprobanteSummary) {
@@ -289,7 +295,7 @@ export function ComprobantesFolder({
     } catch (cause) {
       tab?.close();
       setError(
-        cause instanceof Error && cause.message ? cause.message : "No se pudo abrir el comprobante. Probá de nuevo.",
+        cause instanceof Error && cause.message ? cause.message : "No se pudo abrir el archivo. Probá de nuevo.",
       );
     }
   }
@@ -331,7 +337,7 @@ export function ComprobantesFolder({
 
       {data.canManage && (
         <section
-          aria-label="Cargar comprobantes"
+          aria-label={texts.uploadHeading}
           className={cn("space-y-2 rounded-xl border bg-muted/50 p-2", dragging && "border-primary bg-primary/5")}
           onDragOver={(event) => {
             event.preventDefault();
@@ -347,14 +353,14 @@ export function ComprobantesFolder({
           }}
         >
           <div className="flex flex-col gap-2 px-2 pt-2 md:flex-row md:items-center md:justify-between">
-            <h3 className="font-medium text-sm">Cargar comprobantes</h3>
+            <h3 className="font-medium text-sm">{texts.uploadHeading}</h3>
             <div className="flex flex-col gap-2 md:flex-row md:items-center">
               <label htmlFor="comprobantes-mes" className="text-muted-foreground text-sm">
-                Se cargan en la liquidación de
+                {texts.monthLabel}
               </label>
               <FilterSelect
                 id="comprobantes-mes"
-                label="Se cargan en la liquidación de"
+                label={texts.monthLabel}
                 value={month}
                 disabled={busy || months.length === 0}
                 onChange={(event) => setMonth(event.target.value)}
@@ -367,9 +373,19 @@ export function ComprobantesFolder({
               </FilterSelect>
             </div>
           </div>
+          <div className="mx-2 flex gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
+            <ShieldAlert className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden="true" />
+            <div className="space-y-1">
+              <p id="documentos-aviso" className="font-medium">
+                {texts.notice.title}
+              </p>
+              <p className="text-muted-foreground">{texts.notice.body}</p>
+            </div>
+          </div>
           {/* The whole area is the control: it opens the picker. Dropping anywhere on the zone also works. */}
           <button
             type="button"
+            aria-describedby="documentos-aviso"
             disabled={busy || !month}
             onClick={() => fileInput.current?.click()}
             className="flex w-full flex-col items-center gap-3 rounded-lg px-6 py-8 text-center outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
@@ -408,22 +424,22 @@ export function ComprobantesFolder({
 
       <div className="flex flex-col gap-3 md:flex-row md:items-center">
         <ListSearch
-          aria-label="Buscar comprobante"
+          aria-label={texts.searchLabel}
           placeholder="Buscar por nombre del archivo…"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
-        <ListCount count={comprobantes.length} singular="comprobante" plural="comprobantes" />
+        <ListCount count={comprobantes.length} singular={texts.count.singular} plural={texts.count.plural} />
       </div>
 
       <div aria-live="polite">{error && !removing && <p className="text-destructive text-sm">{error}</p>}</div>
 
       {data.comprobantes === null ? (
-        <ListEmpty>No se pudieron mostrar los comprobantes. Probá de nuevo en unos minutos.</ListEmpty>
+        <ListEmpty>{texts.listFailed}</ListEmpty>
       ) : comprobantes.length === 0 ? (
-        <ListEmpty>Este consorcio no tiene comprobantes cargados.</ListEmpty>
+        <ListEmpty>{texts.empty}</ListEmpty>
       ) : groups.length === 0 ? (
-        <ListEmpty>Ningún comprobante coincide con la búsqueda.</ListEmpty>
+        <ListEmpty>{texts.noMatch}</ListEmpty>
       ) : (
         <ListTable>
           <TableHeader>
@@ -521,10 +537,9 @@ export function ComprobantesFolder({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Borrar este comprobante?</AlertDialogTitle>
+            <AlertDialogTitle>{texts.removeTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              {removing &&
-                `Se borra "${removing.name}" de la liquidación de ${monthName(removing.period)}. No se puede deshacer.`}
+              {removing && texts.removeBody(removing.name, monthName(removing.period))}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div aria-live="polite">{error && <p className="text-destructive text-sm">{error}</p>}</div>

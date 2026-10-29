@@ -2,7 +2,14 @@
 
 import { isConsorcioInScope } from "@/lib/access/consorcio-scope";
 import { getRequestAuthContext } from "@/lib/auth/get-auth-context";
-import { COMPROBANTE_BUCKET, comprobanteFileProblem, periodFromMonthInput } from "@/lib/comprobantes/comprobante-rules";
+import {
+  CARPETA_ITEM,
+  type Carpeta,
+  COMPROBANTE_BUCKET,
+  comprobanteFileProblem,
+  isCarpeta,
+  periodFromMonthInput,
+} from "@/lib/comprobantes/comprobante-rules";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
@@ -19,10 +26,15 @@ type ActionResult<T> = { success: true; data: T } | { success: false; error: str
 
 export type ComprobanteUpload = { id: string; path: string; token: string };
 
-const NOT_FOUND = "El comprobante no existe o no lo tenés asignado.";
+// Said before the row is read, so it can't name the folder.
+const NOT_FOUND = "El archivo no existe o no lo tenés asignado.";
 
 // Signed links to open a file last this long, so a copied link stops working soon.
 const VIEW_URL_SECONDS = 120;
+
+function noUploadPermission(carpeta: Carpeta): string {
+  return `No tenés permiso para cargar ${CARPETA_ITEM[carpeta].plural}.`;
+}
 
 async function canWrite(): Promise<boolean> {
   const context = await getRequestAuthContext();
@@ -47,25 +59,29 @@ async function documentosAllows(target: { organizationId: string | null; communi
 // upload to that exact path, so the browser uploads straight to Storage without passing through Desk.
 export async function startComprobanteUploadAction(input: {
   communityId: string;
+  carpeta: Carpeta;
   month: string;
   fileName: string;
   size: number;
 }): Promise<ActionResult<ComprobanteUpload>> {
+  // The action is callable from outside Desk's UI, so the folder is checked here too.
+  if (!isCarpeta(input.carpeta)) return { success: false, error: "Esa carpeta no existe." };
   const period = periodFromMonthInput(input.month);
-  if (!input.communityId || !period) return { success: false, error: "Elegí la liquidación." };
+  if (!input.communityId || !period) return { success: false, error: "Elegí el mes." };
   const problem = comprobanteFileProblem({ name: input.fileName, size: input.size });
   if (problem) return { success: false, error: problem };
 
   try {
-    if (!(await canWrite())) return { success: false, error: "No tenés permiso para cargar comprobantes." };
+    if (!(await canWrite())) return { success: false, error: noUploadPermission(input.carpeta) };
 
     const supabase = await createClient();
     const organizationId = await findCommunityOrganization(supabase, input.communityId);
     if (!(await documentosAllows({ organizationId, communityId: input.communityId }))) {
-      return { success: false, error: "No tenés permiso para cargar comprobantes." };
+      return { success: false, error: noUploadPermission(input.carpeta) };
     }
     const created = await createComprobante(supabase, {
       communityId: input.communityId,
+      carpeta: input.carpeta,
       period,
       name: input.fileName,
     });
@@ -84,7 +100,7 @@ export async function confirmComprobanteUploadAction(comprobanteId: string): Pro
   if (!comprobanteId) return { success: false, error: NOT_FOUND };
 
   try {
-    if (!(await canWrite())) return { success: false, error: "No tenés permiso para cargar comprobantes." };
+    if (!(await canWrite())) return { success: false, error: "No tenés permiso para cargar archivos." };
 
     const supabase = await createClient();
     const ref = await findComprobanteRef(supabase, comprobanteId);
@@ -103,7 +119,7 @@ export async function openComprobanteAction(comprobanteId: string): Promise<Acti
   try {
     const context = await getRequestAuthContext();
     if (!context.authenticated || context.userType !== "tenant") {
-      return { success: false, error: "No tenés permiso para ver este comprobante." };
+      return { success: false, error: "No tenés permiso para ver este archivo." };
     }
 
     const supabase = await createClient();
@@ -118,7 +134,7 @@ export async function openComprobanteAction(comprobanteId: string): Promise<Acti
     if (error) throw new Error(error.message);
     return { success: true, data: data.signedUrl };
   } catch {
-    return { success: false, error: "No se pudo abrir el comprobante. Probá de nuevo." };
+    return { success: false, error: "No se pudo abrir el archivo. Probá de nuevo." };
   }
 }
 
@@ -128,7 +144,7 @@ export async function deleteComprobanteAction(comprobanteId: string): Promise<Ac
   if (!comprobanteId) return { success: false, error: NOT_FOUND };
 
   try {
-    if (!(await canWrite())) return { success: false, error: "No tenés permiso para borrar comprobantes." };
+    if (!(await canWrite())) return { success: false, error: "No tenés permiso para borrar archivos." };
 
     const supabase = await createClient();
     const ref = await findComprobanteRef(supabase, comprobanteId);
@@ -139,6 +155,6 @@ export async function deleteComprobanteAction(comprobanteId: string): Promise<Ac
     const { error } = await supabaseAdmin.storage.from(COMPROBANTE_BUCKET).remove([path]);
     return { success: true, data: { fileKept: Boolean(error) } };
   } catch {
-    return { success: false, error: "No se pudo borrar el comprobante. Probá de nuevo." };
+    return { success: false, error: "No se pudo borrar el archivo. Probá de nuevo." };
   }
 }

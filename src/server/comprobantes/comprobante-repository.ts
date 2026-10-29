@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import type { Carpeta } from "@/lib/comprobantes/comprobante-rules";
+
 export type ComprobanteSummary = {
   id: string;
   // First day of the month, as the database stores it: "2026-10-01".
@@ -26,12 +28,17 @@ type ComprobanteRow = {
 type CreatedRow = { comprobante_id: string; storage_path: string };
 
 // RLS limits the rows to the membership's consorcios; the caller checks the Documentos scope first.
-// Only files already in the bucket, newest month first.
-export async function listComprobantes(supabase: SupabaseClient, communityId: string): Promise<ComprobanteSummary[]> {
+// Only the folder's files already in the bucket, newest month first.
+export async function listComprobantes(
+  supabase: SupabaseClient,
+  communityId: string,
+  carpeta: Carpeta,
+): Promise<ComprobanteSummary[]> {
   const { data, error } = await supabase
     .from("consorcio_comprobantes")
     .select("id, periodo, nombre, uploaded_at, size_bytes, created_by_name")
     .eq("edificio_id", communityId)
+    .eq("carpeta", carpeta)
     .not("uploaded_at", "is", null)
     .order("periodo", { ascending: false })
     .order("nombre", { ascending: true });
@@ -50,12 +57,13 @@ export async function listComprobantes(supabase: SupabaseClient, communityId: st
 // The database checks the role and chooses the path; the file name never goes into it.
 export async function createComprobante(
   supabase: SupabaseClient,
-  input: { communityId: string; period: string; name: string },
+  input: { communityId: string; carpeta: Carpeta; period: string; name: string },
 ): Promise<CreatedComprobante> {
   const { data, error } = await supabase.rpc("create_consorcio_comprobante", {
     p_edificio_id: input.communityId,
     p_periodo: input.period,
     p_nombre: input.name,
+    p_carpeta: input.carpeta,
   });
   if (error) throw new Error(error.message);
 
