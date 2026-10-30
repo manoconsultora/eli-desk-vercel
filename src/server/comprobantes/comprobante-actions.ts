@@ -42,7 +42,7 @@ async function canWrite(): Promise<boolean> {
   return context.authenticated && context.userType === "tenant" && context.role !== "VIEWER";
 }
 
-// RLS lets through any organization of the user and only looks at the membership's consorcios.
+// The database already applies the Documentos permission and scope, but in any organization of the user.
 // Here: the active organization only, with Documentos resolved and the consorcio in its scope.
 async function documentosAllows(target: { organizationId: string | null; communityId: string }): Promise<boolean> {
   const [context, access] = await Promise.all([getRequestAuthContext(), getDeskFeatureAccess("documentos")]);

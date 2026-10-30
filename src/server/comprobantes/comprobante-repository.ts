@@ -27,7 +27,7 @@ type ComprobanteRow = {
 };
 type CreatedRow = { comprobante_id: string; storage_path: string };
 
-// RLS limits the rows to the membership's consorcios; the caller checks the Documentos scope first.
+// RLS limits the rows to the consorcios where the user has Documentos; the caller checks the active organization.
 // Only the folder's files already in the bucket, newest month first.
 export async function listComprobantes(
   supabase: SupabaseClient,
