@@ -140,9 +140,11 @@ export async function handleBotApiRequest(
   });
   return createApiResponse(dispatched.outcome, {
     correlationId: parsed.request.correlationId,
-    ...(dispatched.outcome === "success" ? {} : { code: dispatched.outcome, category: "dependency" as const }),
+    ...(dispatched.outcome === "success" || dispatched.outcome === "duplicate"
+      ? {}
+      : { code: dispatched.outcome, category: "dependency" as const }),
     retryable: dispatched.retryable,
-    ...(dispatched.outcome === "success" ? { result: dispatched.result } : {}),
+    ...(dispatched.outcome === "success" || dispatched.outcome === "duplicate" ? { result: dispatched.result } : {}),
   });
 }
 
@@ -170,13 +172,20 @@ function responseForIdentity(identity: BotIdentityResolution, correlationId: str
       return createApiResponse("identity_blocked", { correlationId, code: "identity_blocked", category: "identity" });
     case "inactive":
       return createApiResponse("identity_inactive", { correlationId, code: "identity_inactive", category: "identity" });
-    case "ambiguous_unit":
     case "ambiguous_organization":
+      // Never list options across organizations.
+      return createApiResponse("clarification_required", {
+        correlationId,
+        code: identity.outcome,
+        category: "identity",
+      });
+    case "ambiguous_unit":
     case "invalid_unit_selection":
       return createApiResponse("clarification_required", {
         correlationId,
         code: identity.outcome,
         category: "identity",
+        ...(identity.clarification ? { clarification: identity.clarification } : {}),
       });
     case "cross_tenant":
       return createApiResponse("cross_tenant", { correlationId, code: "cross_tenant", category: "identity" });

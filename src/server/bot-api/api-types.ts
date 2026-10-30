@@ -1,4 +1,9 @@
-import type { BotContext, BotIdentityChannel } from "../../lib/bot-identity/identity-types";
+import type {
+  BotContext,
+  BotIdentityChannel,
+  BotUnitClarification,
+  BotUnitOrigin,
+} from "../../lib/bot-identity/identity-types";
 import type { AuthenticatedTechnicalPrincipal } from "../../lib/bot-security/security-types";
 
 export const BOT_API_VERSION = "v1" as const;
@@ -29,6 +34,7 @@ export type BotApiRequest = {
 
 export type BotApiOutcome =
   | "success"
+  | "duplicate"
   | "authentication_failed"
   | "replay"
   | "invalid_request"
@@ -52,6 +58,13 @@ export type BotApiErrorCategory =
   | "dependency"
   | "internal";
 
+export type BotTicketResult = {
+  ticketId: string;
+  ticketCode: string;
+  unitNumber?: string;
+  unitOrigin?: BotUnitOrigin;
+};
+
 export type BotApiResponse = {
   apiVersion: typeof BOT_API_VERSION;
   correlationId: string | null;
@@ -65,7 +78,8 @@ export type BotApiResponse = {
     code: string;
     category: BotApiErrorCategory;
   };
-  result?: { ticketId: string; ticketCode: string };
+  clarification?: BotUnitClarification;
+  result?: BotTicketResult;
 };
 
 export type CapabilityAuthorizationInput = {
@@ -77,6 +91,7 @@ export type CapabilityAuthorizationInput = {
 export type CapabilityAuthorizationResult = { allowed: true } | { allowed: false; code: "capability_denied" };
 
 export type CapabilityDispatchResult =
-  | { outcome: "success"; retryable: false; result: { ticketId: string; ticketCode: string } }
+  | { outcome: "success"; retryable: false; result: BotTicketResult }
+  | { outcome: "duplicate"; retryable: false; result: BotTicketResult }
   | { outcome: "idempotency_conflict"; retryable: false }
   | { outcome: "internal_error"; retryable: true };

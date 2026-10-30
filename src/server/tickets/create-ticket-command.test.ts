@@ -26,7 +26,9 @@ const context = {
   organizationId: "org-a",
   residentId: "resident-a",
   unitId: "unit-a",
+  unitNumber: "1A",
   consorcioId: "building-a",
+  unitOrigin: "inferred_single_link" as const,
 };
 
 const proposal = {
@@ -70,6 +72,8 @@ test("Bot command takes all tenant and actor authority from BotContext/principal
   assert.equal(received?.organizationId, "org-a");
   assert.equal(received?.edificioId, "building-a");
   assert.equal(received?.unidadId, "unit-a");
+  assert.equal(received?.unitOrigin, "inferred_single_link");
+  assert.equal(received?.residentId, "resident-a");
   assert.equal(received?.channelUserId, "channel-user-a");
   assert.equal(received?.createdByChannelUserId, "channel-user-a");
   assert.equal(received?.principalId, "n8n-bot-dev");
@@ -193,4 +197,44 @@ test("API dispatch fails closed on persistence uncertainty", async () => {
     },
   );
   assert.deepEqual(result, { outcome: "internal_error", retryable: true });
+});
+
+test("API dispatch returns unit number and origin on success and duplicate (case: deduced unit confirmation)", async () => {
+  const request = {
+    apiVersion: "v1" as const,
+    correlationId: "corr-2",
+    idempotencyKey: "operation-2",
+    capability: "tickets.create" as const,
+    source: { channel: "telegram" as const, externalSenderId: "sender-a" },
+    input: proposal,
+  };
+  const created = await dispatchRegisteredCapability(
+    { request, principal, context },
+    {
+      async createIdempotentTicket() {
+        return { outcome: "created", ticketId: "ticket-a", ticketCode: "ELI-2609-0001" };
+      },
+    },
+  );
+  assert.deepEqual(created, {
+    outcome: "success",
+    retryable: false,
+    result: { ticketId: "ticket-a", ticketCode: "ELI-2609-0001", unitNumber: "1A", unitOrigin: "inferred_single_link" },
+  });
+  const provided = await dispatchRegisteredCapability(
+    { request, principal, context: { ...context, unitOrigin: "provided" as const } },
+    {
+      async findRecentMatchingTicket() {
+        return { ticketId: "ticket-b", ticketCode: "ELI-2609-0009" };
+      },
+      async createIdempotentTicket() {
+        throw new Error("must not create");
+      },
+    },
+  );
+  assert.deepEqual(provided, {
+    outcome: "duplicate",
+    retryable: false,
+    result: { ticketId: "ticket-b", ticketCode: "ELI-2609-0009", unitNumber: "1A", unitOrigin: "provided" },
+  });
 });

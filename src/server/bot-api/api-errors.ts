@@ -1,4 +1,5 @@
-import type { BotApiErrorCategory, BotApiOutcome, BotApiResponse } from "./api-types";
+import type { BotUnitClarification } from "../../lib/bot-identity/identity-types";
+import type { BotApiErrorCategory, BotApiOutcome, BotApiResponse, BotTicketResult } from "./api-types";
 
 const SAFE_MESSAGES: Partial<Record<BotApiOutcome, string>> = {
   authentication_failed: "Authentication failed.",
@@ -25,7 +26,8 @@ export function createApiResponse(
     category?: BotApiErrorCategory;
     status?: number;
     missingInput?: string[];
-    result?: { ticketId: string; ticketCode: string };
+    result?: BotTicketResult;
+    clarification?: BotUnitClarification;
   } = {},
 ): Response {
   const body: BotApiResponse = {
@@ -44,6 +46,7 @@ export function createApiResponse(
           },
         }
       : {}),
+    ...(options.clarification ? { clarification: options.clarification } : {}),
     ...(options.result ? { result: options.result } : {}),
   };
 

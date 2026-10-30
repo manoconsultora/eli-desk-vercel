@@ -56,11 +56,14 @@ export async function dispatchRegisteredCapability(
     );
     if (result.actor !== "bot") return { outcome: "internal_error", retryable: true };
     if (result.outcome === "conflict") return { outcome: "idempotency_conflict", retryable: false };
-    return {
-      outcome: "success" as const,
-      retryable: false as const,
-      result: { ticketId: result.ticketId, ticketCode: result.ticketCode },
+    const ticketResult = {
+      ticketId: result.ticketId,
+      ticketCode: result.ticketCode,
+      ...(input.context.unitNumber ? { unitNumber: input.context.unitNumber } : {}),
+      unitOrigin: input.context.unitOrigin,
     };
+    if (result.outcome === "duplicate") return { outcome: "duplicate", retryable: false, result: ticketResult };
+    return { outcome: "success" as const, retryable: false as const, result: ticketResult };
   } catch {
     return { outcome: "internal_error" as const, retryable: true as const };
   }
