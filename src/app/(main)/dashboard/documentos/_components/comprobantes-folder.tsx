@@ -4,7 +4,7 @@ import * as React from "react";
 
 import { useRouter } from "next/navigation";
 
-import { CircleAlert, CircleCheck, Ellipsis, Eye, FileText, ShieldAlert, Trash2, Upload } from "lucide-react";
+import { CircleAlert, CircleCheck, Ellipsis, Eye, FileText, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -373,17 +373,9 @@ export function ComprobantesFolder({
               </FilterSelect>
             </div>
           </div>
-          <div className="mx-2 flex gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
-            <ShieldAlert className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden="true" />
-            <div id="documentos-aviso" className="space-y-1">
-              <p className="font-medium">{texts.notice.title}</p>
-              <p className="text-muted-foreground">{texts.notice.body}</p>
-            </div>
-          </div>
           {/* The whole area is the control: it opens the picker. Dropping anywhere on the zone also works. */}
           <button
             type="button"
-            aria-describedby="documentos-aviso"
             disabled={busy || !month}
             onClick={() => fileInput.current?.click()}
             className="flex w-full flex-col items-center gap-3 rounded-lg px-6 py-8 text-center outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
