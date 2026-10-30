@@ -13,14 +13,14 @@ type RpcRow = {
   ticket_code: string | null;
 };
 
-export class BotTicketRepositoryError extends Error {
+class BotTicketRepositoryError extends Error {
   constructor() {
     super("Bot ticket persistence failed.");
     this.name = "BotTicketRepositoryError";
   }
 }
 
-export class SupabaseBotTicketPersistence implements BotTicketPersistence {
+class SupabaseBotTicketPersistence implements BotTicketPersistence {
   constructor(private readonly client: SupabaseClient) {}
 
   async findRecentMatchingTicket(input: BotTicketPersistenceInput) {
@@ -32,6 +32,7 @@ export class SupabaseBotTicketPersistence implements BotTicketPersistence {
       .eq("edificio_id", input.edificioId)
       .eq("created_by_channel_user_id", input.createdByChannelUserId)
       .eq("created_via", "elibot")
+      .is("deleted_at", null)
       .eq("ticket_type", input.ticketType)
       .in("status", ["abierto", "en_proceso"])
       .gte("created_at", since)
