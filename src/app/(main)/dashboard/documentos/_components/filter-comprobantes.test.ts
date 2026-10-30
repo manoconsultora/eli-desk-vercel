@@ -4,7 +4,7 @@ import { filterComprobantes, groupByPeriod } from "./filter-comprobantes";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-function comprobante(id: string, period: string, name: string): ComprobanteSummary {
+function comprobante(id: string, period: string | null, name: string): ComprobanteSummary {
   return { id, period, name, uploadedAt: "2026-10-28T12:00:00Z", sizeBytes: 1024, uploadedBy: "dueno" };
 }
 
@@ -32,5 +32,13 @@ test("agrupa por mes en el orden en que llegan", () => {
       ["2026-10-01", ["c1", "c2"]],
       ["2026-09-01", ["c3"]],
     ],
+  );
+});
+
+test("sin mes queda un solo grupo", () => {
+  const groups = groupByPeriod([comprobante("r1", null, "Reglamento.pdf"), comprobante("r2", null, "Interno.pdf")]);
+  assert.deepEqual(
+    groups.map(([period, items]) => [period, ids(items)]),
+    [[null, ["r1", "r2"]]],
   );
 });

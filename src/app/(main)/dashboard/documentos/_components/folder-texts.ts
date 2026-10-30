@@ -1,11 +1,12 @@
 import type { Carpeta } from "@/lib/comprobantes/comprobante-rules";
 
 // The words each Documentos folder shows. Months go in lowercase ("octubre de 2026"), inside a sentence.
+// The folders without month have no month label, and their removeBody gets no month.
 export type FolderTexts = {
   title: string;
   description: string;
   uploadHeading: string;
-  monthLabel: string;
+  monthLabel?: string;
   uploaded: (count: number) => string;
   count: { singular: string; plural: string };
   searchLabel: string;
@@ -13,7 +14,7 @@ export type FolderTexts = {
   listFailed: string;
   noMatch: string;
   removeTitle: string;
-  removeBody: (name: string, month: string) => string;
+  removeBody: (name: string, month: string | null) => string;
 };
 
 export const FOLDER_TEXTS: Record<Carpeta, FolderTexts> = {
@@ -44,5 +45,44 @@ export const FOLDER_TEXTS: Record<Carpeta, FolderTexts> = {
     noMatch: "Ningún comprobante coincide con la búsqueda.",
     removeTitle: "¿Borrar este comprobante?",
     removeBody: (name, month) => `Se borra "${name}" de la liquidación de ${month}. No se puede deshacer.`,
+  },
+  reglamentos: {
+    title: "Reglamentos",
+    description: "Los PDF de los reglamentos del consorcio.",
+    uploadHeading: "Cargar reglamentos",
+    uploaded: (count) => (count === 1 ? "Se cargó 1 reglamento." : `Se cargaron ${count} reglamentos.`),
+    count: { singular: "reglamento", plural: "reglamentos" },
+    searchLabel: "Buscar reglamento",
+    empty: "Este consorcio no tiene reglamentos cargados.",
+    listFailed: "No se pudieron mostrar los reglamentos. Probá de nuevo en unos minutos.",
+    noMatch: "Ningún reglamento coincide con la búsqueda.",
+    removeTitle: "¿Borrar este reglamento?",
+    removeBody: (name) => `Se borra "${name}". No se puede deshacer.`,
+  },
+  polizas: {
+    title: "Pólizas de seguro",
+    description: "Los PDF de las pólizas de seguro del consorcio.",
+    uploadHeading: "Cargar pólizas",
+    uploaded: (count) => (count === 1 ? "Se cargó 1 póliza." : `Se cargaron ${count} pólizas.`),
+    count: { singular: "póliza", plural: "pólizas" },
+    searchLabel: "Buscar póliza",
+    empty: "Este consorcio no tiene pólizas cargadas.",
+    listFailed: "No se pudieron mostrar las pólizas. Probá de nuevo en unos minutos.",
+    noMatch: "Ninguna póliza coincide con la búsqueda.",
+    removeTitle: "¿Borrar esta póliza?",
+    removeBody: (name) => `Se borra "${name}". No se puede deshacer.`,
+  },
+  normativas: {
+    title: "Normativas",
+    description: "Los PDF de las normas y guías oficiales, como el Manual de Buenas Prácticas Consorciales.",
+    uploadHeading: "Cargar normativas",
+    uploaded: (count) => (count === 1 ? "Se cargó 1 normativa." : `Se cargaron ${count} normativas.`),
+    count: { singular: "normativa", plural: "normativas" },
+    searchLabel: "Buscar normativa",
+    empty: "Este consorcio no tiene normativas cargadas.",
+    listFailed: "No se pudieron mostrar las normativas. Probá de nuevo en unos minutos.",
+    noMatch: "Ninguna normativa coincide con la búsqueda.",
+    removeTitle: "¿Borrar esta normativa?",
+    removeBody: (name) => `Se borra "${name}". No se puede deshacer.`,
   },
 };

@@ -6,8 +6,8 @@ export function filterComprobantes(comprobantes: ComprobanteSummary[], search: s
 }
 
 // Keeps the order it gets (newest month first), so the groups come out in that order too.
-export function groupByPeriod(comprobantes: ComprobanteSummary[]): [string, ComprobanteSummary[]][] {
-  const groups = new Map<string, ComprobanteSummary[]>();
+export function groupByPeriod(comprobantes: ComprobanteSummary[]): [string | null, ComprobanteSummary[]][] {
+  const groups = new Map<string | null, ComprobanteSummary[]>();
   comprobantes.forEach((comprobante) => {
     groups.set(comprobante.period, [...(groups.get(comprobante.period) ?? []), comprobante]);
   });

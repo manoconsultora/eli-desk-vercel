@@ -43,6 +43,7 @@ import {
   COMPROBANTE_BUCKET,
   comprobanteFileProblem,
   formatFileSize,
+  isMonthlyCarpeta,
   periodFromMonthInput,
   recentMonthInputs,
 } from "@/lib/comprobantes/comprobante-rules";
@@ -207,6 +208,7 @@ export function ComprobantesFolder({
   data: ComprobantesFolderData;
 }) {
   const texts = FOLDER_TEXTS[carpeta];
+  const monthly = isMonthlyCarpeta(carpeta);
   const router = useRouter();
   const { refresh, refreshing } = useRefresh();
   const [navigating, startNavigation] = React.useTransition();
@@ -247,7 +249,7 @@ export function ComprobantesFolder({
   }
 
   async function handleFiles(files: File[]) {
-    if (files.length === 0 || busy || !periodFromMonthInput(month)) return;
+    if (files.length === 0 || busy || (monthly && !periodFromMonthInput(month))) return;
     const queue = files.map((file) => ({
       id: crypto.randomUUID(),
       file,
@@ -354,29 +356,31 @@ export function ComprobantesFolder({
         >
           <div className="flex flex-col gap-2 px-2 pt-2 md:flex-row md:items-center md:justify-between">
             <h3 className="font-medium text-sm">{texts.uploadHeading}</h3>
-            <div className="flex flex-col gap-2 md:flex-row md:items-center">
-              <label htmlFor="comprobantes-mes" className="text-muted-foreground text-sm">
-                {texts.monthLabel}
-              </label>
-              <FilterSelect
-                id="comprobantes-mes"
-                label={texts.monthLabel}
-                value={month}
-                disabled={busy || months.length === 0}
-                onChange={(event) => setMonth(event.target.value)}
-              >
-                {months.map((option) => (
-                  <option key={option} value={option}>
-                    {monthName(option)}
-                  </option>
-                ))}
-              </FilterSelect>
-            </div>
+            {monthly && texts.monthLabel && (
+              <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                <label htmlFor="comprobantes-mes" className="text-muted-foreground text-sm">
+                  {texts.monthLabel}
+                </label>
+                <FilterSelect
+                  id="comprobantes-mes"
+                  label={texts.monthLabel}
+                  value={month}
+                  disabled={busy || months.length === 0}
+                  onChange={(event) => setMonth(event.target.value)}
+                >
+                  {months.map((option) => (
+                    <option key={option} value={option}>
+                      {monthName(option)}
+                    </option>
+                  ))}
+                </FilterSelect>
+              </div>
+            )}
           </div>
           {/* The whole area is the control: it opens the picker. Dropping anywhere on the zone also works. */}
           <button
             type="button"
-            disabled={busy || !month}
+            disabled={busy || (monthly && !month)}
             onClick={() => fileInput.current?.click()}
             className="flex w-full flex-col items-center gap-3 rounded-lg px-6 py-8 text-center outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
           >
@@ -446,12 +450,15 @@ export function ComprobantesFolder({
             </TableRow>
           </TableHeader>
           {groups.map(([period, group]) => (
-            <TableBody key={period}>
-              <TableRow className="bg-muted/50 hover:bg-muted/50">
-                <TableHead colSpan={columns} scope="colgroup" className="h-10 px-4 font-semibold text-foreground">
-                  {monthHeading(period)}
-                </TableHead>
-              </TableRow>
+            <TableBody key={period ?? "sin-mes"}>
+              {/* The folders without month come as one group, with no heading. */}
+              {period && (
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableHead colSpan={columns} scope="colgroup" className="h-10 px-4 font-semibold text-foreground">
+                    {monthHeading(period)}
+                  </TableHead>
+                </TableRow>
+              )}
               {group.map((comprobante) => (
                 <TableRow key={comprobante.id}>
                   <ListCell wrap>
@@ -529,7 +536,7 @@ export function ComprobantesFolder({
           <AlertDialogHeader>
             <AlertDialogTitle>{texts.removeTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              {removing && texts.removeBody(removing.name, monthName(removing.period))}
+              {removing && texts.removeBody(removing.name, removing.period ? monthName(removing.period) : null)}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div aria-live="polite">{error && <p className="text-destructive text-sm">{error}</p>}</div>

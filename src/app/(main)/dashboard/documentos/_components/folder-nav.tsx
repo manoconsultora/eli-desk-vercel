@@ -9,7 +9,7 @@ import { FOLDER_TEXTS } from "./folder-texts";
 // The folders on the page itself: with the sidebar collapsed its submenu is gone. Keeps the consorcio.
 export function FolderNav({ current, communityId }: { current: Carpeta; communityId: string }) {
   return (
-    <nav aria-label="Carpetas de Documentos" className="flex w-fit gap-1 rounded-lg bg-muted p-1">
+    <nav aria-label="Carpetas de Documentos" className="flex w-fit flex-wrap gap-1 rounded-lg bg-muted p-1">
       {CARPETAS.map((carpeta) => {
         const active = carpeta === current;
         return (
