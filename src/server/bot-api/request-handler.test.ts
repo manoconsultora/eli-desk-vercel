@@ -451,3 +451,71 @@ test("maps replay, nonce-store, stale, and invalid-HMAC failures before identity
     assert.equal(identityCalls, 0, failure.error.code);
   }
 });
+
+test("clarification_required for several units returns unitOptions without ids and does not dispatch", async () => {
+  let dispatchCalls = 0;
+  const base = candidate();
+  const response = await handleBotApiRequest(
+    request(validBody()),
+    dependencies({
+      identity: {
+        async findChannelCandidates() {
+          return [
+            {
+              ...base,
+              links: [
+                { ...base.links[0], consorcioLabel: "Torre Norte" },
+                { ...base.links[0], unitId: "unit-2", consorcioId: "building-2", consorcioLabel: "Edificio Sur" },
+              ],
+            },
+          ];
+        },
+      },
+      dispatch: () => {
+        dispatchCalls += 1;
+        return dispatchRegisteredCapability();
+      },
+    }),
+  );
+  const payload = await response.json();
+  assert.equal(response.status, 422);
+  assert.equal(payload.error.code, "ambiguous_unit");
+  assert.deepEqual(payload.clarification, {
+    kind: "unit",
+    unitOptions: [
+      { unitNumber: "1A", consorcioLabel: "Torre Norte" },
+      { unitNumber: "1A", consorcioLabel: "Edificio Sur" },
+    ],
+  });
+  assert.doesNotMatch(JSON.stringify(payload), /unit-|building-|org-1|resident-1/);
+  assert.equal(dispatchCalls, 0);
+});
+
+test("ambiguous_organization response carries no clarification options", async () => {
+  const response = await handleBotApiRequest(
+    request(validBody()),
+    dependencies({
+      identity: {
+        async findChannelCandidates() {
+          const link = candidate().links[0];
+          return [
+            candidate(),
+            candidate({
+              channelUserId: "cu-2",
+              organizationId: "org-2",
+              residentOrganizationId: "org-2",
+              links: [
+                { ...link, organizationId: "org-2", unitOrganizationId: "org-2", consorcioOrganizationId: "org-2" },
+              ],
+            }),
+          ];
+        },
+      },
+    }),
+  );
+  const payload = await response.json();
+  assert.equal(response.status, 422);
+  assert.equal(payload.outcome, "clarification_required");
+  assert.equal(payload.error.code, "ambiguous_organization");
+  assert.equal(payload.clarification, undefined);
+});

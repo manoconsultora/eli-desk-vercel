@@ -20,6 +20,8 @@ export type BotTicketPersistenceInput = {
   organizationId: string;
   edificioId: string;
   unidadId: string;
+  unitOrigin: BotContext["unitOrigin"];
+  residentId: string;
   channelUserId: string;
   createdByChannelUserId: string;
   chatId: string;
@@ -35,6 +37,9 @@ export type BotTicketPersistenceResult =
 
 export type BotTicketPersistence = {
   createIdempotentTicket(input: BotTicketPersistenceInput): Promise<BotTicketPersistenceResult>;
+  findRecentMatchingTicket?: (
+    input: BotTicketPersistenceInput,
+  ) => Promise<{ ticketId: string; ticketCode: string } | null>;
 };
 
 export type CreateTicketCommand =
@@ -55,7 +60,7 @@ export type CreateTicketCommand =
 
 export type CreateTicketCommandResult =
   | { actor: "desk"; outcome: "created"; ticket: TicketRecord }
-  | { actor: "bot"; outcome: "created" | "existing"; ticketId: string; ticketCode: string }
+  | { actor: "bot"; outcome: "created" | "existing" | "duplicate"; ticketId: string; ticketCode: string }
   | { actor: "bot"; outcome: "conflict" };
 
 export async function executeCreateTicketCommand(
@@ -77,7 +82,7 @@ export async function executeCreateTicketCommand(
 
   if (!dependencies.botPersistence) throw new Error("Bot ticket persistence is unavailable.");
   const normalized = normalizeBotProposal(command.actor.proposal);
-  const persisted = await dependencies.botPersistence.createIdempotentTicket({
+  const persistenceInput: BotTicketPersistenceInput = {
     environment: command.actor.principal.environment,
     principalId: command.actor.principal.principalId,
     capability: "tickets.create",
@@ -86,6 +91,8 @@ export async function executeCreateTicketCommand(
     organizationId: command.actor.context.organizationId,
     edificioId: command.actor.context.consorcioId,
     unidadId: command.actor.context.unitId,
+    unitOrigin: command.actor.context.unitOrigin,
+    residentId: command.actor.context.residentId,
     channelUserId: command.actor.context.channelUserId,
     createdByChannelUserId: command.actor.context.channelUserId,
     chatId: command.actor.chatId,
@@ -93,7 +100,10 @@ export async function executeCreateTicketCommand(
     priority: normalized.priority,
     category: normalized.category,
     description: normalized.description,
-  });
+  };
+  const recent = await dependencies.botPersistence.findRecentMatchingTicket?.(persistenceInput);
+  if (recent) return { actor: "bot", outcome: "duplicate", ...recent };
+  const persisted = await dependencies.botPersistence.createIdempotentTicket(persistenceInput);
 
   if (persisted.outcome === "conflict") return { actor: "bot", outcome: "conflict" };
   return {

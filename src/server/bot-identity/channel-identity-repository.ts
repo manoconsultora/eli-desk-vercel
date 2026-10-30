@@ -42,6 +42,7 @@ type UnitRow = {
 type BuildingRow = {
   id: string;
   organization_id: string;
+  nombre: string | null;
 };
 
 async function read<T>(query: PromiseLike<{ data: unknown; error: { message?: string } | null }>): Promise<T[]> {
@@ -104,7 +105,7 @@ class SupabaseBotIdentityRepository implements BotIdentityRepository {
         ? await read<BuildingRow>(
             this.client
               .from("edificios")
-              .select("id, organization_id")
+              .select("id, organization_id, nombre")
               .in(
                 "id",
                 units.map((unit) => unit.edificio_id),
@@ -130,6 +131,7 @@ class SupabaseBotIdentityRepository implements BotIdentityRepository {
             unitOrganizationId: unit?.organization_id ?? null,
             consorcioId: unit?.edificio_id ?? null,
             consorcioOrganizationId: building?.organization_id ?? null,
+            consorcioLabel: building?.nombre ?? null,
           };
         }),
       });

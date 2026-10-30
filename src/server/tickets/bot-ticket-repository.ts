@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import { isLikelySameTicket } from "./bot-ticket-duplicate";
 import type {
   BotTicketPersistence,
   BotTicketPersistenceInput,
@@ -22,6 +23,33 @@ export class BotTicketRepositoryError extends Error {
 export class SupabaseBotTicketPersistence implements BotTicketPersistence {
   constructor(private readonly client: SupabaseClient) {}
 
+  async findRecentMatchingTicket(input: BotTicketPersistenceInput) {
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60_000).toISOString();
+    let query = this.client
+      .from("tickets")
+      .select("id, ticket_code, description")
+      .eq("organization_id", input.organizationId)
+      .eq("edificio_id", input.edificioId)
+      .eq("created_by_channel_user_id", input.createdByChannelUserId)
+      .eq("created_via", "elibot")
+      .eq("ticket_type", input.ticketType)
+      .in("status", ["abierto", "en_proceso"])
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    query = input.unidadId ? query.eq("unidad_id", input.unidadId) : query.is("unidad_id", null);
+    const { data, error } = await query;
+    if (error) throw new BotTicketRepositoryError();
+    const match = data?.find(
+      (row) =>
+        typeof row.description === "string" &&
+        typeof row.id === "string" &&
+        typeof row.ticket_code === "string" &&
+        isLikelySameTicket(input.description, row.description),
+    );
+    return match ? { ticketId: match.id, ticketCode: match.ticket_code } : null;
+  }
+
   async createIdempotentTicket(input: BotTicketPersistenceInput): Promise<BotTicketPersistenceResult> {
     const { data, error } = await this.client.rpc("create_n8n_idempotent_ticket", {
       p_environment: input.environment,
@@ -39,6 +67,8 @@ export class SupabaseBotTicketPersistence implements BotTicketPersistence {
       p_priority: input.priority,
       p_category: input.category,
       p_description: input.description,
+      p_unit_origin: input.unitOrigin,
+      p_residente_id: input.residentId,
     });
 
     if (error) throw new BotTicketRepositoryError();
