@@ -48,7 +48,7 @@ export const FOLDER_TEXTS: Record<Carpeta, FolderTexts> = {
   },
   reglamentos: {
     title: "Reglamentos",
-    description: "El reglamento de copropiedad y el reglamento interno del consorcio.",
+    description: "Los PDF de los reglamentos del consorcio.",
     uploadHeading: "Cargar reglamentos",
     uploaded: (count) => (count === 1 ? "Se cargó 1 reglamento." : `Se cargaron ${count} reglamentos.`),
     count: { singular: "reglamento", plural: "reglamentos" },
@@ -61,7 +61,7 @@ export const FOLDER_TEXTS: Record<Carpeta, FolderTexts> = {
   },
   polizas: {
     title: "Pólizas de seguro",
-    description: "Las pólizas de los seguros del consorcio.",
+    description: "Los PDF de las pólizas de seguro del consorcio.",
     uploadHeading: "Cargar pólizas",
     uploaded: (count) => (count === 1 ? "Se cargó 1 póliza." : `Se cargaron ${count} pólizas.`),
     count: { singular: "póliza", plural: "pólizas" },
@@ -74,7 +74,7 @@ export const FOLDER_TEXTS: Record<Carpeta, FolderTexts> = {
   },
   normativas: {
     title: "Normativas",
-    description: "Las normas y disposiciones que el consorcio tiene que tener a mano.",
+    description: "Los PDF de las normas y guías oficiales, como el Manual de Buenas Prácticas Consorciales.",
     uploadHeading: "Cargar normativas",
     uploaded: (count) => (count === 1 ? "Se cargó 1 normativa." : `Se cargaron ${count} normativas.`),
     count: { singular: "normativa", plural: "normativas" },
