@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// Documentos has one folder so far: its entry opens it.
+// Documentos opens its first folder.
 export default function DocumentosPage() {
-  redirect("/dashboard/documentos/comprobantes");
+  redirect("/dashboard/documentos/liquidaciones");
 }

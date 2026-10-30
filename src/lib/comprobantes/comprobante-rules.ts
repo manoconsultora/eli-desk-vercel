@@ -3,6 +3,20 @@ const COMPROBANTE_MAX_BYTES = 10 * 1024 * 1024;
 const COMPROBANTE_MAX_NAME = 200;
 export const COMPROBANTE_BUCKET = "comprobantes";
 
+// The Documentos folders, in the order Desk shows them. The database checks the same list.
+export const CARPETAS = ["liquidaciones", "comprobantes"] as const;
+export type Carpeta = (typeof CARPETAS)[number];
+
+export function isCarpeta(value: unknown): value is Carpeta {
+  return CARPETAS.includes(value as Carpeta);
+}
+
+// What one file of each folder is called, for the messages.
+export const CARPETA_ITEM: Record<Carpeta, { singular: string; plural: string }> = {
+  liquidaciones: { singular: "liquidación", plural: "liquidaciones" },
+  comprobantes: { singular: "comprobante", plural: "comprobantes" },
+};
+
 const MONTH_INPUT = /^([1-9]\d{3})-(0[1-9]|1[0-2])$/;
 
 // "2026-10" (a month option) → "2026-10-01", the first day the database stores.

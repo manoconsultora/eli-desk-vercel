@@ -92,8 +92,11 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
     label: "Documentos",
     icon: FileText,
     availability: "available",
-    href: "/dashboard/documentos/comprobantes",
-    children: [{ id: "comprobantes", label: "Comprobantes", href: "/dashboard/documentos/comprobantes" }],
+    href: "/dashboard/documentos/liquidaciones",
+    children: [
+      { id: "liquidaciones", label: "Liquidaciones", href: "/dashboard/documentos/liquidaciones" },
+      { id: "comprobantes", label: "Comprobantes", href: "/dashboard/documentos/comprobantes" },
+    ],
     placements: ["mobile_more", "desktop"],
     desktopSection: "primary",
   },

@@ -1,4 +1,10 @@
-import { comprobanteFileProblem, formatFileSize, periodFromMonthInput, recentMonthInputs } from "./comprobante-rules";
+import {
+  comprobanteFileProblem,
+  formatFileSize,
+  isCarpeta,
+  periodFromMonthInput,
+  recentMonthInputs,
+} from "./comprobante-rules";
 import assert from "node:assert/strict";
 import test from "node:test";
 
@@ -38,4 +44,13 @@ test("formats the size in B, KB or MB", () => {
   assert.equal(formatFileSize(512), "512 B");
   assert.equal(formatFileSize(1536), "1,5 KB");
   assert.equal(formatFileSize(10 * 1024 * 1024), "10 MB");
+});
+
+test("knows the Documentos folders and nothing else", () => {
+  assert.equal(isCarpeta("liquidaciones"), true);
+  assert.equal(isCarpeta("comprobantes"), true);
+  assert.equal(isCarpeta("reglamentos"), false);
+  assert.equal(isCarpeta("Liquidaciones"), false);
+  assert.equal(isCarpeta(""), false);
+  assert.equal(isCarpeta(undefined), false);
 });
