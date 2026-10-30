@@ -2,6 +2,7 @@ import {
   comprobanteFileProblem,
   formatFileSize,
   isCarpeta,
+  isMonthlyCarpeta,
   periodFromMonthInput,
   recentMonthInputs,
 } from "./comprobante-rules";
@@ -49,8 +50,19 @@ test("formats the size in B, KB or MB", () => {
 test("knows the Documentos folders and nothing else", () => {
   assert.equal(isCarpeta("liquidaciones"), true);
   assert.equal(isCarpeta("comprobantes"), true);
-  assert.equal(isCarpeta("reglamentos"), false);
+  assert.equal(isCarpeta("reglamentos"), true);
+  assert.equal(isCarpeta("polizas"), true);
+  assert.equal(isCarpeta("normativas"), true);
+  assert.equal(isCarpeta("actas"), false);
   assert.equal(isCarpeta("Liquidaciones"), false);
   assert.equal(isCarpeta(""), false);
   assert.equal(isCarpeta(undefined), false);
+});
+
+test("only liquidaciones and comprobantes go by month", () => {
+  assert.equal(isMonthlyCarpeta("liquidaciones"), true);
+  assert.equal(isMonthlyCarpeta("comprobantes"), true);
+  assert.equal(isMonthlyCarpeta("reglamentos"), false);
+  assert.equal(isMonthlyCarpeta("polizas"), false);
+  assert.equal(isMonthlyCarpeta("normativas"), false);
 });

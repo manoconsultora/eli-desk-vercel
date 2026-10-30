@@ -8,6 +8,7 @@ import {
   COMPROBANTE_BUCKET,
   comprobanteFileProblem,
   isCarpeta,
+  isMonthlyCarpeta,
   periodFromMonthInput,
 } from "@/lib/comprobantes/comprobante-rules";
 import { createClient } from "@/lib/supabase/server";
@@ -60,14 +61,17 @@ async function documentosAllows(target: { organizationId: string | null; communi
 export async function startComprobanteUploadAction(input: {
   communityId: string;
   carpeta: Carpeta;
+  // "2026-10" in the folders by month; ignored in the others.
   month: string;
   fileName: string;
   size: number;
 }): Promise<ActionResult<ComprobanteUpload>> {
   // The action is callable from outside Desk's UI, so the folder is checked here too.
   if (!isCarpeta(input.carpeta)) return { success: false, error: "Esa carpeta no existe." };
-  const period = periodFromMonthInput(input.month);
-  if (!input.communityId || !period) return { success: false, error: "Elegí el mes." };
+  const period = isMonthlyCarpeta(input.carpeta) ? periodFromMonthInput(input.month) : null;
+  if (!input.communityId || (isMonthlyCarpeta(input.carpeta) && !period)) {
+    return { success: false, error: "Elegí el mes." };
+  }
   const problem = comprobanteFileProblem({ name: input.fileName, size: input.size });
   if (problem) return { success: false, error: problem };
 

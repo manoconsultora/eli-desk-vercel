@@ -4,8 +4,8 @@ import type { Carpeta } from "@/lib/comprobantes/comprobante-rules";
 
 export type ComprobanteSummary = {
   id: string;
-  // First day of the month, as the database stores it: "2026-10-01".
-  period: string;
+  // First day of the month, as the database stores it: "2026-10-01". Null in the folders without month.
+  period: string | null;
   name: string;
   uploadedAt: string;
   sizeBytes: number;
@@ -19,7 +19,7 @@ export type ComprobanteRef = { organizationId: string; communityId: string; stor
 
 type ComprobanteRow = {
   id: string;
-  periodo: string;
+  periodo: string | null;
   nombre: string;
   uploaded_at: string;
   size_bytes: number;
@@ -57,7 +57,7 @@ export async function listComprobantes(
 // The database checks the role and chooses the path; the file name never goes into it.
 export async function createComprobante(
   supabase: SupabaseClient,
-  input: { communityId: string; carpeta: Carpeta; period: string; name: string },
+  input: { communityId: string; carpeta: Carpeta; period: string | null; name: string },
 ): Promise<CreatedComprobante> {
   const { data, error } = await supabase.rpc("create_consorcio_comprobante", {
     p_edificio_id: input.communityId,

@@ -96,6 +96,9 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
     children: [
       { id: "liquidaciones", label: "Liquidaciones", href: "/dashboard/documentos/liquidaciones" },
       { id: "comprobantes", label: "Comprobantes", href: "/dashboard/documentos/comprobantes" },
+      { id: "reglamentos", label: "Reglamentos", href: "/dashboard/documentos/reglamentos" },
+      { id: "polizas", label: "Pólizas de seguro", href: "/dashboard/documentos/polizas" },
+      { id: "normativas", label: "Normativas", href: "/dashboard/documentos/normativas" },
     ],
     placements: ["mobile_more", "desktop"],
     desktopSection: "primary",

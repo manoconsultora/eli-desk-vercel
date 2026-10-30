@@ -4,8 +4,13 @@ const COMPROBANTE_MAX_NAME = 200;
 export const COMPROBANTE_BUCKET = "comprobantes";
 
 // The Documentos folders, in the order Desk shows them. The database checks the same list.
-export const CARPETAS = ["liquidaciones", "comprobantes"] as const;
+export const CARPETAS = ["liquidaciones", "comprobantes", "reglamentos", "polizas", "normativas"] as const;
 export type Carpeta = (typeof CARPETAS)[number];
+
+// Liquidaciones and comprobantes go by month; a reglamento or a póliza holds until it is replaced.
+export function isMonthlyCarpeta(carpeta: Carpeta): boolean {
+  return carpeta === "liquidaciones" || carpeta === "comprobantes";
+}
 
 export function isCarpeta(value: unknown): value is Carpeta {
   return CARPETAS.includes(value as Carpeta);
@@ -15,6 +20,9 @@ export function isCarpeta(value: unknown): value is Carpeta {
 export const CARPETA_ITEM: Record<Carpeta, { singular: string; plural: string }> = {
   liquidaciones: { singular: "liquidación", plural: "liquidaciones" },
   comprobantes: { singular: "comprobante", plural: "comprobantes" },
+  reglamentos: { singular: "reglamento", plural: "reglamentos" },
+  polizas: { singular: "póliza", plural: "pólizas" },
+  normativas: { singular: "normativa", plural: "normativas" },
 };
 
 const MONTH_INPUT = /^([1-9]\d{3})-(0[1-9]|1[0-2])$/;
