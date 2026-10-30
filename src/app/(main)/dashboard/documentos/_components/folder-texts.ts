@@ -6,7 +6,6 @@ export type FolderTexts = {
   description: string;
   uploadHeading: string;
   monthLabel: string;
-  notice: { title: string; body: string };
   uploaded: (count: number) => string;
   count: { singular: string; plural: string };
   searchLabel: string;
@@ -23,10 +22,6 @@ export const FOLDER_TEXTS: Record<Carpeta, FolderTexts> = {
     description: "El PDF de la liquidación de expensas de cada mes.",
     uploadHeading: "Cargar liquidaciones",
     monthLabel: "Liquidación de",
-    notice: {
-      title: "Antes de cargar la liquidación",
-      body: "Si detalla la cuota sindical del encargado, tapala. Usá una herramienta que borre el texto: un rectángulo dibujado encima lo deja debajo y se puede copiar.",
-    },
     uploaded: (count) => (count === 1 ? "Se cargó 1 liquidación." : `Se cargaron ${count} liquidaciones.`),
     count: { singular: "liquidación", plural: "liquidaciones" },
     searchLabel: "Buscar liquidación",
@@ -41,10 +36,6 @@ export const FOLDER_TEXTS: Record<Carpeta, FolderTexts> = {
     description: "Los PDF de los gastos de cada liquidación, agrupados por mes.",
     uploadHeading: "Cargar comprobantes",
     monthLabel: "Se cargan en la liquidación de",
-    notice: {
-      title: "Antes de cargar recibos de sueldo o boletas sindicales",
-      body: "Tapá la cuota sindical y los datos de salud. En papel, hacelo antes de escanear. En el PDF, usá una herramienta que borre el texto: un rectángulo dibujado encima lo deja debajo y se puede copiar.",
-    },
     uploaded: (count) => (count === 1 ? "Se cargó 1 comprobante." : `Se cargaron ${count} comprobantes.`),
     count: { singular: "comprobante", plural: "comprobantes" },
     searchLabel: "Buscar comprobante",
